@@ -1,0 +1,148 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <p:growl showDetail="false" widgetVar="testcaseGrowl"/>
+
+    <p:panel header="#{msg['test.to.service']}" toggleable="false">
+
+        <div class="button-area fa" align="right" style="padding-top: 8px; padding-bottom: 8px">
+            <p:commandButton value="#{msg['button.insert']}" disabled="#{actionController.viewOnly}"
+                             update=":mop:lst:editDialogTc" styleClass="GreenButton" icon="fa fa-plus White"
+                             oncomplete="PF('editDialogTc').show()"
+                             process="@this" actionListener="#{testCaseController.clear()}"/>
+
+        </div>
+        <div class="cl h6"></div>
+        <p:dataTable var="obj" value="#{testCaseController.testCases}"
+                     paginator="true" rows="25" filterEvent="keyup" rowKey="#{obj.id}"
+                     rowIndexVar="rowIndex" paginatorPosition="bottom" id="testcaseTable"
+                     widgetVar="testcaseTable" rowsPerPageTemplate="25, 50, 100"
+                     editable="false" emptyMessage="#{msg['common.data.not.found']}">
+
+
+            <p:column style="width: 3%; text-align: center;" headerText="#{msg['label.order']}">
+                <h:outputText value="#{rowIndex+ 1}"/>
+            </p:column>
+
+            <p:column id="line" style="width: 12%; text-align: center;"
+                      headerText="#{msg['common.action']}">
+                <p:splitButton value="#{msg['common.edit']}" process="@this" disabled="#{actionController.viewOnly}"
+                               actionListener="#{testCaseController.prepareEdit(obj)}"
+                               onclick="PF('blockUiSearch').block()"
+                               oncomplete="PF('blockUiSearch').unblock();PF('editDialogTc').show()"
+                               update=":mop:lst:testcasepanel" icon="fa fa-edit White">
+
+                    <p:menuitem value="#{msg['common.duplicate']}" process="@this" rendered="false"
+                                actionListener="#{testCaseController.duplicate(obj)}"
+                                onclick="PF('blockUiSearch').block()"
+                                oncomplete="PF('blockUiSearch').unblock();PF('editDialogTc').show()"
+                                update=":mop:lst:testcasepanel" icon="fa fa-copy">
+                    </p:menuitem>
+
+                    <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                onclick="PF('blockUiSearch').block()"
+                                update=":mop:lst:confirmDeleteTc"
+                                oncomplete="PF('blockUiSearch').unblock();PF('confirmDeleteTc').show()"
+                                icon="fa fa-remove">
+                        <f:setPropertyActionListener
+                                target="#{testCaseController.selectedObj}" value="#{obj}"/>
+                    </p:menuitem>
+
+                    <p:menuitem value="#{msg['export.dt']}" process="@this" icon="fa fa-file-word-o" ajax="false" rendered="false">
+                        <p:fileDownload value="#{testCaseController.downloadFile(obj)}"/>
+
+                    </p:menuitem>
+                </p:splitButton>
+            </p:column>
+
+            <p:column id="fileName" style="width: 20%; text-align: center;"
+                      sortBy="#{obj.fileName}" headerText="#{msg['file.name']}">
+                <p:commandLink process="@this"
+                               style="font-style: italic;text-decoration:underline;color: blue;"
+                               value="#{obj.fileName}" ajax="false">
+                    <p:fileDownload value="#{testCaseController.downloadFile(obj)}"/>
+
+                </p:commandLink>
+            </p:column>
+
+            <p:column id="testcaseType" style="width: 15%; text-align: center;"
+                      sortBy="#{obj.testcaseType}" headerText="#{msg['type.test.case']}">
+                <h:outputText value="#{msg['test.case.basic']}" rendered="#{obj.testcaseType==1}"/>
+                <h:outputText value="#{msg['test.case.business']}" rendered="#{obj.testcaseType==2}"/>
+                <h:outputText value="#{msg['test.case.technical']}" rendered="#{obj.testcaseType==3}"/>
+                <h:outputText value="#{msg['test.case.other']}" rendered="#{obj.testcaseType==4}"/>
+            </p:column>
+
+            <p:column id="userPerform" style="width: 10%; text-align: center;"
+                      sortBy="#{obj.userPerform}" headerText="#{msg['department.execute']}">
+                <h:outputText value="#{obj.userPerform}"/>
+            </p:column>
+
+            <p:column id="dateUpload" style="width: 12%; text-align: center;"
+                      sortBy="#{obj.dateUpload}" headerText="#{msg['upload.time']}">
+                <h:outputText value="#{obj.dateUpload}"/>
+            </p:column>
+
+
+        </p:dataTable>
+
+        <p:dialog id="editDialogTc" widgetVar="editDialogTc" width="70%"
+                  resizable="false" showEffect="clip" hideEffect="clip" modal="true"
+                  header="#{msg['tool.impaction.all.process']}" draggable="true">
+            <p:panel id="testcasepanel" header="#{msg['edit.info']}" toggleable="false">
+                <h:panelGrid columns="4" cellpadding="5" width="100%">
+
+                    <h:outputText value="#{msg['type.test.case']}"/>
+                    <p:selectOneMenu value="#{testCaseController.newObj.testcaseType}" style="width:119px">
+                        <f:selectItem itemLabel="#{msg['test.case.basic']}" itemValue="1"/>
+                        <f:selectItem itemLabel="#{msg['test.case.business']}" itemValue="2"/>
+                        <f:selectItem itemLabel="#{msg['test.case.technical']}" itemValue="3"/>
+                        <f:selectItem itemLabel="#{msg['test.case.other']}" itemValue="4"/>
+                    </p:selectOneMenu>
+
+                    <h:outputText value="Upload"/>
+                    <p:fileUpload id="dateUpload" rendered="true" allowTypes="/(\.|\/)(doc|docx|xls|xlsx|zip|rar|pdf)$/"
+                                  requiredMessage="#{msg['you.have.not.up.loaded.file.test.case']}"
+                                  fileUploadListener="#{testCaseController.handleFileUpload}"
+                                  mode="advanced"
+                                  auto="true" sizeLimit="10000000" update="fileName"/>
+
+                    <h:outputText value="#{msg['file.name']}"/>
+                    <p:commandLink process="@this" immediate="true"
+                                   style="font-style: italic;text-decoration:underline;color: blue;"
+                                   id="fileName" value="#{testCaseController.newObj.fileName}" ajax="false">
+                        <p:fileDownload value="#{testCaseController.downloadFile(testCaseController.newObj)}"/>
+                    </p:commandLink>
+
+                    <h:outputText value="#{msg['department.execute']}"/>
+                    <p:inputText id="userPerform" value="#{testCaseController.newObj.userPerform}" rendered="true"
+                                 required="false" requiredMessage="#{msg['you.have.not.entered.department.execute']}"/>
+
+                </h:panelGrid>
+                <h:panelGrid columns="2" cellpadding="5">
+                    <p:commandButton process=":mop:lst:testcasepanel" icon="fa fa-check White"
+                                     value="#{testCaseController.isEdit ? msg['button.update'] : msg['button.insert']}"
+                                     update=":mop:lst:testcaseTable :insertEditForm:designGrowl"
+                                     actionListener="#{testCaseController.saveOrUpdate}" styleClass="GreenButton"/>
+
+                    <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                     onclick="PF('editDialogTc').hide()"
+                                     styleClass="ButtonRed"/>
+                </h:panelGrid>
+            </p:panel>
+        </p:dialog>
+
+        <p:confirmDialog id="confirmDeleteTc"
+                         message="#{msg['confirm.sure.delete']} #{testCaseController.selectedObj.fileName}?"
+                         header="#{msg['button.confirm']}" severity="alert" widgetVar="confirmDeleteTc">
+            <p:commandButton value="#{msg['button.confirm']}" icon="fa fa-check White"
+                             actionListener="#{testCaseController.delete()}"
+                             update=":mop:lst:testcaseTable "
+                             process="@this" oncomplete="PF('confirmDeleteTc').hide()"/>
+            <p:commandButton value="#{msg['button.cancel']}?" onclick="PF('confirmDeleteTc').hide()"/>
+        </p:confirmDialog>
+    </p:panel>
+</ui:composition>

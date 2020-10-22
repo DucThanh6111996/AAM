@@ -1,0 +1,325 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <p:growl showDetail="false" widgetVar="commonGrowl"/>
+
+    <p:panel id="commonpanel" header="#{msg['edit.info']}" toggleable="false">
+
+        <h:panelGrid columns="6" cellpadding="5" width="100%">
+            <h:outputText value="#{msg['mop.common.mop_type']}:" rendered="false"/>
+            <p:selectOneMenu id="mop_group" style="width: 150px" rendered="false"
+                             value="#{actionController.newObj.kbGroup}" >
+                <f:selectItem itemLabel="#{msg['mop.kb_group.standard']}" itemValue="0"/>
+                <f:selectItem itemLabel="#{msg['mop.kb_group.bd']}" itemValue="1"/>
+                <f:selectItem itemLabel="#{msg['mop.kb_group.uctt']}" itemValue="2"/>
+            </p:selectOneMenu>
+
+            <h:outputText value="#{msg['common.country.code']}:" />
+            <p:selectOneMenu id="country" style="width: 115px" rendered="#{actionController.newObj.linkCrTime eq null}"
+                             value="#{actionController.newObj.catCountryBO}" converter="impactProcessConverter">
+                <f:selectItems value="#{actionController.catCountrys}" itemValue="#{timezone.value}" itemLabel="#{timezone.label}"/>
+                <p:ajax event="change" update="process sv-mop"
+                        listener="#{actionController.handleChangeCountry(actionController.newObj)}" />
+
+            </p:selectOneMenu>
+
+            <h:outputText value="#{actionController.newObj.catCountryBO.countryCode}" styleClass="Blue"
+                          rendered="#{actionController.newObj.linkCrTime ne null}"/>
+
+            <h:outputText value="#{msg['cr.company']}:" />
+            <ui:remove>
+            <p:selectOneMenu style="width: 115px" rendered="#{actionController.newObj.linkCrTime eq null}"
+                             disabled="true"
+                             value="#{actionController.newObj.impactProcess}" converter="impactProcessConverter">
+                <f:selectItems value="#{actionController.impactProcesses}" itemValue="#{timezone.value}" itemLabel="#{timezone.label}"/>
+            </p:selectOneMenu>
+            </ui:remove>
+            <h:outputText id="process" value="#{actionController.newObj.impactProcess.name}" styleClass="Blue"/>
+
+            <h:outputText value="#{msg['cr.number']}:" rendered="#{!actionController.uctt}"/>
+            <p:inputText value="#{actionController.newObj.crNumber}"
+                         rendered="#{actionController.newObj.linkCrTime eq null and !actionController.uctt}"
+                         style="width:150px" required="false" requiredMessage="#{msg['you.have.not.entered.CR.code']}"/>
+            <h:outputText value="#{actionController.newObj.crNumber}" styleClass="Blue"
+                          rendered="#{actionController.newObj.linkCrTime ne null and !actionController.uctt}"/>
+
+            <h:outputText value="#{msg['type.script']}:" rendered="#{actionController.uctt}"/>
+            <p:selectOneMenu rendered="#{actionController.uctt}" value="#{actionController.newObj.ucttType}"
+                             style="width: 115px" required="false"
+                             requiredMessage="#{msg['type.of.rescue.must.select']}">
+                <f:selectItem itemLabel="#{msg['common.choose']}"/>
+                <f:selectItem itemLabel="#{msg['service.uctt.type.0']}" itemValue="0"/>
+                <f:selectItem itemLabel="#{msg['service.uctt.type.1']}" itemValue="1"/>
+                <f:selectItem itemLabel="#{msg['service.uctt.type.2']}" itemValue="2"/>
+                <f:selectItem itemLabel="#{msg['service.uctt.type.3']}" itemValue="3"/>
+            </p:selectOneMenu>
+
+            <h:outputText
+                    value="#{actionController.uctt ? msg['script.name'].concat(':') : msg['cr.name'].concat(':')}"/>
+            <p:inputText value="#{actionController.newObj.crName}"
+                         style="width:150px" required="false"
+                         requiredMessage="#{actionController.uctt ? msg['script.name.must.enter'] : msg['cr.name.must.enter']}"
+                         rendered="#{actionController.newObj.linkCrTime eq null}"/>
+            <h:outputText value="#{actionController.newObj.crName}"
+                          rendered="#{actionController.newObj.linkCrTime ne null}"/>
+
+            <h:outputText value="#{msg['impaction.reason']}:"/>
+            <p:inputText value="#{actionController.newObj.reason}"
+                         style="width:150px" required="false" requiredMessage="#{msg['impaction.reason.must.enter']}"
+                         rendered="#{actionController.newObj.linkCrTime eq null}"/>
+            <h:outputText value="#{actionController.newObj.reason}"
+                          rendered="#{actionController.newObj.linkCrTime ne null}"/>
+
+
+            <h:outputText value="#{msg['impaction.location']}" rendered="false"/>
+            <p:inputText value="#{actionController.newObj.location}" rendered="false"
+                         style="width:150px"/>
+
+            <p:outputLabel value="#{msg['impaction.time.from']}: " style="font-weight: bold;"
+                           rendered="#{!actionController.uctt}"/>
+            <p:calendar value="#{actionController.beginTimeWrapper}" styleClass="calendarClass"
+                        pattern="dd/MM/yyyy HH:mm:ss" required="false"
+                        requiredMessage="#{msg['impaction.time.must.enter']}"
+                        rendered="#{actionController.newObj.linkCrTime eq null and !actionController.uctt}"/>
+            <h:outputText value="#{sessionUtil.toTimeZoneDate(actionController.newObj.beginTime)}"
+                          rendered="#{actionController.newObj.linkCrTime ne null and !actionController.uctt}">
+                <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/>
+            </h:outputText>
+
+            <p:outputLabel value="#{msg['to']}: " style="font-weight: bold;" rendered="#{!actionController.uctt}"/>
+            <p:calendar value="#{actionController.endTimeWrapper}" styleClass="calendarClass"
+                        pattern="dd/MM/yyyy HH:mm:ss" required="false"
+                        requiredMessage="#{msg['impaction.time.must.enter']}"
+                        rendered="#{actionController.newObj.linkCrTime eq null and !actionController.uctt}"/>
+            <h:outputText value="#{sessionUtil.toTimeZoneDate(actionController.newObj.endTime)}"
+                          rendered="#{actionController.newObj.linkCrTime ne null and !actionController.uctt}">
+                <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/>
+            </h:outputText>
+
+            <h:outputText value="#{msg['service']}:"/>
+            <p:selectOneMenu id="sv-mop" style="width: 115px" rendered="#{actionController.newObj.linkCrTime eq null}"
+                             value="#{actionController.newObj.service}" converter="impactProcessConverter">
+                <f:selectItems value="#{actionController.serviceNames}" itemValue="#{timezone.value}" itemLabel="#{timezone.label}"/>
+            </p:selectOneMenu>
+
+            <h:outputText value="#{msg['executor']}" rendered="false"/>
+            <p:inputText value="#{actionController.newObj.person}" rendered="false"
+                         style="width:150px"/>
+        </h:panelGrid>
+
+        <h:panelGrid id="sign" columns="3" cellpadding="0" width="100%" rendered="#{actionController.uctt}">
+            <p:inputText value="#{actionController.newObj.labelSign1}" placeholder="#{msg['label.sign.position']}" id="user1Label"/>
+            <p:inputText value="#{actionController.newObj.labelSign2}" placeholder="#{msg['label.sign.position']}" id="user2Label"/>
+            <p:inputText value="#{actionController.newObj.labelSign3}" placeholder="#{msg['label.sign.position']}" id="user3Label"/>
+
+            <p:inputText id="user1" value="#{actionController.newObj.userSign1}" readonly="true"/>
+            <p:inputText id="user2" value="#{actionController.newObj.userSign2}" readonly="true"/>
+            <p:inputText id="user3" value="#{actionController.newObj.userSign3}" readonly="true"/>
+
+            <pe:tooltip for="user1Label" mouseTracking="true" adjustX="10" adjustY="10"
+                        rendered="#{not empty actionController.newObj.adOrgName1}">
+                <h:outputText value="#{actionController.newObj.adOrgName1}" styleClass="Fs14" style="width: 100%"/>
+            </pe:tooltip>
+
+            <pe:tooltip for="user2Label" mouseTracking="true" adjustX="10" adjustY="10"
+                        rendered="#{not empty actionController.newObj.adOrgName2}">
+                <h:outputText value="#{actionController.newObj.adOrgName2}" styleClass="Fs14" style="width: 100%"/>
+            </pe:tooltip>
+
+            <pe:tooltip for="user3Label" mouseTracking="true" adjustX="10" adjustY="10"
+                        rendered="#{not empty actionController.newObj.adOrgName3}">
+                <h:outputText value="#{actionController.newObj.adOrgName3}" styleClass="Fs14" style="width: 100%"/>
+            </pe:tooltip>
+        </h:panelGrid>
+
+        <p:overlayPanel for="user1" widgetVar="user1Overlay" id="user1Overlay" hideEffect="fade" style="width: 820px">
+            <h:panelGrid columns="3" cellpadding="0" width="100%" id="user1Panel">
+                <p:inputText value="#{actionController.emailFind}" id="emailFind1"/>
+
+                <p:commandButton value="#{msg['button.search']}"
+                                 actionListener="#{actionController.findVoUserByEmail()}" icon="fa fa-search White"
+                                 update="user1Table" process="user1Panel"/>
+
+                <p:commandButton value="#{msg['common.choose2']}" actionListener="#{actionController.selectUser(1)}"
+                                 icon="fa fa-check White"
+                                 update=":mop:lst:sign user1Overlay user2Overlay user3Overlay" process="user1Overlay"/>
+            </h:panelGrid>
+
+            <p:spacer height="24px"/>
+
+            <p:dataTable var="obj" value="#{actionController.vof2EntityUsers}" paginator="false"
+                         rows="15" filterEvent="keyup" rowIndexVar="rowIndex" paginatorPosition="bottom"
+                         id="user1Table" selection="#{actionController.selectedVof2EntityUser}"
+                         widgetVar="user1Table" rowsPerPageTemplate="25, 50, 100" lazy="false" rowKey="#{obj}"
+                         editable="false" emptyMessage="#{msg['common.data.not.found']}" scrollable="true">
+
+                <p:column style="width: 3%; text-align: center; white-space: nowrap" headerText="#{msg['label.order']}">
+                    <h:outputText value="#{rowIndex+ 1}"/>
+                </p:column>
+
+                <p:column selectionMode="single" style="width:16px;text-align:center" styleClass="radio"/>
+
+                <p:column style="width: 10%; text-align: center; white-space: nowrap" headerText="#{msg['email']}">
+                    <h:outputText value="#{obj.strEmail}"/>
+                </p:column>
+
+                <p:column style="width: 10%; text-align: center; white-space: nowrap" headerText="#{msg['title']}">
+                    <h:outputText value="#{obj.jobTile}"/>
+                </p:column>
+
+                <p:column style="width: 10%; text-align: center; white-space: nowrap" headerText="#{msg['full.name']}">
+                    <h:outputText value="#{obj.fullName}"/>
+                </p:column>
+
+                <p:column style="width: 20%; text-align: center; white-space: nowrap" headerText="#{msg['department']}">
+                    <h:outputText id="adOrgName" value="#{utils.subContent(obj.adOrgName, 64)}"/>
+                    <pe:tooltip for="adOrgName" mouseTracking="true" adjustX="10" adjustY="10">
+                        <h:outputText value="#{obj.adOrgName}" styleClass="Fs14" style="width: 100%"/>
+                    </pe:tooltip>
+                </p:column>
+            </p:dataTable>
+        </p:overlayPanel>
+
+        <p:overlayPanel for="user2" id="user2Overlay" widgetVar="user2Overlay" hideEffect="fade" style="width: 820px">
+            <h:panelGrid columns="3" cellpadding="0" width="100%" id="user2Panel">
+                <p:inputText value="#{actionController.emailFind}" id="emailFind2"/>
+
+                <p:commandButton value="#{msg['button.search']}"
+                                 actionListener="#{actionController.findVoUserByEmail()}" icon="fa fa-search White"
+                                 update="user2Table" process="user2Panel"/>
+
+                <p:commandButton value="#{msg['common.choose2']}" actionListener="#{actionController.selectUser(2)}"
+                                 icon="fa fa-check White"
+                                 update=":mop:lst:sign user1Overlay user2Overlay user3Overlay" process="user2Overlay"/>
+            </h:panelGrid>
+
+            <p:spacer height="24px"/>
+
+            <p:dataTable var="obj" value="#{actionController.vof2EntityUsers}" paginator="false"
+                         rows="15" filterEvent="keyup" rowIndexVar="rowIndex" paginatorPosition="bottom"
+                         id="user2Table" selection="#{actionController.selectedVof2EntityUser}" rowKey="#{obj}"
+                         widgetVar="user2Table" rowsPerPageTemplate="25, 50, 100" lazy="false"
+                         editable="false" emptyMessage="#{msg['common.data.not.found']}" scrollable="true">
+                <p:column style="width: 3%; text-align: center; white-space: nowrap" headerText="#{msg['label.order']}">
+                    <h:outputText value="#{rowIndex+ 1}"/>
+                </p:column>
+
+                <p:column selectionMode="single" style="width:16px;text-align:center" styleClass="radio"/>
+
+                <p:column style="width: 10%; text-align: center; white-space: nowrap" headerText="#{msg['email']}">
+                    <h:outputText value="#{obj.strEmail}"/>
+                </p:column>
+
+                <p:column style="width: 10%; text-align: center; white-space: nowrap" headerText="#{msg['title']}">
+                    <h:outputText value="#{obj.jobTile}"/>
+                </p:column>
+
+                <p:column style="width: 10%; text-align: center; white-space: nowrap" headerText="#{msg['full.name']}">
+                    <h:outputText value="#{obj.fullName}"/>
+                </p:column>
+
+                <p:column style="width: 20%; text-align: center; white-space: nowrap" headerText="#{msg['department']}">
+                    <h:outputText id="adOrgName2" value="#{utils.subContent(obj.adOrgName, 64)}"/>
+                    <pe:tooltip for="adOrgName2" mouseTracking="true" adjustX="10" adjustY="10">
+                        <h:outputText value="#{obj.adOrgName}" styleClass="Fs14" style="width: 100%"/>
+                    </pe:tooltip>
+                </p:column>
+            </p:dataTable>
+        </p:overlayPanel>
+
+        <p:overlayPanel for="user3" id="user3Overlay" widgetVar="user3Overlay" hideEffect="fade" style="width: 820px">
+            <h:panelGrid columns="3" cellpadding="0" width="100%" id="user3Panel">
+                <p:inputText value="#{actionController.emailFind}" id="emailFind3"/>
+
+                <p:commandButton value="#{msg['button.search']}"
+                                 actionListener="#{actionController.findVoUserByEmail()}" icon="fa fa-search White"
+                                 update="user3Table" process="user3Panel"/>
+
+                <p:commandButton value="#{msg['common.choose2']}" actionListener="#{actionController.selectUser(3)}"
+                                 icon="fa fa-check White"
+                                 update=":mop:lst:sign user1Overlay user2Overlay user3Overlay" process="user3Overlay"/>
+            </h:panelGrid>
+
+            <p:spacer height="24px"/>
+
+            <p:dataTable var="obj" value="#{actionController.vof2EntityUsers}" paginator="false"
+                         rows="15" filterEvent="keyup" rowIndexVar="rowIndex" paginatorPosition="bottom"
+                         id="user3Table" selection="#{actionController.selectedVof2EntityUser}" rowKey="#{obj}"
+                         widgetVar="user3Table" rowsPerPageTemplate="25, 50, 100" lazy="false"
+                         editable="false" emptyMessage="#{msg['common.data.not.found']}" scrollable="true">
+                <p:column style="width: 3%; text-align: center; white-space: nowrap" headerText="#{msg['label.order']}">
+                    <h:outputText value="#{rowIndex+ 1}"/>
+                </p:column>
+
+                <p:column selectionMode="single" style="width:16px;text-align:center" styleClass="radio"/>
+
+                <p:column style="width: 10%; text-align: center; white-space: nowrap" headerText="#{msg['email']}">
+                    <h:outputText value="#{obj.strEmail}"/>
+                </p:column>
+
+                <p:column style="width: 10%; text-align: center; white-space: nowrap" headerText="#{msg['title']}">
+                    <h:outputText value="#{obj.jobTile}"/>
+                </p:column>
+
+                <p:column style="width: 10%; text-align: center; white-space: nowrap" headerText="#{msg['full.name']}">
+                    <h:outputText value="#{obj.fullName}"/>
+                </p:column>
+
+                <p:column style="width: 20%; text-align: center; white-space: nowrap" headerText="#{msg['department']}">
+                    <h:outputText id="adOrgName3" value="#{utils.subContent(obj.adOrgName, 64)}"/>
+                    <pe:tooltip for="adOrgName3" mouseTracking="true" adjustX="10" adjustY="10">
+                        <h:outputText value="#{obj.adOrgName}" styleClass="Fs14" style="width: 100%"/>
+                    </pe:tooltip>
+                </p:column>
+            </p:dataTable>
+        </p:overlayPanel>
+    </p:panel>
+
+    <p:spacer height="12px"/>
+
+
+
+
+    <style>
+        #mop\:lst\:sign tbody tr td {
+            text-align: center;
+            padding-top: 24px;
+        }
+
+        #mop\:lst\:sign tbody tr td input {
+            border: none;
+            width: 60%;
+            text-align: center
+        }
+
+        .radio {
+            width: 16px !important;
+        }
+
+        #mop\:lst\:kb tbody tr td {
+            text-align: left;
+            padding-top: 24px;
+        }
+
+        .class1 {
+            vertical-align: top;
+            width: 12%
+        }
+
+        .class2 {
+            vertical-align: top;
+            width: 88%
+        }
+
+        /*20180705_hoangnd_fix_width_calendar_start*/
+        .calendarClass input {
+            width: 150px;
+        }
+        /*20180705_hoangnd_fix_width_calendar_end*/
+
+
+    </style>
+</ui:composition>

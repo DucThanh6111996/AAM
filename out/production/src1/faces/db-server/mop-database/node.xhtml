@@ -1,0 +1,396 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+	
+	<h:form id="form-node">
+		<p:dataTable var="obj"
+			value="#{mopDatabaseNewController.lazyNodeDatabase}" id="tableNode"
+			widgetVar="tableNode" style="width: 99%"
+			paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+			paginator="true" rows="10" filterEvent="keyup" rowIndexVar="rowIndex"
+			paginatorPosition="bottom" rowsPerPageTemplate="10,15,20"
+			rowKey="#{obj.vId}" emptyMessage="#{msg['datatable.empty']}"
+			selection="#{mopDatabaseNewController.selectedDbNodes}" lazy="true">
+			<f:facet name="header">
+				<h:outputText style="float: left;"
+					value="#{msg['label.node.header']}" />
+
+				<p:selectOneMenu id="selectTemplateId"
+					disabled="#{!mopDatabaseNewController.enableTemplate}"
+					value="#{mopDatabaseNewController.selectedFlowTemplate}"
+					converter="flowTemplateConverter">
+					<f:selectItem noSelectionOption="true"
+						itemLabel="#{msg['label.choose.template']}" />
+					<f:selectItems value="#{mopDatabaseNewController.flowTemplates}"
+						var="template" itemLabel="#{template.flowTemplateName}"
+						itemValue="#{template}">
+					</f:selectItems>
+					<p:ajax event="change" process="tableNode"
+						update="form-create-mop, mainMessage"
+							onstart="PF('blockDataForm').show()"
+							oncomplete="PF('blockDataForm').hide()"
+						listener="#{mopDatabaseNewController.onChangeFlowTemplate}" />
+				</p:selectOneMenu>
+			</f:facet>
+
+			<p:ajax event="toggleSelect" update="selectTemplateId"
+				listener="#{mopDatabaseNewController.onSelectRowData}" />
+			<p:ajax event="rowSelectCheckbox" update="selectTemplateId"
+				listener="#{mopDatabaseNewController.onSelectRowData}" />
+			<p:ajax event="rowUnselectCheckbox" update="selectTemplateId"
+				listener="#{mopDatabaseNewController.onSelectRowData}" />
+				
+			<p:column selectionMode="multiple" exportable="false"
+				style="width : 2%; text-align: center;" />
+
+			<p:column style="width : 3%;">
+				<f:facet name="header">
+					<h:outputText value="#{msg['label.order']}" />
+				</f:facet>
+				<h:outputText value="#{rowIndex + 1}" />
+			</p:column>
+			<p:column style="width : 5%;">
+				<f:facet name="header">
+					<h:outputText value="Server ID" />
+				</f:facet>
+				<h:outputText value="#{obj.dbId}" />
+			</p:column>
+			<p:column style="width : 8%;" sortBy="#{obj.userManager}" filterBy="#{obj.userManager}" >
+				<f:facet name="header">
+					<h:outputText value="User Manager" />
+				</f:facet>
+				<h:outputText value="#{obj.userManager}" />
+			</p:column>
+			<p:column sortBy="#{obj.listIp}" filterBy="#{obj.listIp}"
+				style="width : 15%;">
+				<f:facet name="header">
+					<h:outputText value="#{msg['label.ip.physical']}" />
+				</f:facet>
+				<h:outputText value="#{obj.listIp}" />
+			</p:column>
+			
+			<p:column sortBy="#{obj.addParTime}"
+				filterBy="#{obj.addParTime}" style="width : 20%;">
+				<f:facet name="header">
+					<h:outputText value="#{msg['label.lasttime.update']}" />
+				</f:facet>
+				<p:panelGrid columns="2">
+					<h:outputText value="#{msg['label.add.partition.time']}" />
+					<h:outputText value="#{obj.addParTime}" >
+						<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+					</h:outputText>
+					
+					<h:outputText value="#{msg['label.add.tbs.time']}" />
+					<h:outputText value="#{obj.addTbsTime}" >
+						<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+					</h:outputText>
+					
+					<h:outputText value="#{msg['label.add.datafile.time']}" />
+					<h:outputText value="#{obj.addDatafileTime}" >
+						<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+					</h:outputText>
+					
+					<h:outputText value="#{msg['label.drop.par.time']}" />
+					<h:outputText value="#{obj.dropParTime}" >
+						<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+					</h:outputText>
+					
+					<h:outputText value="#{msg['label.resize.time']}" />
+					<h:outputText value="#{obj.resizeTbsTime}" >
+						<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+					</h:outputText>
+					
+					<h:outputText value="#{msg['label.export.time']}" />
+					<h:outputText value="#{obj.exportTbsTime}" >
+						<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+					</h:outputText>
+					
+				</p:panelGrid>
+			</p:column>
+			
+			<p:column sortBy="#{obj.serviceName}" filterBy="#{obj.serviceName}"
+				style="width : 7%;">
+				<f:facet name="header">
+					<h:outputText value="#{msg['label.database.servicename']}" />
+				</f:facet>
+				<h:outputText value="#{obj.serviceName}" />
+			</p:column>
+			
+			<p:column style="width : 25%;">
+				<f:facet name="header">
+					<h:outputText value="URL" />
+				</f:facet>
+				<h:outputText value="#{obj.jdbcUrl}" />
+			</p:column>
+		</p:dataTable>
+	</h:form>
+
+	<h:form id="form-create-mop">
+		<p:dialog id="dlgConfirmCreateMop" widgetVar="dlgConfirmCreateMop"
+			modal="true" width="80%" height="350"
+			header="#{msg['header.dlg.confirm.exec.db']}">
+
+			<div class="ui-g" style="width: 100%;">
+				<div class="Container30">
+					<h:outputText value="#{msg['label.cycle.month']}"
+						rendered="#{mopDatabaseNewController.selectedFlowTemplate.flowTemplatesId == 10082
+							|| mopDatabaseNewController.selectedFlowTemplate.flowTemplatesId == 10083}" />
+				</div>
+				<div class="Container70">
+					<p:spinner value="#{mopDatabaseNewController.cycleMonth}"
+						rendered="#{mopDatabaseNewController.selectedFlowTemplate.flowTemplatesId == 10082
+							|| mopDatabaseNewController.selectedFlowTemplate.flowTemplatesId == 10083}" 
+							min="0" max="11"/>
+				</div>
+			</div>
+
+			<div class="ui-g" style="width: 100%;">
+				<div class="Container30">
+					<h:outputText value="#{msg['label.param.checklist']}" />
+				</div>
+				<div class="Container70">
+					<p:selectCheckboxMenu style="width: 95%;" label="Chọn tham số"
+						filter="true" scrollHeight="300"
+						value="#{mopDatabaseNewController.checklistParamSelected}">
+						<f:selectItems value="#{mopDatabaseNewController.checklistParams}" />
+					</p:selectCheckboxMenu>
+				</div>
+			</div>
+
+			<div class="ui-g" style="width: 100%;">
+				<div class="Container30">
+					<h:outputText value="#{msg['datatable.header.template']}" />
+				</div>
+				<div class="Container70">
+					<p:inputText value="#{mopDatabaseNewController.flowRunActionName}"
+						style="width: 98%;" />
+				</div>
+			</div>
+
+			<ui:remove>
+				<p:panel id="tbsParamOption"
+					header="#{msg['label.panel.tbs.param.option']}"
+					rendered="#{mopDatabaseNewController.selectedFlowTemplate.flowTemplatesId == 10083}">
+
+					<div class="ui-g" style="width: 100%;">
+						<div class="Container30">
+							<h:outputText value="#{msg['label.tbs.autoExtendStatus']}" />
+						</div>
+						<div class="Container70">
+							<p:selectOneMenu value="#{mopDatabaseNewController.tbsAutoExtend}">
+								<f:selectItem itemLabel="ON" itemValue="1" />
+								<f:selectItem itemLabel="OFF" itemValue="0" />
+								<p:ajax event="change" process="@this"
+									update="form-create-mop:tbsParamOption" />
+							</p:selectOneMenu>
+						</div>
+					</div>
+
+					<div class="ui-g" style="width: 100%;">
+						<div class="Container30">
+							<h:outputText value="#{msg['label.tbs.datafileSize']}" />
+						</div>
+						<div class="Container70">
+							<p:inputText value="#{mopDatabaseNewController.tbsDatafileSize}"
+								placeholder="#{msg['label.tbs.placeholder.guide']}"
+								style="width: 98%;" />
+						</div>
+					</div>
+
+					<div class="ui-g" style="width: 100%;" id="tbsInitSizeId">
+						<div class="Container30">
+							<h:outputText value="#{msg['label.tbs.initSize']}"
+								rendered="#{mopDatabaseNewController.tbsAutoExtend == 1}" />
+						</div>
+						<div class="Container70">
+							<p:inputText value="#{mopDatabaseNewController.tbsInitSize}"
+								placeholder="#{msg['label.tbs.placeholder.guide']}"
+								style="width: 98%;"
+								rendered="#{mopDatabaseNewController.tbsAutoExtend == 1}" />
+						</div>
+					</div>
+					<div class="ui-g" style="width: 100%;" id="tbsMaxSizeId">
+						<div class="Container30">
+							<h:outputText value="#{msg['label.tbs.maxsize']}"
+								rendered="#{mopDatabaseNewController.tbsAutoExtend == 1}" />
+						</div>
+						<div class="Container70">
+							<p:inputText value="#{mopDatabaseNewController.tbsMaxSize}"
+								placeholder="#{msg['label.label.database.guide']}"
+								style="width: 98%;"
+								rendered="#{mopDatabaseNewController.tbsAutoExtend == 1}" />
+						</div>
+					</div>
+				</p:panel>
+			</ui:remove>
+
+            <ui:remove>
+			    <p:panel id="datafileParamOption"
+				header="#{msg['label.panel.datafile.param.option']}"
+				rendered="#{mopDatabaseNewController.selectedFlowTemplate.flowTemplatesId == 10121}">
+
+				<ui:remove>
+					<div class="ui-g" style="width: 100%;">
+						<div class="Container30">
+							<h:outputText value="#{msg['label.tbs.autoExtendStatus']}" />
+						</div>
+						<div class="Container70">
+							<p:selectOneMenu
+								value="#{mopDatabaseNewController.datafileAutoExtend}">
+								<f:selectItem itemLabel="ON" itemValue="1" />
+								<f:selectItem itemLabel="OFF" itemValue="0" />
+								<p:ajax event="change" process="@this"
+									update="form-create-mop:datafileParamOption" />
+							</p:selectOneMenu>
+						</div>
+					</div>
+				</ui:remove>
+
+				<div class="ui-g" style="width: 100%;">
+					<div class="Container30">
+						<h:outputText value="#{msg['label.datafile.tablespacenames']}" />
+					</div>
+					<div class="Container70">
+						<p:inputText
+							value="#{mopDatabaseNewController.datafileTablespaceNames}"
+							placeholder="#{msg['view.tooltip.input.value']}"
+							style="width: 98%;" />
+					</div>
+				</div>
+
+				<div class="ui-g" style="width: 100%;">
+					<div class="Container30">
+						<h:outputText value="#{msg['label.datafile.numbersdatafile']}" />
+					</div>
+					<div class="Container70">
+						<p:inputText value="#{mopDatabaseNewController.datafileNumbers}"
+							placeholder="#{msg['view.tooltip.input.value']}"
+							style="width: 98%;"/>
+					</div>
+				</div>
+
+				<ui:remove>
+					<div class="ui-g" style="width: 100%;">
+						<div class="Container30">
+							<h:outputText value="#{msg['label.tbs.datafileSize']}" />
+						</div>
+						<div class="Container70">
+							<p:inputText
+								value="#{mopDatabaseNewController.datafileDatafileSize}"
+								placeholder="#{msg['label.tbs.placeholder.guide']}"
+								style="width: 98%;" />
+						</div>
+					</div>
+
+					<div class="ui-g" style="width: 100%;">
+						<div class="Container30">
+							<h:outputText value="#{msg['label.tbs.initSize']}"
+								rendered="#{mopDatabaseNewController.datafileAutoExtend == 1}" />
+						</div>
+						<div class="Container70">
+							<p:inputText value="#{mopDatabaseNewController.datafileInitSize}"
+								placeholder="#{msg['label.tbs.placeholder.guide']}"
+								style="width: 98%;"
+								rendered="#{mopDatabaseNewController.datafileAutoExtend == 1}" />
+						</div>
+					</div>
+					<div class="ui-g" style="width: 100%;">
+						<div class="Container30">
+							<h:outputText value="#{msg['label.tbs.maxsize']}"
+								rendered="#{mopDatabaseNewController.datafileAutoExtend == 1}" />
+						</div>
+						<div class="Container70">
+							<p:inputText value="#{mopDatabaseNewController.datafileMaxSize}"
+								placeholder="#{msg['label.label.database.guide']}"
+								style="width: 98%;"
+								rendered="#{mopDatabaseNewController.datafileAutoExtend == 1}" />
+						</div>
+					</div>
+				</ui:remove>
+			</p:panel>
+            </ui:remove>
+
+			<br />
+
+			<p:panel header="Danh sách các Database sẽ thực hiện sinh MOP">
+				<div class="ui-g">
+					<ui:repeat var="node"
+						value="#{mopDatabaseNewController.selectedDbNodes}">
+						<div class="Container100">
+							<h:outputText
+								value="Ip vật lý: #{node.listIp} -- Service name: #{node.serviceName}" />
+							<br />
+						</div>
+
+						<div class="Container50">
+							<p:selectCheckboxMenu label="Danh sách Tablespace" multiple="true"
+												  rendered="#{mopDatabaseNewController.selectedFlowTemplate.flowTemplatesId == 10121}"
+												  value="#{node.lstTbsNameSelected}" var="tbs" filter="true" filterMatchMode="contains">
+								<f:selectItems value="#{node.lstTbsName}" var="tbsName" itemValue="#{tbsName}" itemLabel="#{tbsName}"/>
+								<p:ajax event="change" listener="#{mopDatabaseNewController.tbsSelectionChanged(node.vId)}"
+										update="lstTbsSelected"/>
+								<ui:remove>
+									<p:ajax event="toggleSelect" listener="#{mopDatabaseNewController.tbsSelectionChanged(node.vId)}"
+											update="lstTbsSelected"/>
+								</ui:remove>
+								<p:column style="width: 100px;">
+									<h:outputText value="#{tbs}"/>
+								</p:column>
+							</p:selectCheckboxMenu>
+
+							<p:selectOneMenu rendered="#{mopDatabaseNewController.selectedFlowTemplate.flowTemplatesId == 10160}"
+											 value="#{node.selectedNodeIpImpact}" >
+								<f:selectItem itemLabel="#{msg['label.export.db.choose.ip']}" itemValue=""/>
+								<f:selectItems value="#{node.lstNodeIpServer}"/>
+							</p:selectOneMenu>
+						</div>
+						<div class="Container50" >
+							<p:panel header="Danh sách Tablespace đã chọn" style="width: 100%;"
+									 id="lstTbsSelected" toggleable="true"
+									 rendered="#{mopDatabaseNewController.selectedFlowTemplate.flowTemplatesId == 10121}">
+								<ui:repeat value="#{node.lstTbsObj}" var="tbsObj">
+									<div class="Container100" >
+										<div class="Container50" >
+											<h:outputText value="#{tbsObj.tbsName}" style="width: 200px;"/>
+										</div>
+										<div class="Container50" >
+											<p:spinner value="#{tbsObj.numOfDatafile}" size="20" style="margin-right: 10px;">
+												<p:ajax listener="#{mopDatabaseNewController.onChangeValueSpin(node.vId, tbsObj.tbsName, tbsObj.numOfDatafile)}" />
+											</p:spinner>
+										</div>
+									</div>
+								</ui:repeat>
+							</p:panel>
+						</div>
+
+					</ui:repeat>
+				</div>
+			</p:panel>
+
+
+			<div class="row"
+				style="margin-top: 20px; text-align: center; margin-left: auto; margin-right: auto; display: block">
+				<p:commandButton value="#{msg['view.button.save']}"
+					update="mainMessage" onclick="PF('blockDataForm').show()"
+					actionListener="#{mopDatabaseNewController.startRunBuildMop}"
+					oncomplete="PF('dlgConfirmCreateMop').hide(), PF('blockDataForm').hide()" />
+				<p:commandButton value="#{msg['button.cancel']}"
+					onclick="PF('dlgConfirmCreateMop').hide()" />
+			</div>
+		</p:dialog>
+	</h:form>
+
+	<script type="text/javascript">
+        function beforeOpenDialog() {
+            alert('ok');
+        }
+
+	</script>
+
+</ui:composition>
+

@@ -1,0 +1,714 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+
+	<!-- 	<ui:define name="content"> -->
+	<p:dialog
+		header="Topo: #{drawTopoStatusExecController.selectedFlowRunAction.flowRunName}"
+		widgetVar="showTopo" width="99%" styleClass="FlowRunDlg"
+		style="top:20px; bottom:5px;overflow:hidden;" modal="true"
+		draggable="false" resizable="true" id="showTopo"
+		onShow="beforeOpenDialog();resizeDlgTopo()"
+		onHide="afterCloseDialog(); PF('scheduleUpdateTopo').stop();">
+		<p:outputPanel id="panelControll"
+			style="position: fixed;right: 50px; top: 80px;width: 230px;">
+
+			<div class="ui-g" style="margin: 5px;">
+				<div style="width: 30px; height: 30px;" class="ui-diagram-default"/>
+				<h:outputText value="#{msg['note.diagram.default']}"
+					style="margin-top: 5px; margin-left: 5px;" />
+			</div>
+			<div class="ui-g" style="margin: 5px;">
+				<div style="width: 30px; height: 30px;" class="ui-diagram-rollback-default"/>
+				<h:outputText value="#{msg['note.diagram.rollback.default']}"
+					style="margin-top: 5px; margin-left: 5px;" />
+			</div>
+			<p:separator></p:separator>
+			<div class="ui-g" style="margin: 5px;">
+				<div style="width: 30px; height: 30px;" class="ui-diagram-running" />
+				<h:outputText value="#{msg['note.diagram.running']}"
+					style="margin-top: 5px; margin-left: 5px;" />
+			</div>
+			<div class="ui-g" style="margin: 5px;">
+				<div style="width: 30px; height: 30px;" class="ui-diagram-rollback-running"/>
+				<h:outputText value="#{msg['note.diagramm.rollback.running']}"
+					style="margin-top: 5px; margin-left: 5px;" />
+			</div>
+
+			<p:separator></p:separator>
+			<div class="ui-g" style="margin: 5px;">
+				<div style="width: 30px; height: 30px;" class="ui-diagram-success"/>
+				<h:outputText value="#{msg['note.diagram.success']}"
+					style="margin-top: 5px; margin-left: 5px;" />
+			</div>
+
+			<div class="ui-g" style="margin: 5px;">
+				<div style="width: 30px; height: 30px;" class="ui-diagram-rollback-success"/>
+				<h:outputText value="#{msg['note.diagram.rollback.success']}"
+					style="margin-top: 5px; margin-left: 5px;" />
+			</div>
+
+			<p:separator></p:separator>
+
+			<div class="ui-g" style="margin: 5px;">
+				<div style="width: 30px; height: 30px;" class="ui-diagram-fail"/>
+				<h:outputText value="#{msg['note.diagram.fail']}"
+					style="margin-top: 5px; margin-left: 5px;" />
+			</div>
+
+			<div class="ui-g" style="margin: 5px;">
+				<div style="width: 30px; height: 30px;" class="ui-diagram-rollback-fail"/>
+				<h:outputText value="#{msg['note.diagram.rollback.fail']}"
+					style="margin-top: 5px; margin-left: 5px;" />
+			</div>
+
+		</p:outputPanel>
+
+		<h:form id="topoForm" enctype="multipart/form-data">
+			<p:commandButton
+				disabled="#{(drawTopoStatusExecController.selectedFlowRunAction.status != 3 
+                                         and drawTopoStatusExecController.selectedFlowRunAction.status != 4
+                                         and drawTopoStatusExecController.selectedFlowRunAction.status != 6)
+                                         or drawTopoStatusExecController.selectedFlowRunAction.logFilePath == null}"
+				style="color: white; " icon="fa fa-download" ajax="false"
+				id="downloadLog" title="#{msg['button.downoad.log']}">
+				<p:fileDownload
+					value="#{drawTopoStatusExecController.onExportLog()}" />
+			</p:commandButton>
+
+			<p:commandButton
+					disabled="#{(drawTopoStatusExecController.selectedFlowRunAction.status != 3
+                                         and drawTopoStatusExecController.selectedFlowRunAction.status != 4
+                                         and drawTopoStatusExecController.selectedFlowRunAction.status != 6)
+                                         or drawTopoStatusExecController.selectedFlowRunAction.logFilePath == null}"
+					style="color: white; " icon="fa fa-file-excel-o" ajax="false" styleClass="GreenButton"
+					id="downloadResult" title="#{msg['button.downoad.result']}" actionListener="#{drawTopoStatusExecController.onExportResult()}">
+				<!--<p:fileDownload-->
+						<!--value="#{drawTopoStatusExecController.onExportResult()}" />-->
+			</p:commandButton>
+
+			<p:commandButton
+				disabled="#{drawTopoStatusExecController.selectedFlowRunAction.status != 2}"
+				style="color: white; " icon="fa fa-stop" id="stopDT" styleClass="ButtonRed"
+				title="#{msg['button.stop.dt']}" update="formAccountNode"
+				oncomplete="PF('dlgConfirmStopDT').show();">
+			</p:commandButton>
+
+			<c:if test="#{drawTopoStatusExecController.reboot == true }">
+				<p:button target="_blank" title="#{msg['common.view']}" icon="fa fa-eye White" href="/action/execute?action=#{drawTopoStatusExecController.selectedFlowRunAction.serviceActionId}" />
+			</c:if>
+
+			<!--20180626_hoangnd_them_button_thuc_hien_rollback_start-->
+			<p:commandButton
+					disabled="#{(drawTopoStatusExecController.selectedFlowRunAction.status != 3
+								and drawTopoStatusExecController.selectedFlowRunAction.status != 4
+								and drawTopoStatusExecController.selectedFlowRunAction.status != 6
+								and drawTopoStatusExecController.selectedFlowRunAction.status != 10)
+								or (drawTopoStatusExecController.selectedFlowRunAction.crNumber != null
+								and drawTopoStatusExecController.selectedFlowRunAction.crNumber != 'CR_DEFAULT'
+								and drawTopoStatusExecController.selectedFlowRunAction.crNumber != 'CR_AUTO'
+								and drawTopoStatusExecController.selectedFlowRunAction.crStatus != null
+								and drawTopoStatusExecController.selectedFlowRunAction.crStatus != 6
+								and drawTopoStatusExecController.selectedFlowRunAction.status != 13)}"
+					onclick="PF('block').show()" oncomplete="PF('block').hide()"
+					style="color: white; " icon="fa fa-refresh" id="rollback" styleClass="ButtonRed"
+					title="#{msg['label.rollback.action']}" update="formAccountNode"
+					actionListener="#{drawTopoStatusExecController.onClickRollback()}">
+			</p:commandButton>
+			<!--20180626_hoangnd_them_button_thuc_hien_rollback_end-->
+
+			<p:growl id="mainMessage" showDetail="true" showSummary="false" />
+
+			<p:diagram value="#{drawTopoStatusExecController.topoDiagram}"
+				style="height:500px; " converter="actionFlowConverter"
+				styleClass="ui-widget-content" var="actionData"
+				id="topoFlowRunDiagram">
+				<f:facet name="element">
+					<div class="Container100">
+						<div class="Container5 signer">
+							<i style="margin-left: -10px; margin-top: -10px"
+								class="fa fa-spinner fa-pulse fa-2x fa-fw Aqua"></i>
+						</div>
+						<div class="Container95">
+							<p:commandLink id="cmdLinkActionId"
+								disabled="#{drawTopoStatusExecController.showDiagramOnly}"
+								title="#{drawTopoStatusExecController.showDiagramOnly?'':msg['tip.action.diagram']}"
+								onmousedown="onRightClickDiagram([{name:'action_of_flow_id', value:'#{actionData.stepNum}'}])"
+								ondblclick="onClickDiagram([{name:'action_of_flow_id', value:'#{actionData.stepNum}'}])">
+								<p:outputPanel
+									style="width: 100%;height: calc(4em - 10px);color: #ffffff;">
+									<h:outputText
+									value="#{actionData.action.name}"
+										title="#{drawTopoStatusExecController.showDiagramOnly == 'true' ? '' : msg['title.diagram']}"></h:outputText>
+								</p:outputPanel>
+							</p:commandLink>
+						</div>
+
+					</div>
+					<!-- 20180517_thenv_start -->
+					<script type="text/javascript">
+                        $(document).ready(function() {
+                            var iDiv = document.createElement('div');
+                            iDiv.innerHTML  = '\u00A0';
+                            iDiv.style = 'position: absolute;left: #{drawTopoStatusExecController.x_max}em;';
+                            document.getElementById('topoForm:topoFlowRunDiagram').appendChild(iDiv);
+                        });
+					</script>
+					<!-- 20180517_thenv_end -->
+				</f:facet>
+			</p:diagram>
+
+			<!--20180625_hoangnd_them_button_thuc_hien_chay_action_start-->
+			<p:outputPanel
+					rendered="#{drawTopoStatusExecController.showDiagramOnly==false}">
+				<p:contextMenu for="cmdLinkActionId" id="contextMenuRunManual"
+							   widgetVar="contextMenuRunManual">
+					<p:menuitem value="#{msg['label.diagram.run.manual']}"
+								update="topoForm:mainMessage, formAccountNode"
+								icon="fa fa-caret-right" oncomplete="PF('loadingDialog').hide();"
+								onstart="PF('loadingDialog').show();"
+								actionListener="#{drawTopoStatusExecController.prepareStartManual}" />
+				</p:contextMenu>
+			</p:outputPanel>
+			<!--20180625_hoangnd_them_button_thuc_hien_chay_action_end-->
+
+			<p:remoteCommand name="onClickDiagram"
+				oncomplete="PF('loadingDialog').hide();"
+				update="formShowLog, topoForm:mainMessage"
+				onstart="PF('loadingDialog').show();"
+				actionListener="#{drawTopoStatusExecController.onClickDiagram}" />
+
+			<p:remoteCommand name="onRightClickDiagram"
+				update="formShowLog, formAccountNode, topoForm:mainMessage"
+				actionListener="#{drawTopoStatusExecController.onRightClickDiagram}" />
+
+			<p:poll interval="10" id="scheduleUpdateTopo"
+					widgetVar="scheduleUpdateTopo"
+					update="topoForm:topoFlowRunDiagram, topoForm:mainMessage, topoForm:downloadLog, topoForm:stopDT, topoForm:rollback, topoForm:downloadResult"
+					oncomplete="scrollDiagram(xhr, status, args)"
+					listener="#{drawTopoStatusExecController.updateStatusAction}"
+					autoStart="false" />
+
+		</h:form>
+	</p:dialog>
+
+	<h:form id="confirmStopDlg">
+		<p:confirmDialog id="dlgConfirmStopDT" widgetVar="dlgConfirmStopDT"
+			modal="true" width="50%" style="top: 100px;"
+			message="#{msg['label.confirm.stop.dt']} ">
+			<h:outputText
+				value="#{drawTopoStatusExecController.selectedFlowRunAction.flowRunName}" />
+			<div
+				style="text-align: center; margin-left: auto; margin-right: auto; display: block">
+				<p:commandButton
+					actionListener="#{drawTopoStatusExecController.stopFlowRunAction()}"
+					disabled="#{!sessionUtil.execute}"
+					onstart="PF('loadingDialog').show()"
+					oncomplete="PF('loadingDialog').hide(), PF('dlgConfirmStopDT').hide()"
+					value="#{msg['button.confirm']}" update="topoForm:mainMessage " />
+				<p:commandButton value="#{msg['button.cancel']}"
+					onclick="PF('dlgAcountInfo').hide()" />
+			</div>
+		</p:confirmDialog>
+	</h:form>
+
+	<h:form id="formAccountNode">
+		<p:dialog id="dlgAcountInfo" widgetVar="dlgAcountInfo" modal="true"
+			width="50%" style="top: 100px;"
+			header="#{msg['label.form.input.accountinfo']} 
+					#{drawTopoStatusExecController.selectedFlowRunAction.flowTemplates.flowTemplateName}">
+
+			<p:outputPanel
+				rendered="#{drawTopoStatusExecController.actionOfFlowId != null 
+					and drawTopoStatusExecController.actionOfFlowId gt 0}"
+				class="ui-g" style="margin: 5px;">
+				<p:selectOneMenu value="#{drawTopoStatusExecController.modeRun}"
+					title="#{msg['title.run.type']}" style="width: 100%" id="runType">
+					<f:selectItem itemValue="2"
+						itemLabel="#{msg['title.run.type.manual.2']}" />
+					<f:selectItem itemValue="1"
+						itemLabel="#{msg['title.run.type.manual.1']}" />
+				</p:selectOneMenu>
+			</p:outputPanel>
+
+			<p:outputPanel
+				rendered="#{drawTopoStatusExecController.actionOfFlowId == null 
+					or drawTopoStatusExecController.actionOfFlowId le 0}"
+				class="ui-g" style="margin: 5px;">
+				<p:selectOneMenu value="#{drawTopoStatusExecController.modeRun}"
+					title="#{msg['title.run.type']}" style="width: 100%" id="runType1">
+					<f:selectItem itemValue="1"
+						itemLabel="#{msg['title.run.type.auto.1']}" />
+					<f:selectItem itemValue="2"
+						itemLabel="#{msg['title.run.type.auto.2']}" />
+				</p:selectOneMenu>
+			</p:outputPanel>
+
+			<div
+				style="text-align: center; margin-left: auto; margin-right: auto; display: block">
+				<p:commandButton
+					actionListener="#{drawTopoStatusExecController.onSaveAccountNode}"
+					disabled="#{!sessionUtil.execute}"
+					onstart="PF('loadingDialog').show()"
+					oncomplete="PF('loadingDialog').hide()"
+					value="#{msg['button.confirm']}"
+					update="topoForm:mainMessage formShowLog" />
+				<p:commandButton value="#{msg['button.cancel']}"
+					onclick="PF('dlgAcountInfo').hide()" />
+			</div>
+		</p:dialog>
+	</h:form>
+
+	<h:form id="formShowLog">
+		<p:dialog id="dlgShowLogAction" widgetVar="dlgShowLogAction"
+			modal="true" resizable="false"
+			header="#{msg['label.header.action.logdetail']} 
+						#{drawTopoStatusExecController.selectedActionFlow.action.name}"
+			width="80%" style="top: 50px; bottom: 30px; overflow: auto">
+			<p:ajax event="open" update="panelShowLogAction"></p:ajax>
+			<h:panelGroup id="panelShowLogAction">
+				<ui:remove>
+					<p:commandButton value="Close" onclick="PF('scheduleUpdateLogOl').stop()"
+						oncomplete="PF('dlgShowLogAction').hide()"/>
+				</ui:remove>
+				<br />
+				<p:tabView style="height:100%" id="tabShowLogAction"
+					activeIndex="#{drawTopoStatusExecController.activeIndex}">
+					<p:ajax event="tabChange" update="@parent"
+						listener="#{drawTopoStatusExecController.onChangeTabViewLog}" />
+					<p:tab title="#{msg['label.run.type.auto']}" id="tabAuto">
+						<p:commandButton value="#{msg['button.label.refresh']}"
+							update="tabResultAuto"
+							actionListener="#{drawTopoStatusExecController.showLogManual()}"
+							onstart="PF('loadingDialog').show()"
+							oncomplete="PF('loadingDialog').hide()" style="padding: 3px;" />
+						<p:tabView id="tabResultAuto"
+							rendered="#{drawTopoStatusExecController.mapLogCommand.size() > 0}">
+							<c:forEach items="#{drawTopoStatusExecController.mapLogCommand}"
+								var="actionLog">
+								<p:ajax event="tabChange" update="@parent"></p:ajax>
+								<p:tab title="#{actionLog.key}">
+									<p:commandButton value="Log online" />
+									<br />
+									<p:dataTable value="#{actionLog.value}" rowIndexVar="idx"
+										var="cmdLog" editable="true" lazy="false"
+										paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+										currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+										paginatorPosition="bottom" paginator="true" rows="10"
+										rowsPerPageTemplate="5,10,15">
+
+										<p:column headerText="#{msg['datatable.header.stt']}"
+											style="width : 5%; text-align: center">
+											<h:outputText value="#{idx + 1}" />
+										</p:column>
+
+										<p:column headerText="#{msg['label.cmd']}" style="width: 20%">
+											<h:outputText value="#{cmdLog.cmdRun}"
+												title="#{cmdLog.cmdRun}" />
+										</p:column>
+
+										<p:column width="10%" style="text-align: center"
+											headerText="#{msg['label.check.command.resultFinal']}">
+											<h:outputText
+												value="#{cmdLog.resultFinal == 1 ? 'OK' : 'NOK'}" />
+										</p:column>
+										<p:column width="8%" headerText="#{msg['label.operator']}">
+											<h:outputText value="#{cmdLog.commandDetail.operator}" />
+										</p:column>
+										<p:column width="10%" headerText="#{msg['label.standardValue']}">
+											<h:outputText value="#{cmdLog.commandDetail.standardValue}" title="#{cmdLog.commandDetail.standardValue}" />
+										</p:column>
+
+										<p:column headerText="#{msg['label.check.command.result']}">
+											<h:outputText value="#{cmdLog.result}" />
+										</p:column>
+
+										<p:column style="width: 15%"
+											headerText="#{msg['label.finishTime']}">
+											<!--20180704_hoangnd_thay_doi_gio_theo_time_zone_start-->
+											<h:outputText value="#{sessionUtil.toTimeZoneDate(cmdLog.finishTime)}">
+												<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+											</h:outputText>
+											<!--20180704_hoangnd_thay_doi_gio_theo_time_zone_end-->
+										</p:column>
+
+										<p:column
+											headerText="#{msg['label.check.command.resultDetail']}"
+											style="width: 10%; text-align: center">
+											<p:commandButton icon="fa fa-fw fa-edit" process="@this"
+												update="formLogDetail"
+												oncomplete="PF('dlgCmdLogDetail').show()"
+												actionListener="#{drawTopoStatusExecController.prepareShowCmdLog(cmdLog)}">
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+								</p:tab>
+							</c:forEach>
+						</p:tabView>
+						<h:outputText
+							rendered="#{drawTopoStatusExecController.mapLogCommand.size() == 0}"
+							value="#{msg['datatable.empty']}"
+							style="font-weight: bold; text-align: center;" />
+					</p:tab>
+					<ui:remove>
+						<p:tab title="Online" id="tabOnline">
+							<p:tabView id="tabResultOnline"
+								rendered="#{drawTopoStatusExecController.mapLogCommandOnline.size() > 0}">
+								<c:forEach
+									items="#{drawTopoStatusExecController.mapLogCommandOnline}"
+									var="actionLog">
+									<p:ajax event="tabChange" update="@parent"></p:ajax>
+									<p:tab title="#{actionLog.key}">
+										<p:inputTextarea style="margin-top: 10px; width: 98%" rows="20"
+											value="#{actionLog.value}" autoResize="true" readonly="true"
+											onmouseover="focusToEnd(this);"/>
+									</p:tab>
+								</c:forEach>
+							</p:tabView>
+						</p:tab>
+					</ui:remove>
+				</p:tabView>
+			</h:panelGroup>
+		</p:dialog>
+
+		<p:poll interval="10" id="scheduleUpdateLogOl"
+			widgetVar="scheduleUpdateLogOl"
+			update="formShowLog:tabShowLogAction"
+			listener="#{drawTopoStatusExecController.showLogActionAuto(drawTopoStatusExecController.actionOfFlowId, true)}"
+			autoStart="false" />
+
+	</h:form>
+
+	<h:form id="formLogOnline">
+		<p:dialog width="60%" modal="true" height="400px"
+			widgetVar="dlgCmdLogOnline" id="dlgCmdLogOnline" resizable="false"
+			header="#{msg['label.check.command.resultDetail']}: #{drawTopoStatusExecController.selectedLogCommand.cmdRun}">
+			<p:inputTextarea style="margin-top: 10px; width: 98%" rows="20"
+				value="#{drawTopoStatusExecController.selectedLogCommand.resultDetail}"
+				autoResize="true" readonly="true" />
+		</p:dialog>
+	</h:form>
+
+	<h:form id="formLogDetail">
+
+		<p:dialog width="60%" modal="true" height="400px"
+			widgetVar="dlgCmdLogDetail" id="dlgCmdLogDetail" resizable="false"
+			header="#{msg['label.check.command.resultDetail']}: #{drawTopoStatusExecController.selectedLogCommand.cmdRun}">
+			<p:inputTextarea style="margin-top: 10px; width: 98%" rows="20"
+				value="#{drawTopoStatusExecController.selectedLogCommand.resultDetail}"
+				autoResize="true" readonly="true" />
+		</p:dialog>
+	</h:form>
+
+	<h:form id="formErrorActionScreen">
+		<p:dialog id="dlgErrorActionScreen" widgetVar="dlgErrorActionScreen" modal="true"
+				  width="50%" style="top: 100px;"
+				  header="#{msg['error.reboot.wait']}">
+			<div
+					style="text-align: center; margin-left: auto; margin-right: auto; display: block">
+				<p:button target="_blank" value="#{msg['button.confirm']}" title="#{msg['common.view']}" icon="fa fa-eye White" href="/action/execute?action=#{drawTopoStatusExecController.selectedFlowRunAction.serviceActionId}" />
+				<p:commandButton value="#{msg['button.cancel']}"
+								 onclick="PF('dlgErrorActionScreen').hide()" />
+			</div>
+		</p:dialog>
+	</h:form>
+
+	<!--20180628_hoangnd__start-->
+	<p:dialog modal="true" class="transparent-dialog" showHeader="false"
+			  widgetVar="block" draggable="false" closable="false" resizable="false" >
+    <span class="fa-stack fa-2x" style="width: 5em; height: 5em; line-height: 5em;" >
+        <i class="fa fa-fire fa-stack-1x" style="bottom: 40px; color: #FAFAFA; font-size: 0.8em"  ></i>
+        <i class="fa fa-spinner fa-pulse fa-3x fa-fw fa-stack-2x" style="color: #00AAFF; font-size: 3em;"></i>
+        <i class="fa fa-coffee fa-stack-1x" style="color: #975524; bottom: 20px;font-size: 1.2em"></i>
+    </span>
+	</p:dialog>
+	<!--20180628_hoangnd__end-->
+	<p:confirmDialog global="true" header="#{msg['view.dialog.header.confirm.run.dt.auto']}"
+					 id="dlgRunAutoConfirm"
+					 showEffect="face" hideEffect="scale"
+					 widgetVar="dlgRunAutoConfirm">
+		<f:facet name="message">
+			<h:outputText value="#{msg['confirm.run.dt.auto']}"/>
+			<p:spacer width="100%" height="1px"></p:spacer>
+		</f:facet>
+
+		<p:commandButton value="Yes" update="topoForm:mainMessage" process="@this"
+						 oncomplete="PF('dlgRunAutoConfirm').hide();PF('loadingDialog').hide()"
+						 title="#{msg['view.dialog.header.confirm.run.dt.auto']}"
+						 onstart="PF('loadingDialog').show()"
+						 actionListener="#{drawTopoStatusExecController.confirmRunDtAuto()}"
+						 styleClass="ui-confirmdialog-yes RedButton"
+						 icon="ui-icon-check fa fa-check Fs14 White"/>
+		<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no AquaButton"
+						 onclick="PF('dlgRunAutoConfirm').hide()"
+						 icon="ui-icon-close fa fa-close Fs14 White"/>
+	</p:confirmDialog>
+
+	<script type="text/javascript">
+		$(document).ready(function() {
+			var currentTabID = "tab-1";
+			var currentIconID = "10";
+			ChangeTab(currentTabID);
+		});
+
+		function scrollDiagram(xhr, status, args) {
+
+			//alert(args1.idElementToScroll);
+			try {
+				var indexScroll = args.idElementToScroll;
+				if (indexScroll != null) {
+					var diagram = $("#topoForm\\:topoFlowRunDiagram-"
+							+ indexScroll);
+					if (diagram != null) {
+						var top = diagram.offset().top
+								+ $(".ui-diagram-element").css('height');
+						$(".ui-diagram-element").css('height');
+						$("#topoForm\\:topoFlowRunDiagram").scrollTop(top);
+					}
+				}
+			} catch (e) {
+
+			}
+		};
+		function resizeDlgTopo() {
+			var h = $('#topoForm\\:topoFlowRunDiagram').css('height')
+			var a = window.innerHeight;
+			//$('#showTopo').css('height',h);
+			$('#topoForm\\:topoFlowRunDiagram').css('height', a - 95 - 20);
+		}
+		
+		function focusToEnd(txt) {
+			if (txt.createTextRange) {
+				//IE  
+				var FieldRange = txt.createTextRange();
+				FieldRange.moveStart('character', txt.value.length);
+				FieldRange.collapse();
+				FieldRange.select();
+			} else {
+				//Firefox and Opera  
+				txt.focus();
+				var length = txt.value.length;
+				txt.setSelectionRange(length, length);
+			}
+		}
+		
+	</script>
+
+	<style type="text/css">
+.ui-diagram-element {
+	width: 20em;
+	height: 4em;
+	line-height: 1.8em;
+	text-align: center;
+	box-shadow: 0 0 0 rgba(0, 0, 0, 0.8);
+	/*border-radius: 4px;*/
+	/*border: 1px solid transparent;*/
+	background-color: #98AFC7;
+	color: #ffffff;
+}
+
+.ui-diagram-btn {
+	width: 20em;
+	height: 4em;
+	line-height: 1.8em;
+	color: #ffffff;
+}
+
+.ui-diagram-start {
+	/*background-color: #778899;*/
+	background: #00aadf;
+	background: -moz-linear-gradient(240deg, #00aadf 0%, #0071bc 100%);
+	background: -webkit-linear-gradient(240deg, #00aadf 0%, #0071bc 100%);
+	background: linear-gradient(240deg, #00aadf 0%, #0071bc 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00aadf', endColorstr='#0071bc',GradientType=1 );
+	color: #ffffff;
+}
+
+.ui-diagram-start a {
+	color: black !important;
+	text-decoration: none;
+}
+
+.ui-diagram-end {
+	/*background-color: #778899;*/
+	background: #00aadf;
+	background: -moz-linear-gradient(240deg, #00aadf 0%, #0071bc 100%);
+	background: -webkit-linear-gradient(240deg, #00aadf 0%, #0071bc 100%);
+	background: linear-gradient(240deg, #00aadf 0%, #0071bc 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00aadf', endColorstr='#0071bc',GradientType=1 );
+	color: #ffffff;
+}
+
+.ui-diagram-end a {
+	color: black !important;
+	text-decoration: none;
+}
+
+.ui-diagram-default {
+	/*background-color: #C0C0C0;*/
+	background: #95afc0;
+	background: -moz-linear-gradient(240deg, #95afc0 0%, #7ed6df 100%);
+	background: -webkit-linear-gradient(240deg, #95afc0 0%, #7ed6df 100%);
+	background: linear-gradient(240deg, #95afc0 0%, #7ed6df 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#95afc0', endColorstr='#7ed6df',GradientType=1 );
+	color: #ffffff;
+}
+
+.ui-diagram-default a {
+	color: black !important;
+	text-decoration: none;
+}
+
+.ui-diagram-success {
+	/*background-color: #008000;*/
+	background: #00aa5e;
+	background: -moz-linear-gradient(240deg, #00aa5e 0%, #00a78f 100%);
+	background: -webkit-linear-gradient(240deg, #00aa5e 0%, #00a78f 100%);
+	background: linear-gradient(240deg, #00aa5e 0%, #00a78f 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00aa5e', endColorstr='#00a78f',GradientType=1 );
+	color: #ffffff;
+}
+
+.ui-diagram-success a {
+	color: black !important;
+	text-decoration: none;
+}
+
+.ui-diagram-running {
+	/*background-color: #ADFF2F;*/
+	background: #badc58;
+	background: -moz-linear-gradient(240deg, #badc58 0%, #20bf6b  100%);
+	background: -webkit-linear-gradient(240deg, #badc58 0%, #20bf6b  100%);
+	background: linear-gradient(240deg, #badc58 0%, #20bf6b  100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#badc58', endColorstr='#20bf6b',GradientType=1 );
+	color: #ffffff;
+}
+
+.ui-diagram-running a {
+	color: black !important;
+	text-decoration: none;
+}
+
+.ui-diagram-fail {
+	/*background-color: #C34A2C;*/
+	background: #ff7295;
+	background: -moz-linear-gradient(240deg, #ff7295 0%, #fe875d 100%);
+	background: -webkit-linear-gradient(240deg, #ff7295 0%, #fe875d 100%);
+	background: linear-gradient(240deg, #ff7295 0%, #fe875d 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff7295', endColorstr='#fe875d',GradientType=1 );
+	color: #ffffff;
+}
+
+.ui-diagram-fail a {
+	color: black !important;
+	text-decoration: none;
+}
+
+.ui-diagram-rollback-default {
+	/*background-color: #b0719c;*/
+	background: #ff9ff3;
+	background: -moz-linear-gradient(240deg, #ff9ff3 0%, #f368e0 100%);
+	background: -webkit-linear-gradient(240deg, #ff9ff3 0%, #f368e0 100%);
+	background: linear-gradient(240deg, #ff9ff3 0%, #f368e0 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff9ff3', endColorstr='#f368e0',GradientType=1 );
+	color: #ffffff;
+}
+
+.ui-diagram-rollback-default a {
+	color: black !important;
+	text-decoration: none;
+}
+
+.ui-diagram-rollback-success {
+	/*background-color: #40E0D0;*/
+	background: #48dbfe;
+	background: -moz-linear-gradient(240deg, #48dbfe 0%, #0adbe3 100%);
+	background: -webkit-linear-gradient(240deg, #48dbfe 0%, #0adbe3 100%);
+	background: linear-gradient(240deg, #48dbfe 0%, #0adbe3 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#48dbfe', endColorstr='#0adbe3',GradientType=1 );
+	color: #ffffff;
+}
+
+.ui-diagram-rollback-success a {
+	color: black !important;
+	text-decoration: none;
+}
+
+.ui-diagram-rollback-running {
+	/*background-color: #FFD700;*/
+	background: #ffc321;
+	background: -moz-linear-gradient(240deg, #ffc321 0%, #f79f1f 100%);
+	background: -webkit-linear-gradient(240deg, #ffc321 0%, #f79f1f 100%);
+	background: linear-gradient(240deg, #ffc321 0%, #f79f1f 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffc321', endColorstr='#f79f1f',GradientType=1 );
+	color: #ffffff;
+}
+
+.ui-diagram-rollback-running a {
+	color: black !important;
+	text-decoration: none;
+}
+
+.ui-diagram-rollback-fail {
+	/*background-color: #FF00FF;*/
+	background: #8854d0;
+	background: -moz-linear-gradient(240deg, #8854d0 0%, #f368e0 100%);
+	background: -webkit-linear-gradient(240deg, #8854d0 0%, #f368e0 100%);
+	background: linear-gradient(240deg, #8854d0 0%, #f368e0 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#8854d0', endColorstr='#f368e0',GradientType=1 );
+	color: #ffffff;
+}
+
+.ui-diagram-rollback-fail a {
+	color: black !important;
+	text-decoration: none;
+}
+
+.flow-label-ok {
+	font-size: 14px;
+	font-weight: bold;
+	color: #127C12;
+}
+
+.flow-label-nok {
+	font-size: 14px;
+	font-weight: bold;
+	color: #816A51;
+}
+
+.signer {
+	display: none;
+}
+
+.ui-diagram-running .signer {
+	display: inline;
+}
+
+.ui-diagram-rollback-running .signer {
+	display: inline;
+}
+
+#topoForm\:topoFlowRunDiagram { //
+	height: calc(100% -    100px) !important;
+}
+
+.ui-diagram-element span {
+	text-decoration: none;
+	opacity: 1 !important;
+}
+
+#showTopo .ui-dialog-titlebar {
+	background: #00aa5e;
+	background: -moz-linear-gradient(240deg, #00aa5e 0%, #00a78f 100%);
+	background: -webkit-linear-gradient(240deg, #00aa5e 0%, #00a78f 100%);
+	background: linear-gradient(240deg, #00aa5e 0%, #00a78f 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00aa5e', endColorstr='#00a78f',GradientType=1 );
+}
+</style>
+
+	<!--</ui:define>-->
+</ui:composition>

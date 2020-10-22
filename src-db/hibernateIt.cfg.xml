@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+
+    <session-factory>
+        <property name="hibernate.bytecode.use_reflection_optimizer">false</property>
+        <property name="hibernate.c3p0.idle_test_period">1800</property>
+        <property name="hibernate.c3p0.max_size">200</property>
+        <property name="hibernate.c3p0.max_statements">100</property>
+        <property name="hibernate.c3p0.min_size">2</property>
+        <property name="hibernate.c3p0.maxIdleTime">200</property>
+        <property name="hibernate.c3p0.timeout">30000</property>
+        <property name="hibernate.cache.provider_class">org.hibernate.cache.NoCacheProvider</property>
+        <property name="hibernate.connection.CharSet">utf8</property>
+        <property name="hibernate.connection.characterEncoding">utf8</property>
+        <property name="hibernat    e.connection.driver_class">oracle.jdbc.driver.OracleDriver</property>
+        <property name="connection.provider_class">com.viettel.util.EncryptedPasswordC3P0ConnectionProvider</property>
+
+        <!--<property name="hibernate.connection.password">BUuGfvNXYACc0oDi/5pxZg==</property>-->
+        <!--<property name="hibernate.connection.url">jdbc:oracle:thin:@(DESCRIPTION_LIST= (LOAD_BALANCE=off) (FAILOVER=on) (DESCRIPTION=  (LOAD_BALANCE=on) (ADDRESS=(PROTOCOL=tcp)(HOST=10.60.33.47)(PORT=1521)) (ADDRESS=(PROTOCOL=tcp)(HOST=10.60.33.48)(PORT=1521)) (CONNECT_DATA=(SERVER=SHARED)(SERVICE_NAME=vinamilkdg)) ) (DESCRIPTION= (LOAD_BALANCE=on) (ADDRESS=(PROTOCOL=tcp)(HOST=10.240.188.39)(PORT=1521)) (ADDRESS=(PROTOCOL=tcp)(HOST=10.240.188.41)(PORT=1521)) (CONNECT_DATA=(SERVER=SHARED)(SERVICE_NAME=vinamilkdg)) ))</property>-->
+        <!--<property name="hibernate.connection.username">aam</property>-->
+        <!--<property name="hibernate.default_schema">aam</property>-->
+
+        <!--<property name="hibernate.connection.password">BUuGfvNXYACc0oDi/5pxZg==</property>-->
+        <!--<property name="hibernate.connection.url">jdbc:oracle:thin:@(DESCRIPTION=(LOAD_BALANCE=yes)(ADDRESS=(PROTOCOL=TCP)(HOST= 10.60.33.47)(PORT=1521))(ADDRESS= (PROTOCOL=TCP) (HOST=10.60.33.48) (PORT=1521))(CONNECT_DATA=(FAILOVER_MODE=  (TYPE=select)  (METHOD=basic)  (RETRIES=180)  (DELAY=5))(SERVICE_NAME=vinamilk)))</property>-->
+        <!--<property name="hibernate.connection.username">aam</property>-->
+        <!--<property name="hibernate.default_schema">AAM</property>-->
+
+        <property name="hibernate.connection.password">7wuYTnEDyqdXXkIMjkYtbw==</property>
+        <property name="hibernate.connection.url">jdbc:oracle:thin:@(DESCRIPTION=(FAILOVER=on)(LOAD_BALANCE=yes)(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=10.60.94.69)(PORT=1521)))(CONNECT_DATA=(FAILOVER_MODE=(TYPE=select)(METHOD=basic)(RETRIES=180)(DELAY=5))(SID=aam)))</property>
+        <property name="hibernate.connection.username">AAM</property>
+        <property name="hibernate.default_schema">AAM</property>
+
+        <property name="hibernate.search.autoregister_listeners">false</property>
+
+        <property name="hibernate.dialect">org.hibernate.dialect.OracleDialect</property>
+        <property name="hibernate.current_session_context_class">thread</property>
+        <property name="hibernate.show_sql">false</property>
+        <property name="hibernate.format_sql">false</property>
+        <property name="hibernate.enable_lazy_load_no_trans">true</property>
+
+        <mapping class="com.viettel.it.model.Action"/>
+        <mapping class="com.viettel.it.model.ActionCommand"/>
+        <mapping class="com.viettel.it.model.ActionDetail"/>
+        <mapping class="com.viettel.it.model.ActionOfFlow"/>
+        <mapping class="com.viettel.it.model.CommandDetail"/>
+        <mapping class="com.viettel.it.model.CommandTelnetParser"/>
+        <mapping class="com.viettel.it.model.FlowRunAction"/>
+        <mapping class="com.viettel.it.model.FlowTemplates"/>
+        <mapping class="com.viettel.it.model.Node"/>
+        <mapping class="com.viettel.it.model.NodeRun"/>
+        <mapping class="com.viettel.it.model.NodeType"/>
+        <mapping class="com.viettel.it.model.ParamGroup"/>
+        <mapping class="com.viettel.it.model.ParamInput"/>
+        <mapping class="com.viettel.it.model.ParamValue"/>
+        <mapping class="com.viettel.it.model.Vendor"/>
+        <mapping class="com.viettel.it.model.NodeRunGroupAction"/>
+        <mapping class="com.viettel.it.model.Version"/>
+        <mapping class="com.viettel.it.model.ParamInOut"/>
+        <mapping class="com.viettel.it.model.FlowRunLog"/>
+        <mapping class="com.viettel.it.model.FlowRunLogAction"/>
+        <mapping class="com.viettel.it.model.FlowRunLogCommand"/>
+
+        <mapping class="com.viettel.it.model.ParamInOut"/>
+
+        <mapping class="com.viettel.it.model.ParamNodeVal"/>
+        <mapping class="com.viettel.it.model.RelationNode"/>
+
+        <mapping class="com.viettel.it.model.NodeActionOff"/>
+        <mapping class="com.viettel.it.model.ServiceTemplate"/>
+
+        <mapping class="com.viettel.it.model.Province"/>
+
+        <mapping class="com.viettel.it.model.PlanIpServiceOam"/>
+        <mapping class="com.viettel.it.model.PlanIpVirtualEthernet"/>
+        <mapping class="com.viettel.it.model.NodeAccount"/>
+        <mapping class="com.viettel.it.model.AccountGroupMop"/>
+        <mapping class="com.viettel.it.model.VDatabaseInfos"/>
+        <mapping class="com.viettel.it.model.ParamChecklistDatabase"/>
+        <mapping class="com.viettel.it.model.DbParamDatafile"/>
+        <mapping class="com.viettel.it.model.ParamExportDb"/>
+        <mapping class="com.viettel.it.model.ParamExportDumpSizeDb"/>
+        <mapping class="com.viettel.it.model.TotalCommandOfAction"/>
+
+        <mapping class="com.viettel.it.model.ItAction"/>
+        <mapping class="com.viettel.it.model.ItActionBusiness"/>
+        <mapping class="com.viettel.it.model.ItNode"/>
+        <mapping class="com.viettel.it.model.ItRoles"/>
+        <mapping class="com.viettel.it.model.ItBusinessGroup"/>
+        <mapping class="com.viettel.it.model.ItServices"/>
+        <mapping class="com.viettel.it.model.ItUserBusinessGroup"/>
+        <mapping class="com.viettel.it.model.ItUserRole"/>
+        <mapping class="com.viettel.it.model.ItUsers"/>
+        <mapping class="com.viettel.it.model.ItUserService"/>
+        <mapping class="com.viettel.it.model.ItUserAction"/>
+        <mapping class="com.viettel.it.model.ItNodeAction"/>
+        <mapping class="com.viettel.it.model.ItActionLog"/>
+        <mapping class="com.viettel.it.model.ItCommandLog"/>
+        <mapping class="com.viettel.it.model.ItActionAccount"/>
+
+        <mapping class="com.viettel.it.model.ServiceTemplateMapping"/>
+        <mapping class="com.viettel.it.model.TemplateGroup"/>
+        <mapping class="com.viettel.it.model.AutoConfigMopParams"/>
+        <mapping class="com.viettel.it.model.AutoConfigNodeTemplate"/>
+        <mapping class="com.viettel.it.model.CategoryDomain"/>
+        <mapping class="com.viettel.it.model.CategoryGroupDomain"/>
+        <mapping class="com.viettel.it.model.FlowTemplateMapAlarm"/>
+        <mapping class="com.viettel.it.model.CategoryConfigGetNode"/>
+        <!-- thenv_20180613_menu Danh sach nguoi dung - thi truong_start -->
+        <mapping class="com.viettel.it.model.MapUserCountryBO"/>
+        <mapping class="com.viettel.model.CatCountryBO"/>
+        <!-- thenv_20180613_menu Danh sach nguoi dung - thi truong_end -->
+        <!--20181606_tudn_start them ghi log-->
+        <mapping class="com.viettel.it.model.LogActionBO"/>
+        <!--20181606_tudn_end them ghi log-->
+
+        <!--20180813_tudn_start tao webservice cho thi truong-->
+        <mapping class="com.viettel.it.model.MapProcessCountry"/>
+        <!--20180813_tudn_start tao webservice cho thi truong-->
+
+        <!--20181119_tudn_start them danh sach lenh blacklist-->
+        <mapping class="com.viettel.it.model.CommandBlacklist"/>
+        <mapping class="com.viettel.it.model.CatConfig"/>
+        <!--20181119_tudn_end them danh sach lenh blacklist-->
+
+        <!--20190402_chuongtq start check param when create MOP-->
+        <mapping class="com.viettel.it.model.ParamCondition"/>
+        <mapping class="com.viettel.it.model.ProcedureGNOC"/>
+        <!--20190402_chuongtq end check param when create MOP-->
+    </session-factory>
+
+</hibernate-configuration>

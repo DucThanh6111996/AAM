@@ -1,0 +1,54 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions">
+
+    <p:dataTable var="obj"
+                 value="#{executeController.rollbackRestartObjects}"
+                 id="rollbackRestartObjects">
+
+        <p:column headerText="#{msg['information']}" style="width:30%">
+            <div style="white-space: pre">
+                <p:outputLabel rows="8" autoResize="false" style="width:100%"
+                               styleClass="unresizable" value="#{utils.exeDescription(obj)}" readonly="true"/>
+            </div>
+        </p:column>
+        <p:column headerText="#{msg['log.impaction']}" style="width:30%">
+            <!--20190219_hoangnd_fix bug view log impact khi chay rollback_start-->
+            <p:inputTextarea rows="8" autoResize="false" style="width:96%"
+                             id="logDetail" styleClass="unresizable"
+                             value="#{executeController.cutLog(obj)}" readonly="true"/>
+            <!--20190219_hoangnd_fix bug view log impact khi chay rollback_end-->
+        </p:column>
+
+        <p:column headerText="#{msg['time']}" style="width:10%; text-align: center">
+            <h:outputText value="#{sessionUtil.toTimeZoneDate(obj.beginDate)}" readonly="true">
+                <f:convertDateTime pattern="dd-MM HH:mm:ss"/>
+            </h:outputText>
+            <br/>
+            <h:outputText value="#{sessionUtil.toTimeZoneDate(obj.endDate)}" readonly="true">
+                <f:convertDateTime pattern="dd-MM HH:mm:ss"/>
+            </h:outputText>
+
+            <br/>
+            <p:commandLink id="fade" update=":execute:detailDlg" process="@this"
+                           style="font-style: italic;text-decoration:underline;color: blue;"
+                           value="#{msg['view.log']}"
+                           actionListener="#{executeController.exeLogDetail(obj)}"
+                           oncomplete="PF('dlg').show()"/>
+        </p:column>
+        <p:column headerText="#{msg['end.time']}" style="width:10%"
+                  rendered="false">
+            <h:outputText value="#{sessionUtil.toTimeZoneDate(obj.endDate)}" readonly="true">
+                <f:convertDateTime pattern="dd-MM-yyyy HH:mm:ss"/>
+            </h:outputText>
+        </p:column>
+        <p:column headerText="#{msg['common.status']}" style="text-align: center;width:10%">
+            <i class="#{iconUtils.statusIcon(obj.runStt)}"></i>
+        </p:column>
+    </p:dataTable>
+    <script type="text/javascript">
+    </script>
+</ui:composition>

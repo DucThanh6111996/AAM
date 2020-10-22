@@ -1,0 +1,62 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	>
+	<p:dialog header="" widgetVar="showNodeLayer" width="70%" 
+              style="top:40px; bottom:40px;overflow:hidden;"  modal="true" 
+              draggable="true" resizable="false" id="showNodeLayer"  onShow="resizeTable()"
+               >
+		<h:form style="">
+			<p:growl showDetail="true" showSummary="false"/>
+			<div class="ui-datatable" id="data-node-layer" style="width: 100%; overflow: auto;">
+			<table style="" role="grid">
+				<THEAD >
+					<tr role="row">
+						<th width="200px" >
+							<p:commandButton value="#{msg['button.save']}" icon="fa fa-save" styleClass="White"
+								update="@form" actionListener="#{nodeLayerController.saveNodeLayer}" />
+						</th>
+						<c:forEach items="#{nodeLayerController.nodeActionOffs}" var="nodeActionOff">
+							<th width="50px">
+								#{nodeActionOff.nodeType.typeName}#{nodeActionOff.isMaster==1?' - Master':nodeActionOff.isMaster==0?' - Backup':''}
+							</th>						
+						</c:forEach>
+					</tr>
+				</THEAD>
+				<TBODY>
+				
+				<c:forEach items="#{nodeLayerController.nodeLayers}" var="nodeLayers" >
+					<tr>
+						<td>#{nodeLayers.get(0).actionOfFlow.groupActionName}</td>
+						<c:forEach items="#{nodeLayers}" var="nodeLayer" >
+							<td style="text-align: center; ">
+								<p:inputSwitch style="width: 50px" value="#{nodeLayer.declare}" styleClass="SwitchNodeLayer" >
+								</p:inputSwitch>
+							</td>
+						</c:forEach>
+					</tr>	
+				</c:forEach>
+				</TBODY>
+			</table>
+			</div>
+			
+		</h:form>
+	</p:dialog>
+	<script type="text/javascript">
+		function resizeTable(){
+			var a = $('#showNodeLayer').width() - 30 ;
+			var b = $('#showNodeLayer').height() - 58;
+			$('#data-node-layer').css('width',a);
+			$('#data-node-layer').css('height',b);
+		}
+	</script>
+	<style type="text/css">
+		.SwitchNodeLayer .ui-inputswitch-off span{
+			color: red !important;
+		}
+	</style>
+</ui:composition>	

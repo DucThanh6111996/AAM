@@ -1,0 +1,322 @@
+<ui:composition 
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	template="/layout/olympos_db_server/template.xhtml">
+	
+	<ui:define name="content">
+		<h:form id="form">
+
+			<p:growl id="mainMessage" showDetail="true" showSummary="false" life="5000"/>
+
+			<p:dataTable var="obj" value="#{itHistoryController.lazyActionLog}"
+						 paginator="true" rows="25" filterEvent="keyup" rowKey="#{obj.id}"
+						 rowIndexVar="rowIndex" paginatorPosition="bottom" id="objectTable"
+						 widgetVar="objectTable" rowsPerPageTemplate="25, 50, 100"
+						 lazy="true" editable="false" emptyMessage="#{msg['common.data.not.found']}"
+						 scrollable="true" scrollWidth="100%">
+
+				<!--20180704_hoangnd_fix_bug_da_ngon_ngu_start-->
+				<p:column style="width: 3%; text-align: center;" headerText="#{msg['datatable.header.stt']}">
+					<h:outputText value="#{rowIndex+ 1}"/>
+				</p:column>
+				<!--20180704_hoangnd_fix_bug_da_ngon_ngu_end-->
+
+				<p:column id="userName" style="width: 20%; text-align: center;" filterBy="#{obj.action.name}"
+						  sortBy="#{obj.action.name}" headerText="#{msg['label.group.action']}">
+					<h:outputText value="#{obj.action.name}" rendered="#{obj.action != null}"/>
+					<h:outputText value="#{obj.description}" rendered="#{obj.description != null}"/>
+				</p:column>
+
+				<p:column style="width: 13%; text-align: center;"
+						  sortBy="#{obj.startTime}" filterBy="#{obj.startTime}"
+						  headerText="#{msg['common.start.time']}">
+					<!--20180705_hoangnd_fix_bug_timezone_start-->
+					<h:outputText value="#{sessionUtil.toTimeZoneDate(obj.startTime)}">
+						<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss"/>
+					</h:outputText>
+					<!--20180705_hoangnd_fix_bug_timezone_end-->
+				</p:column>
+
+				<p:column style="width: 13%; text-align: center;"
+						  filterBy="#{obj.endTime}"
+						  sortBy="#{obj.endTime}" headerText="#{msg['common.end.time']}">
+					<!--20180705_hoangnd_fix_bug_timezone_start-->
+					<h:outputText value="#{sessionUtil.toTimeZoneDate(obj.endTime)}">
+						<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss"/>
+					</h:outputText>
+					<!--20180705_hoangnd_fix_bug_timezone_end-->
+				</p:column>
+
+				<p:column style="width: 10%; text-align: center;" filterBy="#{obj.userRun}"
+						  sortBy="#{obj.userRun}" headerText="#{msg['datatable.header.executeby']}">
+					<h:outputText value="#{obj.userRun}"/>
+				</p:column>
+
+				<p:column style="width: 20%; text-align: center;" filterBy="#{obj.crNumber}"
+						  sortBy="#{obj.crNumber}" headerText="#{msg['datatable.header.ticketCode']}">
+					<h:outputText value="#{obj.crNumber}"/>
+				</p:column>
+
+				<p:column headerText="#{msg['datatable.header.status']}" style="width:12%"
+						  filterBy="#{obj.status}">
+					<f:facet name="filter">
+						<p:selectOneMenu styleClass="selectOneStatus" onchange="PF('objectTable').filter()">
+							<f:selectItem itemLabel="#{msg['datatable.header.status']}"
+										  itemValue=""/>
+							<f:selectItem
+									itemLabel="#{msg['view.label.flowrunaction.status1']}"
+									itemValue="1"/>
+							<f:selectItem
+									itemLabel="#{msg['view.label.flowrunaction.status2']}"
+									itemValue="2"/>
+							<f:selectItem
+									itemLabel="#{msg['view.label.flowrunaction.status3']}"
+									itemValue="3"/>
+							<f:selectItem
+									itemLabel="#{msg['view.label.flowrunaction.status4']}"
+									itemValue="4"/>
+							<f:selectItem
+									itemLabel="#{msg['view.label.flowrunaction.status5']}"
+									itemValue="5"/>
+							<f:selectItem
+									itemLabel="#{msg['view.label.flowrunaction.status-3']}"
+									itemValue="-3"/>
+						</p:selectOneMenu>
+					</f:facet>
+
+					<p:outputPanel style="width: 100%; text-align:center"
+								   rendered="#{obj.status == 1}">
+						<i class="fa fa-clock-o Fs20" style="color: #00BFFF !important;"></i>
+						<br/>
+						<h:outputText value="#{msg['view.label.flowrunaction.status1']}"
+									  rendered="#{obj.status == 1}"
+									  style="color: #00BFFF;text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+					</p:outputPanel>
+
+					<p:outputPanel style="width: 100%; text-align:center"
+								   rendered="#{obj.status == 2}">
+						<i class="fa fa-spinner fa-pulse fa-fw Fs20"
+						   style="color: #4169E1 !important;"></i>
+						<br/>
+						<h:outputText value="#{msg['view.label.flowrunaction.status2']}"
+									  style="color: #4169E1; text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+					</p:outputPanel>
+
+					<p:outputPanel style="width: 100%; text-align:center"
+								   rendered="#{obj.status == 3}">
+						<i class="fa fa-check-circle Fs20"
+						   style="color: #228B22 !important;"></i>
+						<br/>
+						<h:outputText value="#{msg['view.label.flowrunaction.status3']}"
+									  style="color: #228B22; text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+					</p:outputPanel>
+
+					<p:outputPanel style="width: 100%; text-align:center"
+								   rendered="#{obj.status == 4}">
+						<i class="fa fa-warning Fs20" style="color: #FF8C00 !important;"></i>
+						<br/>
+						<h:outputText value="#{msg['view.label.flowrunaction.status4']}"
+									  style="color: #FF8C00; text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+					</p:outputPanel>
+					<p:outputPanel style="width: 100%; text-align:center"
+								   rendered="#{obj.status == 5}">
+						<i class="fa fa-clock-o Fs20" style="color: #00BFFF !important;"></i>
+						<br/>
+						<h:outputText value="#{msg['view.label.flowrunaction.status5']}"
+									  rendered="#{obj.status == 5}"
+									  style="color: #00BFFF;text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+					</p:outputPanel>
+					<p:outputPanel style="width: 100%; text-align:center"
+								   rendered="#{obj.status == -3}">
+						<i class="fa fa-warning Fs20" style="color: #FF0000 !important;"></i>
+						<br/>
+						<h:outputText value="#{msg['view.label.flowrunaction.status-3']}"
+									  style="color: #FF0000; text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+					</p:outputPanel>
+				</p:column>
+
+				<p:column style="width:8%">
+					<p:commandButton ajax="false" icon="fa fa-download White" title="Download log"
+									 actionListener="#{itHistoryController.downloadLog(obj)}">
+						<p:fileDownload value="#{itHistoryController.fileCommandLog}"></p:fileDownload>
+					</p:commandButton>
+					<p:spacer width="2px;"/>
+					<p:commandButton icon="fa fa-eye White" title="View log"
+									 onclick="PF('pollUpdateLog').start()"
+									 oncomplete="PF('dlgShowLog').show()"
+									 update="actionLogForm"
+									 actionListener="#{itHistoryController.getCmdLog(obj)}"/>
+
+				</p:column>
+			</p:dataTable>
+		</h:form>
+
+		<h:form id="actionLogForm">
+			<p:dialog id="dlgShowLog" widgetVar="dlgShowLog" width="60%" height="500px;" modal="true" resizable="false"
+					  header="#{itHistoryController.selectedActionLog.action.name}" closable="false">
+				<p:scrollPanel id="panelActionLog" style="height: 450px;">
+					<p:dataTable var="obj" value="#{itHistoryController.commandLogList}"
+								 paginator="true" rows="25" filterEvent="keyup" rowKey="#{obj.id}"
+								 rowIndexVar="rowIndex" paginatorPosition="bottom" id="tblCmdLog"
+								 widgetVar="tblCmdLog" rowsPerPageTemplate="25, 50, 100"
+								 editable="false" emptyMessage="#{msg['common.data.not.found']}"
+								 scrollable="true" scrollWidth="100%;">
+
+						<p:column style="width: 3%; text-align: center;" headerText="No">
+							<h:outputText value="#{rowIndex+ 1}"/>
+						</p:column>
+
+						<p:column style="width: 20%; text-align: center;" filterBy="#{obj.commandDetail.commandName}"
+								  sortBy="#{obj.commandDetail.commandName}"
+								  headerText="#{msg['label.action.command.name']}">
+							<h:outputText value="#{obj.commandDetail.commandName}"/>
+						</p:column>
+
+						<p:column headerText="#{msg['label.command.type']}" style="width:10%"
+								  filterBy="#{obj.logType}">
+							<f:facet name="filter">
+								<p:selectOneMenu onchange="PF('tblCmdLog').filter()">
+									<f:selectItem
+											itemLabel="#{msg['datatable.header.status']}"
+											itemValue=""/>
+									<f:selectItem
+											itemLabel="#{msg['label.command.type.impact']}"
+											itemValue="0"/>
+									<f:selectItem
+											itemLabel="#{msg['label.cmd.cmdtype3']}"
+											itemValue="1"/>
+								</p:selectOneMenu>
+							</f:facet>
+
+
+							<p:outputPanel style="width: 100%; text-align:center"
+										   rendered="#{obj.logType == 0}">
+								<i class="fa fa-clock-o Fs20" style="color: #00BFFF !important;"></i>
+								<br/>
+								<h:outputText value="#{msg['label.command.type.impact']}"
+											  rendered="#{obj.logType == 0}"
+											  style="color: #00BFFF;text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+							</p:outputPanel>
+
+							<p:outputPanel style="width: 100%; text-align:center"
+										   rendered="#{obj.logType == 1}">
+								<i class="fa fa-spinner fa-pulse fa-fw Fs20"
+								   style="color: #4169E1 !important;"></i>
+								<br/>
+								<h:outputText value="#{msg['label.cmd.cmdtype3']}"
+											  style="color: #4169E1; text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+							</p:outputPanel>
+						</p:column>
+
+						<p:column style="width: 15%; text-align: center;"
+								  sortBy="#{obj.insertTime}" headerText="#{msg['label.updateTime']}">
+							<h:outputText value="#{obj.insertTime}">
+								<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss"/>
+							</h:outputText>
+						</p:column>
+
+						<p:column style="width: 15%; text-align: center;"
+								  headerText="#{msg['datatable.header.action']}">
+							<p:commandButton icon="fa fa-eye White" title="View log"
+											 actionListener="#{itHistoryController.prepareViewLog(obj)}"/>
+						</p:column>
+
+					</p:dataTable>
+
+				</p:scrollPanel>
+
+				<h:panelGrid columns="1" style="margin: 0 auto;">
+					<p:commandButton value="#{msg['button.cancel']}"
+									 onclick="PF('pollUpdateLog').stop()"
+									 oncomplete="PF('dlgShowLog').hide()"/>
+				</h:panelGrid>
+			</p:dialog>
+
+
+			<p:poll autoStart="false" interval="5" listener="#{itHistoryController.pollGetCmdLog()}"
+					process="@this" widgetVar="pollUpdateLog" update="actionLogForm:tblCmdLog"/>
+
+		</h:form>
+
+		<h:form id="formLogDetail">
+			<p:dialog widgetVar="dlgXmlCmdLog" modal="true" width="70%" height="400"
+					  style="top: 30%; left: 40%;"
+					  header="#{itHistoryController.selectedCmdLog.command}">
+				<h:panelGroup id="xmlLogDetailId">
+					<p:treeTable value="#{itHistoryController.xmlDatas}" var="document" expandMode="">
+						<p:ajax event="expand" listener="#{itHistoryController.nodeExpand}"/>
+						<p:ajax event="collapse" listener="#{itHistoryController.nodeCollapse}"/>
+
+						<f:facet name="header">
+							Document Viewer
+						</f:facet>
+						<p:column headerText="Name">
+							<h:outputText value="#{document.name}"/>
+						</p:column>
+						<p:column headerText="Value">
+							<h:outputText value="#{document.value}"/>
+						</p:column>
+					</p:treeTable>
+				</h:panelGroup>
+
+				<h:panelGrid columns="2" style="margin: 0 auto;">
+					<p:commandButton value="#{msg['button.cancel']}"
+									 onclick="PF('dlgXmlCmdLog').hide()"/>
+				</h:panelGrid>
+			</p:dialog>
+
+			<p:dialog widgetVar="dlgSqlCmdLog" modal="true" width="70%" resizable="false"
+					  height="500px;" style="margin-bottom: 10px; margin-right: 10px;"
+					  header="#{itHistoryController.selectedCmdLog.command}">
+				<p:scrollPanel style="height: 450px">
+					<p:dataTable value="#{itHistoryController.sqlDataTables}" var="item"
+								 paginator="true" rows="20" rowIndexVar="rowIndex"
+								 paginatorPosition="bottom" rowsPerPageTemplate="20, 50, 100"
+								 editable="false" emptyMessage="#{msg['common.data.not.found']}" >
+						<p:columns value="#{itHistoryController.columnsName}"
+								   var="columnName" columnIndexVar="i" width="100px;">
+							<f:facet name="header">#{columnName}</f:facet>
+							#{item[i]}
+						</p:columns>
+					</p:dataTable>
+				</p:scrollPanel>
+				<h:panelGrid columns="2" style="margin: 0 auto;">
+					<p:commandButton value="#{msg['button.cancel']}"
+									 onclick="PF('dlgSqlCmdLog').hide()"/>
+				</h:panelGrid>
+			</p:dialog>
+
+			<p:dialog widgetVar="dlgCmdLogDetail" modal="true" width="70%" height="400"
+					  style="top: 30%; left: 40%;" closable="false">
+				<h:panelGroup id="logDetailId">
+					<h:outputText disabled="true" controls="" style="width: 100%; height: 95%"
+								  value="#{itHistoryController.selectedCmdLog.log}"/>
+				</h:panelGroup>
+
+				<h:panelGrid columns="2" style="margin: 0 auto;">
+					<p:commandButton value="#{msg['button.cancel']}"
+									 onclick="PF('dlgCmdLogDetail').hide()"/>
+				</h:panelGrid>
+			</p:dialog>
+		</h:form>
+
+		<style type="text/css">
+			.selectOneStatus {
+				min-width: 16px !important;
+				width: 60% !important;
+			}
+		</style>
+
+
+		<script type="text/javascript">
+			$(document).ready(function() {
+				var currentTabID = "tab-2";
+				var currentIconID = "14";
+				ChangeTab(currentTabID, currentIconID);
+			});
+		</script>
+	</ui:define>
+</ui:composition>

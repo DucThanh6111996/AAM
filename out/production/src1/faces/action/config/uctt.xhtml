@@ -1,0 +1,365 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions"
+                template="/layout/olympos/template.xhtml">
+    <ui:define name="content">
+
+        <h:form id="insertEditForm">
+            <p:growl id="designGrowl" showDetail="false" widgetVar="designGrowl"/>
+
+            <div class="messagebox tc">
+                <p:growl id="mainMessage" life="5000" showDetail="true" autoUpdate="true" globalOnly="true"
+                         for="mainMessage" widgetVar="aGrowl"/>
+            </div>
+
+            <pe:blockUI target=":mop:lst:objectTable" content="blockUIContent" widgetVar="blockUiSearch"/>
+
+            <pe:blockUI target=":mop:lst:editwizard" content="blockUIContent" widgetVar="blockUiWizard"/>
+
+            <pe:blockUI target=":mop:lst:appDataTable" content="blockUIContent" widgetVar="blockUiApp"/>
+            <pe:blockUI target=":mop:lst:dataTable" content="blockUIContent" widgetVar="blockUiSelectApp"/>
+            <pe:blockUI target=":mop:lst:editDialogAction" content="blockUIContent" widgetVar="blockUiAppDialog"/>
+            <pe:blockUI target=":mop:lst:editDialogDb" content="blockUIContent" widgetVar="blockUiDbDialog"/>
+
+            <h:panelGrid id="blockUIContent" columns="2" style="display:none;table-layout:auto;" styleClass="blockUi">
+                <h:graphicImage library="olympos-layout/images" name="loading-bars-blue.svg"
+                                style="margin-right: 12px; vertical-align: middle;"/>
+                <h:outputText value="#{msg['executing']} ......" style="white-space: nowrap;"/>
+            </h:panelGrid>
+
+            <h:outputStylesheet id="blockUICSS">
+                #blockUIContent td {
+                    border: none !important;
+                    padding: 0 !important;
+                }
+            </h:outputStylesheet>
+        </h:form>
+
+        <h:form id="mop">
+
+            <p:tabView id="lst">
+
+                <p:tab title="#{msg['information.rescue.scenario']}">
+                    <div class="button-area fa" align="right" style="padding-bottom: 16px">
+                        <p:commandButton value="#{msg['create.script']}" update=":mop:lst"
+                                         styleClass="ButtonRed buttonEffect hvr-backward " process="@this"
+                                         actionListener="#{actionController.preAdd(0)}" icon="fa fa-plus White"
+                                         onstart="PF('blockUiSearch').block()"
+                                         oncomplete="PF('blockUiSearch').unblock()"/>
+                    </div>
+
+                    <div class="cl h6"></div>
+                    <p:dataTable var="obj" value="#{actionController.lazyDataModel}" style="width: 100%"
+                                 paginator="true" rows="12" filterEvent="keyup" rowKey="#{obj.id}"
+                                 rowIndexVar="rowIndex"
+                                 paginatorPosition="bottom" id="objectTable" widgetVar="objectTable"
+                                 rowsPerPageTemplate="12, 15, 20" lazy="true" editable="false"
+                                 emptyMessage="#{msg['common.data.not.found']}" scrollable="true"
+                                 scrollWidth="100%" frozenColumns="0">
+                        <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                                oncomplete="PF('blockUiSearch').unblock()"/>
+
+                        <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                                oncomplete="PF('blockUiSearch').unblock()"/>
+
+                        <p:ajax event="filter" onstart="PF('blockUiSearch').block()"
+                                oncomplete="PF('blockUiSearch').unblock()"/>
+
+                        <p:column style="width: 32px; text-align: center;" headerText="STT">
+                            <h:outputText value="#{rowIndex+ 1}"/>
+                        </p:column>
+
+                        <p:column id="line" style="width: 184px; text-align: center; white-space: nowrap"
+                                  headerText="#{msg['common.action']}">
+                            <p:splitButton style="width: 96px;"
+                                           value="#{actionController.username eq obj.createdBy and actionController.editable(obj.crState) and obj.runStatus eq null ? msg['common.edit'] : msg['common.view']}"
+                                           process="@this" actionListener="#{actionController.prepareEdit(obj)}"
+                                           onclick="PF('blockUiSearch').block()"
+                                           oncomplete="PF('blockUiSearch').unblock()" update=":mop:lst"
+                                           icon="fa #{actionController.username eq obj.createdBy and actionController.editable(obj.crState) and obj.runStatus eq null ? 'fa-edit' : 'fa-search'} White">
+
+                                <p:menuitem value="#{msg['common.duplicate']}" process="@this"
+                                            actionListener="#{actionController.duplicate(obj, false)}"
+                                            onclick="PF('blockUiSearch').block()"
+                                            oncomplete="PF('blockUiSearch').unblock()" update=":mop:lst"
+                                            icon="fa fa-copy">
+                                </p:menuitem>
+
+                                <p:menuitem value="#{msg['duplicate.file']}" process="@this"
+                                            actionListener="#{actionController.duplicate(obj, true)}"
+                                            onclick="PF('blockUiSearch').block()"
+                                            oncomplete="PF('blockUiSearch').unblock()" update=":mop:lst"
+                                            icon="fa fa-copy">
+                                </p:menuitem>
+
+                                <p:menuitem value="Delete" process="@this" onclick="PF('blockUiSearch').block()"
+                                            update=":mop:lst:confirmDelete"
+                                            oncomplete="PF('blockUiSearch').unblock();PF('confirmDelete').show()"
+                                            rendered="#{(actionController.username eq obj.createdBy) and (obj.linkCrTime eq null) and (obj.runStatus eq null)}"
+                                            icon="fa fa-remove">
+                                    <f:setPropertyActionListener target="#{actionController.selectedObj}"
+                                                                 value="#{obj}"/>
+                                </p:menuitem>
+
+                                <p:menuitem value="#{msg['export.dt']}" process="@this" icon="fa fa-download"
+                                            ajax="false">
+                                    <p:fileDownload value="#{actionController.exportDT(obj)}"/>
+                                </p:menuitem>
+
+                                <p:menuitem value="#{msg['source.code']}" process="@this" icon="fa fa-cloud-download"
+                                            ajax="false">
+                                    <p:fileDownload value="#{actionController.downloadCode(obj)}"/>
+                                </p:menuitem>
+                            </p:splitButton>
+
+                            <p:commandButton icon="fa fa-location-arrow White" styleClass="ButtonRed"
+                                             title="#{msg['sign']}"
+                                             process="@this" onclick="PF('blockUiSearch').block()"
+                                             update=":mop:lst:confirmSign"
+                                             oncomplete="PF('blockUiSearch').unblock();PF('confirmSign').show()"
+                                             rendered="#{empty obj.signStatus and actionController.username eq obj.createdBy}">
+                                <f:setPropertyActionListener target="#{actionController.selectedObj}" value="#{obj}"/>
+                            </p:commandButton>
+                            <p:spacer width="40px" height="1px"
+                                      rendered="#{not empty obj.signStatus or actionController.username ne obj.createdBy}"/>
+                        </p:column>
+
+                        <p:column style="width: 120px; text-align: center;" sortBy="#{obj.voTextId}"
+                                  headerText="#{msg['voffice.id']}" filterBy="#{obj.voTextId}"
+                                  filterMatchMode="contains">
+                            <h:outputText value="#{obj.voTextId}"/>
+                        </p:column>
+
+                        <p:column style="width: 150px; text-align: center;" sortBy="#{obj.tdCode}"
+                                  headerText="#{msg['script.code']}" filterBy="#{obj.tdCode}"
+                                  filterMatchMode="contains">
+                            <span class="fa #{iconUtils.statusIconSmall(obj.verifyStatus)} Fs18"/>
+                            <p:spacer width="12px"/>
+                            <h:outputText value="#{obj.tdCode}"/>
+                        </p:column>
+
+                        <p:column style="width: 196px; text-align: center;" sortBy="#{obj.crNumber}"
+                                  headerText="#{msg['cr.number']}"
+                                  filterBy="#{obj.crNumber}" filterMatchMode="contains" rendered="false">
+                            <h:outputText value="#{obj.crNumber}"/>
+                        </p:column>
+
+                        <p:column style="width: 220px; text-align: center;" sortBy="#{obj.crName}"
+                                  headerText="#{msg['script.name']}" filterBy="#{obj.crName}"
+                                  filterMatchMode="contains">
+                            <h:outputText id="crName" value="#{utils.subContent(obj.crName, 64)}"/>
+                            <pe:tooltip for="crName" mouseTracking="true" adjustX="10" adjustY="10">
+                                <h:outputText value="#{obj.crName}" styleClass="Fs14" style="width: 100%"/>
+                            </pe:tooltip>
+                        </p:column>
+
+                        <p:column style="width: 160px; text-align: center;" sortBy="#{obj.signStatus}"
+                                  headerText="#{msg['common.status']}" filterBy="#{obj.signStatus}"
+                                  filterMatchMode="contains"
+                                  rendered="true">
+                            <f:facet name="filter">
+                                <p:selectOneMenu onchange="PF('objectTable').filter()">
+                                    <f:selectItem itemLabel="#{msg['common.choose']}" noSelectionOption="false"/>
+                                    <f:selectItem itemLabel="#{msg['voffice.sign.status.1']}" itemValue="1"
+                                                  noSelectionOption="true"/>
+                                    <f:selectItem itemLabel="#{msg['voffice.sign.status.2']}" itemValue="2"
+                                                  noSelectionOption="true"/>
+                                    <f:selectItem itemLabel="#{msg['voffice.sign.status.3']}" itemValue="3"
+                                                  noSelectionOption="true"/>
+                                    <f:selectItem itemLabel="#{msg['voffice.sign.status.4']}" itemValue="4"
+                                                  noSelectionOption="true"/>
+                                    <f:selectItem itemLabel="#{msg['voffice.sign.status.5']}" itemValue="5"
+                                                  noSelectionOption="true"/>
+                                </p:selectOneMenu>
+                            </f:facet>
+
+                            <h:outputText value="#{msg['voffice.sign.status.'.concat(obj.signStatus)]}"/>
+                        </p:column>
+
+                        <p:column style="width: 120px; text-align: center; white-space: nowrap"
+                                  sortBy="#{obj.createdBy}" headerText="#{msg['creator']}" filterBy="#{obj.createdBy}"
+                                  filterMatchMode="contains">
+                            <h:outputText value="#{obj.createdBy}"/>
+                        </p:column>
+
+                        <p:column style="width: 140px; text-align: center; white-space: nowrap"
+                                  sortBy="#{obj.createdTime}" headerText="#{msg['create.time']}">
+                            <h:outputText value="#{sessionUtil.toTimeZoneDate(obj.createdTime)}">
+                                <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/>
+                            </h:outputText>
+                        </p:column>
+
+                        <p:column id="reasonCl" style="width: 240px; text-align: center;" sortBy="#{obj.reason}"
+                                  headerText="#{msg['reasons.for.implementation']}">
+                            <h:outputText id="reason" value="#{utils.subContent(obj.reason, 64)}"/>
+                            <pe:tooltip for="reason" mouseTracking="true" adjustX="10" adjustY="10">
+                                <h:outputText value="#{obj.reason}" styleClass="Fs14" style="width: 100%"/>
+                            </pe:tooltip>
+                        </p:column>
+
+                        <p:column style="width: 140px; text-align: center; white-space: nowrap" rendered="false"
+                                  sortBy="#{obj.location}" headerText="#{msg['location.of.execution']}">
+                            <h:outputText value="#{obj.location}"/>
+                        </p:column>
+
+                        <p:column style="width: 120px; text-align: center; white-space: nowrap" rendered="false"
+                                  sortBy="#{obj.createdBy}" headerText="#{msg['executor']}">
+                            <h:outputText value="#{obj.createdBy}"/>
+                        </p:column>
+
+                        <p:column style="width: 140px; text-align: center; white-space: nowrap"
+                                  headerText="#{msg['common.start.time']}" rendered="false">
+                            <h:outputText value="#{sessionUtil.toTimeZoneDate(obj.beginTime)}">
+                                <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/>
+                            </h:outputText>
+                        </p:column>
+                        <p:column style="width: 140px; text-align: center; white-space: nowrap"
+                                  headerText="#{msg['common.end.time']}" rendered="false">
+                            <h:outputText value="#{sessionUtil.toTimeZoneDate(obj.endTime)}">
+                                <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/>
+                            </h:outputText>
+                        </p:column>
+
+                    </p:dataTable>
+                    <p:confirmDialog id="confirmDelete"
+                                     message="#{msg['confirm.sure.delete']} #{actionController.selectedObj.crNumber}?"
+                                     header="#{msg['common.confirm']}" severity="alert" widgetVar="confirmDelete">
+                        <p:commandButton value="#{msg['common.confirm']}" icon="fa fa-check White"
+                                         styleClass="GreenButton"
+                                         update=":mop:lst:objectTable" actionListener="#{actionController.delete}"
+                                         oncomplete="PF('confirmDelete').hide()" process="@this"/>
+
+                        <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                         styleClass="ButtonRed"
+                                         onclick="PF('confirmDelete').hide()"/>
+                    </p:confirmDialog>
+
+                    <p:confirmDialog id="confirmSign"
+                                     message="#{msg['are.you.sure.you.sign.the.script']} #{actionController.selectedObj.tdCode}?"
+                                     header="#{msg['common.confirm']}" severity="alert" widgetVar="confirmSign">
+                        <f:facet name="message">
+                            <h:outputText
+                                    value="#{msg['are.you.sure.you.sign.the.script']} #{actionController.selectedObj.tdCode}?"/>
+                            <br/>
+                            <p:spacer height="32px"/>
+                            <p:inputText value="#{actionController.passSso}" id="passSso" type="password"/>
+                            <p:watermark value="Password SSO" for="passSso"/>
+                        </f:facet>
+
+                        <p:commandButton value="#{msg['sign']}" icon="fa fa-check White" styleClass="GreenButton"
+                                         update=":mop:lst:objectTable :insertEditForm:designGrowl"
+                                         onclick="PF('blockUiSearch').block(); PF('confirmSign').hide()"
+                                         actionListener="#{actionController.signVoffice}"
+                                         oncomplete="PF('blockUiSearch').unblock()" process="confirmSign"/>
+
+                        <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                         styleClass="ButtonRed"
+                                         onclick="PF('confirmSign').hide()"/>
+                    </p:confirmDialog>
+
+                    <p:dialog id="selectModule" widgetVar="selectModule" width="70%" resizable="false" showEffect="fade"
+                              hideEffect="fade" modal="true" header="#{msg['list.module.selected']}" draggable="true">
+                        <p:dataTable var="obj" value="#{actionController.lazyModel}" paginator="true" rows="25"
+                                     filterEvent="keyup" rowKey="#{obj.id}" rowIndexVar="rowIndex"
+                                     paginatorPosition="bottom" id="moduleTable"
+                                     widgetVar="moduleTable" rowsPerPageTemplate="25, 50, 100" lazy="true"
+                                     editable="false" emptyMessage="#{msg['common.data.not.found']}">
+
+                            <p:column style="width: 3%; text-align: center;" headerText="#{msg['label.order']}">
+                                <h:outputText value="#{rowIndex+ 1}"/>
+                            </p:column>
+
+                            <p:column style="width: 10%; text-align: center;" headerText="#{msg['module']}">
+                                <h:outputText value="#{actionController.findAppCode(obj.moduleId)}"/>
+                            </p:column>
+
+                            <p:column style="width: 10%; text-align: center;" headerText="#{msg['service']}">
+                                <h:outputText value="#{actionController.findAppGroupName(obj.moduleId)}"/>
+                            </p:column>
+                            <p:column id="line" style="width: 20%; text-align: center;"
+                                      headerText="#{msg['common.action']}">
+                                <p:commandButton value="Delete" process="@this">
+
+                                </p:commandButton>
+                            </p:column>
+
+                        </p:dataTable>
+                    </p:dialog>
+
+                </p:tab>
+                <p:tab title="#{actionController.viewOnly ? msg['detail'] : msg['common.mop.edit']}" closable="true"
+                       id="edittab"
+                       rendered="false">
+                    <ui:insert name="detail-dialog">
+                        <ui:include src="edit/index.xhtml"/>
+                    </ui:insert>
+                </p:tab>
+            </p:tabView>
+        </h:form>
+
+        <script type="text/javascript">
+            $(document).ready(function () {
+                var currentTabID = "tab-0";
+                var currentIconID = "10";
+                ChangeTab(currentTabID);
+            });
+        </script>
+        <style>
+            #lst\:form\:objectTable_paginator_bottom {
+                width: 100% !important;
+            }
+
+            .ui-wizard .ui-wizard-step-titles li {
+                /*background-color: #00aeef;*/
+                background-color: #74AFAD;
+                /*background-color: #4ABDAC;*/
+            }
+
+            .ui-wizard .ui-wizard-step-titles li.ui-state-highlight {
+                /*background-color: #0ca533;*/
+                /*background-color: #D9853B;*/
+                background-color: #FC4A1A;
+                /*background-color: #F7B733;*/
+            }
+
+            .ui-wizard-step-title {
+                min-width: 92px;
+                /*min-width: 108px;*/
+                text-align: center;
+            }
+
+            .ui-wizard-navbar {
+                padding-top: 12px;
+            }
+
+            .ui-growl {
+                top: 32px !important;
+            }
+
+            .ui-blockui {
+                background-color: grey;
+            }
+
+            .ui-blockui-content {
+                background-color: grey;
+
+            }
+
+            .blockUI .ui-widget-content {
+                background-color: white;
+            }
+
+            /*#insertEditForm\:blockUIContent tbody tr td {*/
+            .blockUi tbody tr td {
+                border: none !important;
+            }
+
+            .ui-splitbutton .ui-state-hover {
+                background-color: #ff6f13 !important;
+            }
+        </style>
+    </ui:define>
+</ui:composition>

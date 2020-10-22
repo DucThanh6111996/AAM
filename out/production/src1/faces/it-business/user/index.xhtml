@@ -1,0 +1,374 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions"
+                template="/layout/olympos/template.xhtml">
+    <ui:define name="content">
+        <h:form id="insertEditForm">
+            <p:growl id="designGrowl" showDetail="false"/>
+            <pe:blockUI target=":form:objectTable" content="blockUIContent" widgetVar="blockUiSearch"/>
+
+            <h:panelGrid id="blockUIContent" columns="2" style="display:none;table-layout:auto;" styleClass="blockUi">
+                <h:graphicImage library="olympos-layout/images" name="loading-bars-blue.svg"
+                                style="margin-right: 12px; vertical-align: middle;"/>
+                <h:outputText value="#{msg['executing']} ......" style="white-space: nowrap;"/>
+            </h:panelGrid>
+        </h:form>
+
+        <div class="cl h6"></div>
+        <h:form id="form">
+            <p:growl id="mainMessage" showDetail="true" showSummary="false"
+                     life="5000"/>
+            <p:dataTable var="obj" value="#{itUserController.lazyDataModel}"
+                         paginator="true" rows="25" filterEvent="keyup" rowKey="#{obj.userId}"
+                         rowIndexVar="rowIndex" paginatorPosition="bottom" id="objectTable"
+                         widgetVar="objectTable" rowsPerPageTemplate="25, 50, 100"
+                         lazy="true" editable="false" emptyMessage="#{msg['common.data.not.found']}">
+                <f:facet name="header">
+                    #{msg['it.title.listUser']}
+                    <p:commandButton style="float: right;" icon="fa fa-plus-square"
+                                     title="#{msg['button.insert']}"
+                                     rendered="#{itUserController.checkIsAdmin()}"
+                                     actionListener="#{itUserController.clear}"
+                                     update="userInfoForm"
+                                     oncomplete="PF('dlgUserInfo').show()"
+                                     styleClass="White" />
+                </f:facet>
+                <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                        oncomplete="PF('blockUiSearch').unblock()"/>
+
+                <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                        oncomplete="PF('blockUiSearch').unblock()"/>
+
+                <!--20180704_hoangnd_fix_bug_da_ngon_ngu_start-->
+                <p:column style="width: 3%; text-align: center;" headerText="#{msg['datatable.header.stt']}">
+                    <h:outputText value="#{rowIndex+ 1}"/>
+                </p:column>
+                <!--20180704_hoangnd_fix_bug_da_ngon_ngu_end-->
+
+                <p:column id="line" style="width: 10%; text-align: center;"
+                          headerText="#{msg['common.action']}">
+                    <p:splitButton value="#{msg['it.title.view']}" process="@this"
+                                   actionListener="#{itUserController.view(obj)}"
+                                   onclick="PF('blockUiSearch').block()"
+                                   oncomplete="PF('blockUiSearch').unblock();PF('viewInfo').show()"
+                                   update=":form:panel" icon="fa fa-search White">
+
+                        <p:menuitem value="#{msg['it.title.mappingRole']}" process="@this"
+                                    actionListener="#{itUserController.showMapRole(obj)}"
+                                    onclick="PF('blockUiSearch').block()"
+                                    oncomplete="PF('blockUiSearch').unblock();PF('mapRoleDialog').show()"
+                                    update=":form:panelMapRole">
+                        </p:menuitem>
+
+                        <p:menuitem value="#{msg['it.title.mappingBusinessGroup']}" process="@this"
+                                    actionListener="#{itUserController.showMapBG(obj)}"
+                                    onclick="PF('blockUiSearch').block()"
+                                    oncomplete="PF('blockUiSearch').unblock();PF('mapBGDialog').show()"
+                                    update=":form:panelMapBG">
+                        </p:menuitem>
+                    </p:splitButton>
+                </p:column>
+
+                <p:column id="userName" style="width: 10%; text-align: center;" filterBy="#{obj.userName}"
+                          sortBy="#{obj.userName}" headerText="#{msg['it.title.userName']}">
+                    <h:outputText value="#{obj.userName}"/>
+                </p:column>
+
+                <p:column id="fullName" style="width: 10%; text-align: center;" filterBy="#{obj.fullName}"
+                          sortBy="#{obj.fullName}" headerText="#{msg['it.title.fullName']}">
+                    <h:outputText value="#{obj.fullName}"/>
+                </p:column>
+
+                <p:column id="email" style="width: 10%; text-align: center;" filterBy="#{obj.email}"
+                          sortBy="#{obj.email}" headerText="#{msg['it.title.email']}">
+                    <h:outputText value="#{obj.email}"/>
+                </p:column>
+
+                <p:column id="phone" style="width: 10%; text-align: center;" filterBy="#{obj.phone}"
+                          sortBy="#{obj.phone}" headerText="#{msg['it.title.phone']}">
+                    <h:outputText value="#{obj.phone}"/>
+                </p:column>
+
+                <p:column id="staffCode" style="width: 10%; text-align: center;" filterBy="#{obj.staffCode}"
+                          sortBy="#{obj.staffCode}" headerText="#{msg['it.title.staffCode']}" filterMatchMode="contains">
+                    <h:outputText value="#{obj.staffCode}"/>
+                </p:column>
+
+                <p:column id="status" style="width: 10%; text-align: center;"
+                          sortBy="#{obj.status}" headerText="#{msg['it.title.status']}">
+                    <h:outputText value="#{obj.status eq 1 ? msg['it.datatable.statusOn'] : msg['it.datatable.statusOff']}"/>
+                </p:column>
+
+                <p:column style="width: 10%;" exportable="false"
+                          headerText="#{msg['datatable.header.action']}">
+
+                    <p:tooltip position="left" />
+                    <p:commandButton title="#{msg['title.update']}"
+                                     styleClass="Fs14 White" icon="fa fa-edit"
+                                     rendered="#{itUserController.checkIsAdmin()}"
+                                     actionListener="#{itUserController.prepareEditUser(obj)}"
+                                     oncomplete="PF('dlgUserInfo').show()"
+                                     update="userInfoForm"
+                                     style="color:green; font-weight: bold;font-size: 13px ">
+                    </p:commandButton>
+                    <p:spacer width="2px;" />
+                    <p:commandButton id="btnDel" title="#{msg['label.del']}"
+                                     icon="fa fa-trash" styleClass="RedButton Fs14 White"
+                                     update="dlgDelNode"
+                                     rendered="#{itUserController.checkIsAdmin()}"
+                                     oncomplete="PF('dlgDelNode').show()"
+                                     actionListener="#{itUserController.prepareDel(obj)}"
+                                     style="color:green; font-weight: bold;font-size: 13px ">
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+
+            <p:dialog id="viewInfo" widgetVar="viewInfo" width="70%"
+                      resizable="false" showEffect="fade" hideEffect="fade" modal="true"
+                      header="#{msg['page.title']}" draggable="true">
+                <p:panel id="panel" header="#{msg['it.panel.infoUser']}" toggleable="false">
+                    <h:panelGrid columns="6" cellpadding="5" width="100%">
+                        <h:outputText value="#{msg['it.title.userName']}"/>
+                        <p:inputText readonly="true" id="userNameView" value="#{itUserController.selectedObj.userName}"
+                                     required="true" requiredMessage="#{msg['name.have.not.entered']}"/>
+                        <p:watermark for="userNameView" value="#{msg['it.title.userName']}"/>
+
+                        <h:outputText value="#{msg['it.title.fullName']}"/>
+                        <p:inputText readonly="true" id="fullNameView" value="#{itUserController.selectedObj.fullName}"
+                                     required="true" requiredMessage="#{msg['name.have.not.entered']}"/>
+                        <p:watermark for="fullNameView" value="#{msg['it.title.fullName']}"/>
+
+                        <h:outputText value="#{msg['it.title.email']}"/>
+                        <p:inputText readonly="true" id="emailView" value="#{itUserController.selectedObj.email}"
+                                     required="true" requiredMessage="#{msg['execution.time.have.not.entered']}"/>
+                        <p:watermark for="emailView" value="#{msg['it.title.email']}"/>
+
+                        <h:outputText value="#{msg['it.title.phone']}"/>
+                        <p:inputText readonly="true"  id="phoneView" value="#{itUserController.selectedObj.phone}"
+                                     required="true" requiredMessage="#{msg['execution.time.have.not.entered']}"/>
+                        <p:watermark for="phoneView" value="#{msg['it.title.phone']}"/>
+
+                        <h:outputText value="#{msg['it.title.staffCode']}"/>
+                        <p:inputText readonly="true" id="staffCodeView" value="#{itUserController.selectedObj.staffCode}"
+                                     required="true" requiredMessage="#{msg['execution.time.have.not.entered']}"/>
+                        <p:watermark for="staffCodeView" value="#{msg['it.title.staffCode']}"/>
+
+                        <h:outputText value="#{msg['it.title.status']}"/>
+                        <p:inputText readonly="true" id="statusView" value="#{itUserController.selectedObj.status eq 1 ? msg['it.datatable.statusOn'] : msg['it.datatable.statusOff']}"
+                                     required="true" requiredMessage="#{msg['execution.time.have.not.entered']}"/>
+                        <p:watermark for="statusView" value="#{msg['it.title.status']}"/>
+
+                    </h:panelGrid>
+
+                    <h:panelGrid columns="3" cellpadding="5" width="100%">
+                        <h:outputText value="#{msg['it.info.role']}"/>
+                        <p:inputTextarea readonly="true" cols="70" rows="1" id="role" value="#{itUserController.roleString}"
+                                         required="true" requiredMessage="#{msg['name.have.not.entered']}"/>
+                        <p:watermark for="role" value="#{msg['it.info.role']}"/>
+
+                        <h:outputText value="#{msg['it.info.businessGroup']}"/>
+                        <p:inputTextarea readonly="true" cols="70" rows="1" id="businessGroup" value="#{itUserController.businessGroupString}"
+                                         required="true" requiredMessage="#{msg['name.have.not.entered']}"/>
+                        <p:watermark for="businessGroup" value="#{msg['it.info.businessGroup']}"/>
+                    </h:panelGrid>
+                </p:panel>
+            </p:dialog>
+
+            <p:dialog id="mapRoleDialog" widgetVar="mapRoleDialog" width="70%"
+                      resizable="false" showEffect="fade" hideEffect="fade" modal="true"
+                      header="#{msg['page.title']}" draggable="true">
+                <p:panel id="panelMapRole" header="#{msg['it.panel.mappingRole']}" toggleable="false">
+
+                    <h:panelGrid columns="6" cellpadding="5" width="100%">
+
+                        <h:outputText value="#{msg['it.title.userName']}"/>
+                        <p:inputText readonly="true" id="userNameMapRole" value="#{itUserController.selectedObj.userName}"
+                                     required="true" requiredMessage="#{msg['name.have.not.entered']}"/>
+                        <p:watermark for="userNameMapRole" value="#{msg['it.title.userName']}"/>
+
+                        <h:outputText value="#{msg['it.info.role']}"/>
+                        <p:selectCheckboxMenu id="roleMapRole" value="#{itUserController.listRolesSelected}" label="#{msg['it.info.role']}" multiple="true"
+                                              filter="true" filterMatchMode="startsWith" panelStyle="width:250px">
+                            <f:selectItems value="#{itUserController.listRoles}" var="obj"
+                                           itemLabel="#{obj.getRoleCode()}" itemValue="#{obj.getRoleId().toString()}"/>
+                        </p:selectCheckboxMenu>
+                        <p:watermark for="roleMapRole" value="#{msg['it.info.role']}"/>
+
+                    </h:panelGrid>
+
+                    <h:panelGrid columns="2" cellpadding="5">
+                        <p:commandButton value="#{msg['button.confirm']}" process="panelMapRole" styleClass="GreenButton" icon="fa fa-check White"
+                                         actionListener="#{itUserController.mapRole()}"
+                                         update=":form:objectTable :insertEditForm:designGrowl panelMapRole"/>
+
+                        <p:commandButton value="#{msg['button.cancel']}" process="panelMapRole" icon="fa fa-remove White"
+                                         actionListener="#{itUserController.cancel(0)}"
+                                         update=":form:objectTable panelMapRole"
+                                         styleClass="RedButton"/>
+                    </h:panelGrid>
+                </p:panel>
+            </p:dialog>
+
+            <p:dialog id="mapBGDialog" widgetVar="mapBGDialog" width="70%"
+                      resizable="false" showEffect="fade" hideEffect="fade" modal="true"
+                      header="#{msg['page.title']}" draggable="true">
+                <p:panel id="panelMapBG" header="#{msg['it.panel.mappingBusinessGroup']}" toggleable="false">
+
+                    <h:panelGrid columns="6" cellpadding="5" width="100%">
+
+                        <h:outputText value="#{msg['it.title.userName']}"/>
+                        <p:inputText readonly="true" id="userNameMapBG" value="#{itUserController.selectedObj.userName}"
+                                     required="true" requiredMessage="#{msg['name.have.not.entered']}"/>
+                        <p:watermark for="userNameMapBG" value="#{msg['it.title.userName']}"/>
+
+                        <h:outputText value="#{msg['it.info.businessGroup']}"/>
+                        <!--20181226_hoangnd_them thi truong_start-->
+                        <p:selectCheckboxMenu id="roleMapBG" value="#{itUserController.listBGSelected}" label="#{msg['it.info.businessGroup']}" multiple="true"
+                                              filter="true" filterMatchMode="contains" panelStyle="width:250px">
+                            <f:selectItems value="#{itUserController.listBusinessGroups}" var="obj2"
+                                           itemLabel="#{obj2.businessGroupName}"
+                                           itemValue="#{obj2.getBusinessId().toString()}"/>
+                        </p:selectCheckboxMenu>
+                        <!--20181226_hoangnd_them thi truong_end-->
+                        <p:watermark for="roleMapBG" value="#{msg['it.info.businessGroup']}"/>
+
+                    </h:panelGrid>
+
+                    <h:panelGrid columns="2" cellpadding="5">
+                        <p:commandButton value="#{msg['button.confirm']}" process="panelMapBG" styleClass="GreenButton" icon="fa fa-check White"
+                                         actionListener="#{itUserController.mapBG()}"
+                                         update=":form:objectTable :insertEditForm:designGrowl panel"
+                                         />
+
+                        <p:commandButton value="#{msg['button.cancel']}" process="panelMapBG" icon="fa fa-remove White"
+                                         actionListener="#{itUserController.cancel(1)}"
+                                         update=":form:objectTable panelMapBG"
+                                         styleClass="RedButton"/>
+                    </h:panelGrid>
+                </p:panel>
+            </p:dialog>
+
+        </h:form>
+
+        <p:dialog id="dlgUserInfo" widgetVar="dlgUserInfo" width="70%"
+                  height="50%" modal="true" header="#{msg['label.sub.menu.itbusiness.user']}">
+            <h:form id="userInfoForm" enctype="multipart/form-data">
+                <div class="Container100 Flex FlexWrap">
+                    <div class="ui-g" style="width: 100%">
+                        <h:inputHidden value="#{itUserController.selectedUser.userId}"/>
+
+                        <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                            <h:outputText class="cd-text-required ui-g-3" value="UserName"/>
+                            <p:inputText class="ui-g-8" maxlength="200" id="userNameInsert"
+                                         value="#{itUserController.selectedUser.userName}"/>
+                        </div>
+
+                        <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                            <h:outputText class="ui-g-3 cd-text-required" value="FullName"/>
+                            <p:inputText class="ui-g-8" maxlength="200" id="fullNameInsert"
+                                         value="#{itUserController.selectedUser.fullName}"/>
+                        </p:outputPanel>
+
+                        <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                            <h:outputText class="ui-g-3 cd-text-required" value="Email"/>
+                            <p:inputText class="ui-g-8" maxlength="200" id="emailInsert"
+                                         value="#{itUserController.selectedUser.email}"/>
+                        </p:outputPanel>
+
+                        <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                            <h:outputText class="ui-g-3 cd-text-required" value="Phone"/>
+                            <p:inputText class="ui-g-8" maxlength="200" id="phoneInsert"
+                                         value="#{itUserController.selectedUser.phone}"/>
+                        </p:outputPanel>
+
+
+                        <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                            <h:outputText class="ui-g-3" value="StaffCode"/>
+                            <p:inputNumber class="ui-g-8 input-number-fix" decimalPlaces="0"
+                                           thousandSeparator="" maxlength="20" id="staffcode" minValue="0" maxValue="999999"
+                                           value="#{itUserController.selectedUser.staffCode}"/>
+                        </p:outputPanel>
+                    </div>
+
+                    <div class="Container100 Flex">
+                        <div
+                                style="text-align: center; margin-left: auto; margin-right: auto; display: block">
+                            <p:commandButton id="saveNode" type="submit"
+                                             value="#{msg['label.update']}" icon="fa fa-save"
+                                             styleClass="Fs14 White"
+                                             update="form:objectTable, form:mainMessage"
+                                             actionListener="#{itUserController.saveUser}" />
+                            <p:spacer height="10px;" />
+                            <p:commandButton id="cancelAction" type="submit"
+                                             icon="fa fa-close" value="#{msg['label.cancel']}"
+                                             styleClass="GrayButton Fs14"
+                                             onclick="PF('dlgUserInfo').hide()" />
+                        </div>
+                    </div>
+
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <p:confirmDialog global="true"
+                         header="#{msg['label.del.form.node']}" id="dlgDelNode"
+                         showEffect="face" hideEffect="scale" widgetVar="dlgDelNode">
+            <f:facet name="message">
+                <h:outputText
+                        value="#{msg['title.confirm.delete']}
+                #{itUserController.selectedUser.userId}" />
+            </f:facet>
+
+            <p:commandButton value="#{msg['button.delete']}"
+                             update="form:objectTable, form:mainMessage" process="@this"
+                             oncomplete="PF('dlgDelNode').hide()"
+                             actionListener="#{itUserController.delUser}"
+                             styleClass="ui-confirmdialog-yes AquaButton"
+                             icon="ui-icon-check fa fa-check Fs14 White" />
+            <p:commandButton value="#{msg['button.cancel']}" type="button"
+                             styleClass="ui-confirmdialog-no RedButton"
+                             onclick="PF('dlgDelNode').hide()"
+                             icon="ui-icon-close fa fa-close Fs14 White" />
+        </p:confirmDialog>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                var currentTabID = "tab-2";
+                var currentIconID = "11";
+                ChangeTab(currentTabID, currentIconID);
+            });
+        </script>
+        <style>
+            .blockUi tbody td {
+                border-color: white !important;
+            }
+
+            .cl1 {
+                width: 20%;
+            }
+
+            .c1 {
+                width: 20%;
+            }
+
+            .c2 {
+                width: 20%;
+            }
+
+            .ui-selectcheckboxmenu-token{
+                background-color: #00aeef;
+            }
+            /*.ui-chkbox-box{
+                color: blue;
+            }
+            .ui-chkbox-icon{
+                color: blue;
+            }
+            .ui-chkbox-label{
+                color: blue;
+            }*/
+        </style>
+    </ui:define>
+</ui:composition>

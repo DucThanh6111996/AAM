@@ -1,0 +1,507 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions" xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/layout/olympos/template.xhtml">
+    <ui:define name="content">
+
+        <h:form id="insertEditForm">
+            <p:growl id="designGrowl" showDetail="false" widgetVar="designGrowl"/>
+
+            <div class="messagebox tc">
+                <p:growl id="mainMessage" life="5000" showDetail="true" autoUpdate="true" globalOnly="true"
+                         for="mainMessage" widgetVar="aGrowl"/>
+            </div>
+
+            <pe:blockUI target=":mop:lst:objectTable" content="blockUIContent" widgetVar="blockUiSearch"/>
+
+            <pe:blockUI target=":mop:lst:editwizard" content="blockUIContent" widgetVar="blockUiWizard"/>
+
+            <pe:blockUI target=":mop:lst:appDataTable" content="blockUIContent" widgetVar="blockUiApp"/>
+            <pe:blockUI target=":mop:lst:dataTable" content="blockUIContent" widgetVar="blockUiSelectApp"/>
+            <pe:blockUI target=":mop:lst:editDialogAction" content="blockUIContent" widgetVar="blockUiAppDialog"/>
+            <pe:blockUI target=":mop:lst:editDialogDb" content="blockUIContent" widgetVar="blockUiDbDialog"/>
+
+            <h:panelGrid id="blockUIContent" columns="2" style="display:none;table-layout:auto;" styleClass="blockUi">
+                <h:graphicImage library="olympos-layout/images" name="loading-bars-blue.svg"
+                                style="margin-right: 12px; vertical-align: middle;"/>
+                <h:outputText value="#{msg['executing']} ......" style="white-space: nowrap;"/>
+            </h:panelGrid>
+
+            <h:outputStylesheet id="blockUICSS">
+                #blockUIContent td {
+                    border: none !important;
+                    padding: 0 !important;
+                }
+            </h:outputStylesheet>
+        </h:form>
+
+        <h:form id="mop">
+            <p:tabView id="lst" dynamic="true" activeIndex="#{actionController.tabViewActiveIndex}">
+                <p:tab title="#{msg['impact.management']}">
+                    <div class="button-area fa" align="right" style="padding-bottom: 16px">
+                        <p:commandButton update=":mop:lst" title="#{msg['create.mop']}"
+                                         styleClass="buttonEffect hvr-grow GreenButton" process="@this"
+                                         actionListener="#{actionController.preAdd(0)}" icon="fa fa-plus White"
+                                         onstart="PF('blockUiSearch').block()" oncomplete="PF('blockUiSearch').unblock()"/>
+
+                        <p:spacer width="2px"/>
+
+
+                        <p:splitButton update=":mop:lst" rendered="false" value="#{msg[create.mop]}"
+                                       styleClass="buttonEffect hvr-backward " process="@this"
+                                       actionListener="#{actionController.preAdd(0)}" icon="fa fa-plus White"
+                                       onstart="PF('blockUiSearch').block()" oncomplete="PF('blockUiSearch').unblock()">
+                            <p:menuitem value="#{msg['cr.rescue.information']}" process="@this"
+                                        onclick="PF('blockUiSearch').block()"
+                                        oncomplete="PF('blockUiSearch').unblock(); PF('chooseKb').show()"
+                                        update=":mop:lst:chooseKb" actionListener="#{actionController.resetCrUctt}"
+                                        icon="fa fa-copy">
+                            </p:menuitem>
+                        </p:splitButton>
+                    </div>
+
+                    <div class="cl h6"></div>
+                    <p:dataTable var="obj" value="#{actionController.lazyDataModel}" style="width: 100%"
+                                 paginator="true" rows="12" filterEvent="keyup" rowKey="#{obj.id}"
+                                 rowIndexVar="rowIndex"
+                                 paginatorPosition="bottom" id="objectTable" widgetVar="objectTable"
+                                 rowsPerPageTemplate="12, 15, 20" lazy="true" editable="false"
+                                 emptyMessage="#{msg['common.data.not.found']}" scrollable="true"
+                                 scrollWidth="100%" frozenColumns="0">
+                        <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                                oncomplete="PF('blockUiSearch').unblock()"/>
+
+                        <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                                oncomplete="PF('blockUiSearch').unblock()"/>
+
+                        <p:ajax event="filter" onstart="PF('blockUiSearch').block()"
+                                oncomplete="PF('blockUiSearch').unblock()"/>
+
+                        <p:column style="width: 32px; text-align: center;" headerText="#{msg['mop.title.stt']}">
+                            <h:outputText value="#{rowIndex+ 1}"/>
+                        </p:column>
+
+                        <p:column id="line" style="width: 132px; text-align: center; white-space: nowrap"
+                                  headerText="#{msg['common.action']}">
+                            <p:splitButton style="width: 96px;"
+                                           value="#{actionController.username eq obj.createdBy and actionController.editable(obj.crState) and obj.runStatus eq null ? msg['common.edit'] : msg['common.view']}"
+                                           process="@this" actionListener="#{actionController.prepareEdit(obj)}"
+                                           onclick="PF('blockUiSearch').block()"
+                                           oncomplete="PF('blockUiSearch').unblock()" update=":mop:lst"
+                                           icon="fa #{actionController.username eq obj.createdBy and actionController.editable(obj.crState) and obj.runStatus eq null ? 'fa-edit' : 'fa-search'} White">
+
+                                <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                            onclick="PF('blockUiSearch').block()"
+                                            update=":mop:lst:confirmDelete"
+                                            oncomplete="PF('blockUiSearch').unblock();PF('confirmDelete').show()"
+                                            rendered="#{(actionController.username eq obj.createdBy) and (obj.linkCrTime eq null) and (obj.runStatus eq null) and (obj.actionType eq 0)}"
+                                            icon="fa fa-remove">
+                                    <f:setPropertyActionListener target="#{actionController.selectedObj}"
+                                                                 value="#{obj}"/>
+                                </p:menuitem>
+
+                                <p:menuitem value="#{msg['common.duplicate']}" process="@this" rendered="#{obj.actionType eq 0}"
+                                            actionListener="#{actionController.duplicate(obj, false)}"
+                                            onclick="PF('blockUiSearch').block()"
+                                            oncomplete="PF('blockUiSearch').unblock()" update=":mop:lst"
+                                            icon="fa fa-copy">
+                                </p:menuitem>
+                            </p:splitButton>
+                        </p:column>
+
+                        <p:column style="width: 216px; text-align: center;" sortBy="#{obj.crNumber}"
+                                  headerText="#{msg['mop.title.templateName']}"
+                                  filterBy="#{obj.crNumber}" filterMatchMode="contains">
+                            <h:outputText value="#{obj.crNumber}"/>
+                        </p:column>
+
+                        <p:column style="width: 220px; text-align: center;" sortBy="#{obj.crName}"
+                                  headerText="#{msg['mop.service']}"
+                                  filterBy="#{obj.crName}" filterMatchMode="contains">
+                            <h:outputText id="crName" value="#{utils.subContent(obj.crName, 64)}"/>
+                            <pe:tooltip for="crName" mouseTracking="true" adjustX="10" adjustY="10">
+                                <h:outputText value="#{obj.crName}" styleClass="Fs14" style="width: 100%"/>
+                            </pe:tooltip>
+                        </p:column>
+
+                        <p:column style="width: 120px; text-align: center; white-space: nowrap"
+                                  sortBy="#{obj.createdBy}" headerText="#{msg['creator']}" filterBy="#{obj.createdBy}"
+                                  filterMatchMode="contains">
+                            <h:outputText value="#{obj.createdBy}"/>
+                        </p:column>
+
+                        <p:column style="width: 140px; text-align: center; white-space: nowrap"
+                                  sortBy="#{obj.createdTime}" headerText="#{msg['create.time']}">
+                            <h:outputText value="#{sessionUtil.toTimeZoneDate(obj.createdTime)}">
+                                <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/>
+                            </h:outputText>
+                        </p:column>
+
+                        <p:column style="width: 140px; text-align: center; white-space: nowrap"
+                                  headerText="#{msg['update.time']}">
+                            <h:outputText value="#{sessionUtil.toTimeZoneDate(obj.beginTime)}">
+                                <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/>
+                            </h:outputText>
+                        </p:column>
+
+                        <p:column id="reasonCl" style="width: 260px; text-align: center;" sortBy="#{obj.reason}"
+                                  headerText="#{msg['reasons.for.implementation']}">
+                            <h:outputText id="reason" value="#{utils.subContent(obj.reason, 64)}"/>
+                            <pe:tooltip for="reason" mouseTracking="true" adjustX="10" adjustY="10">
+                                <h:outputText value="#{obj.reason}" styleClass="Fs14" style="width: 100%"/>
+                            </pe:tooltip>
+                        </p:column>
+
+                    </p:dataTable>
+                    <p:confirmDialog id="confirmDelete"
+                                     message="#{msg['confirm.sure.delete']} #{actionController.selectedObj.crNumber}?"
+                                     header="#{msg['common.confirm']}" severity="alert" widgetVar="confirmDelete">
+                        <p:commandButton value="#{msg['common.confirm']}" icon="fa fa-check White"
+                                         styleClass="GreenButton"
+                                         update=":mop:lst:objectTable" actionListener="#{actionController.delete}"
+                                         oncomplete="PF('confirmDelete').hide()" process="@this"/>
+
+                        <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                         styleClass="ButtonRed"
+                                         onclick="PF('confirmDelete').hide()"/>
+                    </p:confirmDialog>
+
+                    <p:confirmDialog id="confirmApprove"
+                                     message="#{msg['confirm.sure.approve.cr.ait']}: #{actionController.selectedObj.crNumber}?"
+                                     header="#{msg['common.confirm']}" severity="alert" widgetVar="confirmApprove">
+                        <p:commandButton value="#{msg['common.confirm']}" icon="fa fa-check White"
+                                         styleClass="GreenButton"
+                                         update=":mop:lst:objectTable" actionListener="#{actionController.approve}"
+                                         oncomplete="PF('confirmApprove').hide()" process="@this"/>
+
+                        <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                         styleClass="ButtonRed"
+                                         onclick="PF('confirmApprove').hide()"/>
+                    </p:confirmDialog>
+
+                    <p:dialog id="selectModule" widgetVar="selectModule" width="70%" resizable="false" showEffect="fade"
+                              hideEffect="fade" modal="true" header="#{msg['list.module.selected']}" draggable="true">
+                        <p:dataTable var="obj" value="#{actionController.lazyModel}" paginator="true" rows="25"
+                                     filterEvent="keyup" rowKey="#{obj.id}" rowIndexVar="rowIndex"
+                                     paginatorPosition="bottom" id="moduleTable"
+                                     widgetVar="moduleTable" rowsPerPageTemplate="25, 50, 100" lazy="true"
+                                     editable="false" emptyMessage="#{msg['common.data.not.found']}">
+
+                            <p:column style="width: 3%; text-align: center;" headerText="#{msg['label.order']}">
+                                <h:outputText value="#{rowIndex+ 1}"/>
+                            </p:column>
+
+                            <p:column style="width: 10%; text-align: center;" headerText="#{msg['module']}">
+                                <h:outputText value="#{actionController.findAppCode(obj.moduleId)}"/>
+                            </p:column>
+
+                            <p:column style="width: 10%; text-align: center;" headerText="#{msg['service']}">
+                                <h:outputText value="#{actionController.findAppGroupName(obj.moduleId)}"/>
+                            </p:column>
+                            <p:column id="line" style="width: 20%; text-align: center;"
+                                      headerText="#{msg['common.action']}">
+                                <p:commandButton value="Delete" process="@this">
+
+                                </p:commandButton>
+                            </p:column>
+
+                        </p:dataTable>
+                    </p:dialog>
+
+                    <p:dialog id="chooseKb"
+                              message="#{msg['confirm.sure.delete']} #{actionController.selectedObj.crNumber}?"
+                              severity="alert" widgetVar="chooseKb" showEffect="fade" hideEffect="fade" modal="true"
+                              header="#{msg['create.cr.rescue.information.from.script']}"
+                              draggable="true" width="912px" height="440px">
+                        <h:panelGrid columns="2" cellpadding="5" style="text-align: right" columnClasses="c1, c2">
+                            <p:selectOneListbox id="advanced" value="#{actionController.selectedKb}"
+                                                converter="actionUcttConverter" var="t" filter="true"
+                                                filterMatchMode="contains" style="width: 400px; height: 386px">
+                                <p:ajax listener="#{actionController.onSelectKb}"/>
+
+                                <f:selectItems value="#{actionController.kbUctts}" var="kb"
+                                               itemLabel="#{kb.tdCode} #{kb.crName} #{kb.createdBy}" itemValue="#{kb}"/>
+
+                                <p:column>
+                                    <h:panelGrid columns="1" cellpadding="5" style="text-align: left">
+                                        <h:outputText value="#{t.createdBy} - #{t.tdCode}"/>
+                                        <h:outputText value="#{t.crName}"/>
+                                    </h:panelGrid>
+                                </p:column>
+                            </p:selectOneListbox>
+
+                            <h:panelGrid columns="1" cellpadding="5" style="text-align: left">
+                                <h:outputText value="#{msg['reason.rescue.information']}:"/>
+                                <p:inputText style="width: 312px" value="#{actionController.reasonUctt}"/>
+
+                                <h:outputText value="#{msg['common.start.time']}:"/>
+                                <p:calendar pattern="yyyy/MM/dd HH:mm:ss" value="#{actionController.startTimeUctt}"
+                                            style="width: 312px"/>
+
+                                <h:outputText value="#{msg['common.end.time']}:"/>
+                                <p:calendar pattern="yyyy/MM/dd HH:mm:ss" value="#{actionController.endTimeUctt}"
+                                            style="width: 312px"/>
+                            </h:panelGrid>
+                        </h:panelGrid>
+
+                        <f:facet name="footer">
+                            <h:panelGrid columns="2" cellpadding="5" style="text-align: right">
+                                <p:commandButton value="#{msg['create.cr']}" icon="fa fa-check White"
+                                                 styleClass="GreenButton"
+                                                 actionListener="#{actionController.confirmCreateCr}" process="chooseKb"
+                                                 update="confirmCreateCr :insertEditForm:designGrowl"/>
+
+                                <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                                 styleClass="ButtonRed"
+                                                 onclick="PF('chooseKb').hide()"/>
+                            </h:panelGrid>
+                        </f:facet>
+                    </p:dialog>
+
+                    <p:dialog id="confirmRollback" severity="alert" widgetVar="confirmRollback"  showEffect="fade" hideEffect="fade" modal="true"
+                              header="#{msg['dialog.rollback.header']} #{actionController.selectedObj.crNumber}"
+                              draggable="true" width="552px" height="300px">
+                        <h:panelGrid columns="2" cellpadding="5" style="text-align: right" columnClasses="c1, c2">
+                            <h:panelGrid columns="1" cellpadding="5" style="text-align: left">
+                                <h:outputText value="#{msg['dialog.rollback.reason']}:"/>
+                                <p:inputText style="width: 312px" value="#{actionController.reasonUctt}"/>
+
+                                <h:outputText value="#{msg['dialog.rollback.user']}:"/>
+                                <p:inputText style="width: 312px" value="#{actionController.userRollback}"/>
+
+                                <h:outputText value="#{msg['dialog.rollback.start.time']}:"/>
+                                <p:calendar pattern="yyyy/MM/dd HH:mm:ss" value="#{actionController.startTimeUctt}" style="width: 312px"/>
+
+                                <h:outputText value="#{msg['dialog.rollback.end.time']}:"/>
+                                <p:calendar pattern="yyyy/MM/dd HH:mm:ss" value="#{actionController.endTimeUctt}" style="width: 312px"/>
+                            </h:panelGrid>
+                        </h:panelGrid>
+
+                        <f:facet name="footer">
+                            <h:panelGrid columns="2" cellpadding="5" style="text-align: right">
+                                <p:commandButton value="#{msg['dialog.rollback.confirm']}" icon="fa fa-check White" styleClass="GreenButton"
+                                                 actionListener="#{actionController.confirmApproveRollback}" process="confirmRollback"
+                                                 update=":insertEditForm:designGrowl"/>
+
+                                <p:commandButton value="#{msg['dialog.rollback.cancel']}" icon="fa fa-remove White" styleClass="ButtonRed"
+                                                 onclick="PF('confirmRollback').hide()"/>
+                            </h:panelGrid>
+                        </f:facet>
+                    </p:dialog>
+
+                    <p:dialog id="confirmImpactUctt" severity="alert" widgetVar="confirmImpactUctt"  showEffect="fade" hideEffect="fade" modal="true"
+                              header="#{msg['approval.impact.uctt']} #{actionController.selectedObj.crNumber}"
+                              draggable="true" width="552px" height="300px">
+                        <h:panelGrid columns="2" cellpadding="5" style="text-align: right" columnClasses="c1, c2">
+                            <h:panelGrid columns="1" cellpadding="5" style="text-align: left">
+                                <h:outputText value="#{msg['impaction.reason']}:"/>
+                                <p:inputText style="width: 312px" value="#{actionController.reasonUctt}"/>
+
+                                <h:outputText value="#{msg['user.impact']}:"/>
+                                <p:inputText style="width: 312px" value="#{actionController.userRollback}"/>
+
+                                <h:outputText value="#{msg['dialog.rollback.start.time']}:"/>
+                                <p:calendar pattern="yyyy/MM/dd HH:mm:ss" value="#{actionController.startTimeUctt}" style="width: 312px"/>
+
+                                <h:outputText value="#{msg['dialog.rollback.end.time']}:"/>
+                                <p:calendar pattern="yyyy/MM/dd HH:mm:ss" value="#{actionController.endTimeUctt}" style="width: 312px"/>
+                            </h:panelGrid>
+                        </h:panelGrid>
+
+                        <f:facet name="footer">
+                            <h:panelGrid columns="2" cellpadding="5" style="text-align: right">
+                                <p:commandButton value="#{msg['dialog.rollback.confirm']}" icon="fa fa-check White" styleClass="GreenButton"
+                                                 actionListener="#{actionController.confirmApproveImpactUctt}" process="confirmImpactUctt" update=":insertEditForm:designGrowl"/>
+
+                                <p:commandButton value="#{msg['dialog.rollback.cancel']}" icon="fa fa-remove White" styleClass="ButtonRed"
+                                                 onclick="PF('confirmImpactUctt').hide()"/>
+                            </h:panelGrid>
+                        </f:facet>
+                    </p:dialog>
+
+                    <!--20181023_hoangnd_approval impact step_start-->
+                    <p:dialog id="confirmImpactStep" severity="alert" widgetVar="confirmImpactStep"  showEffect="fade" hideEffect="fade" modal="true"
+                              header="#{msg['dialog.impact.step.header']} #{actionController.selectedObj.crNumber}"
+                              draggable="true" width="552px" height="180px">
+                        <h:panelGrid columns="2" cellpadding="5" style="text-align: right" columnClasses="c1, c2">
+                            <h:panelGrid columns="1" cellpadding="5" style="text-align: left">
+                                <h:outputText value="#{msg['dialog.impact.step.reason']}:"/>
+                                <p:inputText style="width: 312px" value="#{actionController.reasonImpactStep}" maxlength="100"/>
+
+                                <h:outputText value="#{msg['dialog.impact.step.user']}:"/>
+                                <p:inputText style="width: 312px" value="#{actionController.exeImpactStep}" maxlength="100"/>
+                            </h:panelGrid>
+                        </h:panelGrid>
+
+                        <f:facet name="footer">
+                            <h:panelGrid columns="2" cellpadding="5" style="text-align: right">
+                                <p:commandButton value="#{msg['dialog.rollback.confirm']}" icon="fa fa-check White" styleClass="GreenButton"
+                                                 actionListener="#{actionController.confirmApproveImpactStep}" process="confirmImpactStep"
+                                                 update=":insertEditForm:designGrowl"/>
+
+                                <p:commandButton value="#{msg['dialog.rollback.cancel']}" icon="fa fa-remove White" styleClass="ButtonRed"
+                                                 onclick="PF('confirmImpactStep').hide()"/>
+                            </h:panelGrid>
+                        </f:facet>
+                    </p:dialog>
+                    <!--20181023_hoangnd_approval impact step_end-->
+
+                    <p:confirmDialog id="confirmCreateCr"
+                                     message="#{msg['confirm.sure.create.cr.from.script']}: #{actionController.selectedKb.tdCode} - #{actionController.selectedKb.crName}?"
+                                     header="#{msg['common.confirm']}" severity="alert" widgetVar="confirmCreateCr">
+                        <p:commandButton value="#{msg['common.confirm']}" icon="fa fa-check White"
+                                         styleClass="GreenButton"
+                                         update=":mop:lst:objectTable :insertEditForm:designGrowl"
+                                         actionListener="#{actionController.createCrUctt}"
+                                         oncomplete="PF('blockUiSearch').unblock()" process="@this"
+                                         onclick="PF('confirmCreateCr').hide(); PF('chooseKb').hide(); PF('blockUiSearch').block()"/>
+
+                        <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                         styleClass="ButtonRed"
+                                         onclick="PF('confirmCreateCr').hide()"/>
+                    </p:confirmDialog>
+
+                    <p:dialog id="authIbm" severity="alert" widgetVar="authIbm"  showEffect="fade" hideEffect="fade" modal="true"
+                              header="#{msg['devops.ibm.auth']}"
+                              draggable="true" width="552px" height="164px">
+                        <h:panelGrid columns="2" cellpadding="5" style="text-align: right" columnClasses="c1, c2">
+                            <h:panelGrid columns="1" cellpadding="5" style="text-align: left">
+                                <h:outputText value="#{msg['devops.ibm.user']}"/>
+                                <p:inputText style="width: 312px" value="#{actionController.ibmUsername}" readonly="true"/>
+
+                                <h:outputText value="#{msg['devops.ibm.passs']}"/>
+                                <p:inputText style="width: 312px" value="#{actionController.ibmPassword}" type="password"/>
+                            </h:panelGrid>
+                        </h:panelGrid>
+
+                        <f:facet name="footer">
+                            <h:panelGrid columns="2" cellpadding="5" style="text-align: right">
+                                <p:commandButton value="Xác nhận" icon="fa fa-check White" styleClass="GreenButton" actionListener="#{actionController.preAdd(2)}" process="authIbm" update=":insertEditForm:designGrowl :mop:lst"
+                                                 onstart="PF('blockUiSearch').block(); PF('authIbm').hide()" oncomplete="PF('blockUiSearch').unblock()"/>
+
+                                <p:commandButton value="Hủy bỏ" icon="fa fa-remove White" styleClass="ButtonRed"
+                                                 onclick="PF('authIbm').hide()"/>
+                            </h:panelGrid>
+                        </f:facet>
+                    </p:dialog>
+                </p:tab>
+                <p:tab title="#{actionController.viewOnly ? msg['common.detail'] : msg['common.mop.edit']}" closable="true"
+                       id="edittab"
+                       rendered="#{actionController.reqParamater ? true : false}">
+                    <ui:insert name="detail-dialog">
+                        <ui:include src="../action/config/edit/index.xhtml"/>
+                    </ui:insert>
+                </p:tab>
+            </p:tabView>
+        </h:form>
+
+        <script type="text/javascript">
+            $(document).ready(function () {
+                var currentTabID = "tab-0";
+                var currentIconID = "10";
+                ChangeTab(currentTabID);
+            });
+        </script>
+        <style>
+            #lst\:form\:objectTable_paginator_bottom {
+                width: 100% !important;
+            }
+            /*
+                        .ui-wizard .ui-wizard-step-titles li {
+                            !*background-color: #00aeef;*!
+                            background-color: #67BCDB;
+                        }
+
+                        .ui-wizard .ui-wizard-step-titles li.ui-state-highlight {
+                            !*background-color: #0ca533;*!
+                            background-color: #FF4136;
+                        }*/
+
+            .ui-wizard .ui-wizard-step-titles li {
+                /*background-color: #00aeef;*/
+                /*background-color: #74AFAD;*/
+                background-color: #4ABDAC;
+            }
+
+            .ui-wizard .ui-wizard-step-titles li.ui-state-highlight {
+                /*background-color: #0ca533;*/
+                /*background-color: #D9853B;*/
+                /*background-color: #FC4A1A;*/
+                background-color: #F7B733;
+            }
+
+            .ui-wizard-step-title {
+                min-width: 92px;
+                /*min-width: 108px;*/
+                text-align: center;
+            }
+
+            .ui-wizard-navbar {
+                padding-top: 12px;
+            }
+
+            .ui-growl {
+                top: 32px !important;
+            }
+
+            .ui-blockui {
+                background-color: grey;
+            }
+
+            .ui-blockui-content {
+                background-color: grey;
+
+            }
+
+            .blockUI .ui-widget-content {
+                background-color: white;
+            }
+
+            /*#insertEditForm\:blockUIContent tbody tr td {*/
+            .blockUi tbody tr td {
+                border: none !important;
+            }
+
+            .ui-selectlistbox-listcontainer {
+                height: 354px !important;
+            }
+
+            .c2 {
+                vertical-align: top;
+            }
+
+            #mop\:lst\:editDialogApp .ui-dialog-titlebar {
+                background-color: #1abc9c !important;
+                border-bottom: solid 1px #1abc9c !important;
+            }
+
+            #mop\:lst\:editDialogDb .ui-dialog-titlebar {
+                background-color: #1abc9c !important;
+                border-bottom: solid 1px #1abc9c !important;
+            }
+
+            #mop\:lst\:editDialogCustom .ui-dialog-titlebar {
+                background-color: #1abc9c !important;
+                border-bottom: solid 1px #1abc9c !important;
+            }
+
+            #mop\:lst\:editDialogTc .ui-dialog-titlebar {
+                background-color: #1abc9c !important;
+                border-bottom: solid 1px #1abc9c !important;
+            }
+
+            #mop\:lst\:authIbm .ui-dialog-titlebar {
+                background-color: #FF4136 !important;
+                border-bottom: solid 1px #FF4136 !important;
+            }
+
+            #mop\:lst\:chooseKb .ui-dialog-titlebar {
+                background-color: #FF4136 !important;
+                border-bottom: solid 1px #FF4136 !important;
+            }
+        </style>
+    </ui:define>
+</ui:composition>

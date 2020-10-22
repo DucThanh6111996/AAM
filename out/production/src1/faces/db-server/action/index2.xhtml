@@ -1,0 +1,1776 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions"
+                template="/layout/olympos_db_server/template.xhtml">
+
+    <ui:define name="content">
+        <h:form id="form">
+
+            <p:growl id="mainMessage" showDetail="true" showSummary="false"
+                     life="5000" />
+
+            <p:blockUI block="layoutData" widgetVar="blockDataForm">
+                LOADING<br />
+                <p:graphicImage
+                        value="/resources/olympos-layout/images/ajax-loader.gif" />
+            </p:blockUI>
+            <p:blockUI block="form:treeAction" widgetVar="blockTree">
+                <p:graphicImage
+                        value="/resources/olympos-layout/images/ajax-loader.gif" />
+            </p:blockUI>
+
+            <p:layout id="layoutData" styleClass="NoPadding"
+                      onResize="setLayoutForm()">
+                <p:layoutUnit position="west" resizable="true">
+                    <h:panelGroup>
+                        <div class="ui-g">
+                            <div class="Container100">
+                                <p:inputText id="searchTreeId"
+                                             value="#{actionDbServerController.keyActionSearch}"
+                                             style="width: calc(100% - 20px)"
+                                             label="#{msg['button.search']}"
+                                             placeholder="#{msg['button.search']}"
+                                             title="#{msg['button.search']}">
+                                    <p:ajax delay="500" event="keyup"
+                                            onstart="PF('blockTree').show()"
+                                            oncomplete="PF('blockTree').hide()" update="treeAction"
+                                            listener="#{actionDbServerController.searchActionNode()}">
+                                    </p:ajax>
+                                </p:inputText>
+                            </div>
+                        </div>
+                    </h:panelGroup>
+
+                    <p:tree widgetVar="treeAction123" id="treeAction"
+                            value="#{actionDbServerController.rootNode}" var="node"
+                            selection="#{actionDbServerController.selectedNode}"
+                            style="width: calc(100% - 2px); border-style: none;"
+                            selectionMode="single" dynamic="true" cache="false" animate="true">
+                        <ui:remove>
+                            <p:ajax event="select" update="panelShowCmdsInAction"
+                                    listener="#{actionDbServerController.prepareShowCmdInAction}" />
+                        </ui:remove>
+                        <p:treeNode expandedIcon="ui-icon-folder-open"
+                                    collapsedIcon="ui-icon-folder-collapsed">
+                            <h:outputText value="#{node.name}" title="#{node.name}" />
+                        </p:treeNode>
+                        <p:treeNode type="impact_label" icon="ui-icon-plusthick">
+                            <h:outputText value="#{node.name}" title="#{node.name}" />
+                        </p:treeNode>
+                        <p:treeNode type="rollback_label" icon="ui-icon-plusthick">
+                            <h:outputText value="#{node.name}" title="#{node.name}" />
+                        </p:treeNode>
+                        <p:treeNode type="parent" icon="ui-icon-folder-collapsed">
+                            <h:outputText value="#{node.name}" title="#{node.name}" />
+                        </p:treeNode>
+                        <p:treeNode type="child" icon="ui-icon-circle-triangle-e"
+                                    id="childNode-#{node.actionId}">
+
+                            <p:commandLink
+                                    ondblclick="dbClickTree([{name:'dbClickTree', value:''}])"
+                                    style="text-decoration: none;">
+                                <div>
+                                    <h:outputText id="text-childNode" value="#{node.name}"
+                                                  title="#{node.name}&lt;br /&gt; &lt;i style='color: yellow;' &gt; #{msg['tip.add.action.template']} &lt;i /&gt;" />
+                                    <p:tooltip for="text-childNode" position="top"></p:tooltip>
+                                </div>
+                            </p:commandLink>
+
+                            <p:draggable for="text-childNode" revert="true" opacity="0.3" />
+                        </p:treeNode>
+                    </p:tree>
+
+                    <p:remoteCommand name="dbClickTree" update="panelActionFlow"
+                                     oncomplete="PF('dlgActionFlow').show()"
+                                     actionListener="#{actionDbServerController.preAddActionToTemplate}">
+                    </p:remoteCommand>
+
+                    <p:contextMenu for="treeAction" id="contextMenuActionParent"
+                                   nodeType="parent">
+                        <p:menuitem value="#{msg['label.add']}" update=":formAddAction"
+                                    oncomplete="PF('dlgAddAction').show()"
+                                    icon=" ui-icon-circle-plus"
+                                    actionListener="#{actionDbServerController.checkAddAction()}" />
+                        <p:menuitem value="#{msg['label.del']}"
+                                    update=":formDelAction, form:mainMessage"
+                                    actionListener="#{actionDbServerController.prepareDelAction()}"
+                                    icon=" ui-icon-trash" />
+                        <p:menuitem value="#{msg['label.update.action']}"
+                                    update=":formAddAction" oncomplete="PF('dlgAddAction').show()"
+                                    actionListener="#{actionDbServerController.prepareEdit}"
+                                    icon="ui-icon-pencil" />
+                    </p:contextMenu>
+
+                    <p:contextMenu for="treeAction" id="contextMenuActionChild"
+                                   nodeType="child">
+                        <p:menuitem value="#{msg['label.del']}"
+                                    update=":formDelAction, form:mainMessage"
+                                    actionListener="#{actionDbServerController.prepareDelAction}"
+                                    icon=" ui-icon-trash" />
+                        <p:menuitem value="#{msg['label.update.action']}"
+                                    update=":formAddAction" oncomplete="PF('dlgAddAction').show()"
+                                    actionListener="#{actionDbServerController.prepareEdit}"
+                                    icon="ui-icon-pencil" />
+                        <p:menuitem value="#{msg['label.clone.action']}"
+                                    actionListener="#{actionDbServerController.prepareCloneAction}"
+                                    update=":formAddAction" oncomplete="PF('dlgAddAction').show()"
+                                    icon="ui-icon-arrowthick-1-e" />
+                        <p:menuitem value="#{msg['label.view.command.action']}"
+                                    update="panelShowCmdsInAction, form:mainMessage"
+                                    actionListener="#{actionDbServerController.prepareShowCmdInAction}"
+                                    icon="ui-icon-extlink" />
+                        <p:menuitem value="#{msg['label.add.cmd.action']}"
+                                    update=":formActionDetail"
+                                    actionListener="#{actionDbServerController.prepareAddActionDetail}"
+                                    oncomplete="PF('dlgActionDetail').show()"
+                                    icon="ui-icon-plusthick" />
+
+                        <p:menuitem value="#{msg['label.addActionToTemplate']}"
+                                    actionListener="#{actionDbServerController.preAddActionToTemplate}"
+                                    update="panelActionFlow" oncomplete="PF('dlgActionFlow').show()"
+                                    icon="ui-icon-arrowthick-1-e" />
+                    </p:contextMenu>
+
+                </p:layoutUnit>
+
+                <p:layoutUnit position="center" id="layoutFlowTemmplateCenter"
+                              resizable="true">
+                    <h:panelGroup id="panelFlowTempalteInfo">
+                        <div class="ui-g">
+                            <div class="Container60">
+
+                                <p:selectOneMenu style="width: 100%;" id="selectItemTemplate"
+                                                 var="temp" autoWidth="false" filter="true"
+                                                 filterMatchMode="contains" widgetVar="selectItemTemplateWg"
+                                                 value="#{buildTemplateFlowController.selectedFlowTemplate}"
+                                                 converter="flowTemplateConverter" height="300">
+                                    <f:selectItem itemLabel="#{msg['label.choose.template']}"
+                                                  itemValue="" />
+                                    <f:selectItems
+                                            value="#{buildTemplateFlowController.lstFlowTemplate}"
+                                            var="template" itemLabel="#{template.flowTemplateName}"
+                                            itemValue="#{template}" />
+
+                                    <p:column>
+                                        <p:commandLink
+                                                onclick="changeFlowTemplate([{name:'templateId', value:'#{temp.flowTemplatesId}'}]); PF('loadingDialog').show()"
+                                                style="text-decoration: none;">
+                                            <div
+                                                    style="width: 100%; margin-bottom: -25px; padding-top: 10px; padding-bottom: 10px; margin-top: -9px; height: 18px;">
+                                                <h:outputText value="#{temp.flowTemplateName}"
+                                                              style="width:100%" />
+                                            </div>
+                                        </p:commandLink>
+                                    </p:column>
+
+                                    <p:column style="width: 100px;">
+                                        <div style="text-align: right;">
+                                            <h:outputText value="#{msg['mop.execute.validate.gnoc']}"
+                                                          rendered="#{temp.templateType == 1}" />
+                                            <h:outputText value="#{msg['mop.execute.validate.voffice']}"
+                                                          rendered="#{temp.templateType == 2}" />
+                                            <h:outputText value="#{msg['mop.execute.validate.normal']}"
+                                                          rendered="#{temp.templateType == 3}" />
+                                        </div>
+                                    </p:column>
+
+
+                                    <p:column style="width: 135px;">
+                                        <div style="text-align: right; padding-right: 20px">
+                                            <p:tooltip position="top"></p:tooltip>
+                                            <p:commandButton id="btnDelTemplate"
+                                                             rendered="#{temp.status != 9 and temp.status != 1}"
+                                                             title="#{msg['label.del']}"
+                                                             onclick="deleteTemplate([{name:'templateId', value:'#{temp.flowTemplatesId}'}])"
+                                                             type="button" icon="fa fa-trash"
+                                                             styleClass="Fs14 White RedButton" />
+
+                                            <p:commandButton title="#{msg['label.rename']}"
+                                                             rendered="#{temp.status != 9 and temp.status != 1}"
+                                                             onclick="editTemplate([{name:'templateId', value:'#{temp.flowTemplatesId}'}])"
+                                                             type="button" icon="fa fa-edit"
+                                                             styleClass="Fs14 White BlueButton" />
+
+                                            <p:commandButton title="#{msg['button.clone']}"
+                                                             onclick="copyTemplate([{name:'templateId', value:'#{temp.flowTemplatesId}'}])"
+                                                             type="button" icon="fa fa-copy"
+                                                             styleClass="Fs14 White BlueButton" />
+                                        </div>
+                                    </p:column>
+
+                                </p:selectOneMenu>
+
+                                <p:remoteCommand name="changeFlowTemplate" process="@this"
+                                                 oncomplete="PF('loadingDialog').hide()"
+                                                 actionListener="#{buildTemplateFlowController.onChangeFlowTemplate}"
+                                                 update="form:listActionOfFlow, form:panelControll" />
+
+                                <p:remoteCommand name="deleteTemplate"
+                                                 oncomplete="PF('confDlgDelTemplate').show()"
+                                                 update="panelDelTemplate, form:mainMessage"
+                                                 actionListener="#{buildTemplateFlowController.prepareDelTemplate}" />
+
+                                <p:remoteCommand name="editTemplate"
+                                                 oncomplete="PF('dlgAddNewTemplate').show()"
+                                                 update="panelAddNewTemplate, form:mainMessage"
+                                                 actionListener="#{buildTemplateFlowController.prepareRenameTemplate}" />
+
+                                <p:remoteCommand name="copyTemplate"
+                                                 oncomplete="PF('dlgCopyTemplate').show()"
+                                                 update="panelCopyTemplate, form:mainMessage"
+                                                 actionListener="#{buildTemplateFlowController.onSelectCopyTemplate}" />
+
+                            </div>
+                            <div class="Container10"></div>
+                            <div class="Container30 TexAlRight" style="padding-right: 20px;">
+                                <p:commandButton value="#{msg['label.add.template']}"
+                                                 onkeypress="if( event.keyCode == 13){event.keyCode=0;}"
+                                                 icon="fa fa-plus-circle" styleClass="GreenButton Fs14 White"
+                                                 update="panelAddNewTemplate" id="btAddTemplateId"
+                                                 oncomplete="PF('dlgAddNewTemplate').show()"
+                                                 actionListener="#{buildTemplateFlowController.preAddTemplate}" />
+                            </div>
+                        </div>
+
+                    </h:panelGroup>
+
+                    <h:panelGroup id="listActionOfFlow">
+                        <p:outputPanel id="panelControll"
+                                       style="position: fixed;right: 5px; bottom: 30px;width: 45px;">
+                            <p:tooltip position="left"></p:tooltip>
+                            <p:commandButton icon="fa fa-save"
+                                             rendered="#{(buildTemplateFlowController.selectedFlowTemplate != null)
+											and (buildTemplateFlowController.selectedFlowTemplate.status != 9)
+											and (buildTemplateFlowController.selectedFlowTemplate.status != 1)}"
+                                             title="#{msg['label.button.save.actionOfFlow']}"
+                                             update="form:listActionOfFlow, form:selectItemTemplate, form:mainMessage"
+                                             style="width: 100%;" styleClass="Fs14 White"
+                                             actionListener="#{buildTemplateFlowController.saveActionOfFlow}" />
+
+                            <p:commandButton icon="fa fa-plus"
+                                             rendered="#{(buildTemplateFlowController.selectedFlowTemplate != null)
+											and (buildTemplateFlowController.selectedFlowTemplate.flowTemplateName != null)
+											and (buildTemplateFlowController.selectedFlowTemplate.status != 9)
+											and (buildTemplateFlowController.selectedFlowTemplate.status != 1)}"
+                                             title="#{msg['label.group.action.add']}" process="@this"
+                                             update="form:listActionOfFlow, form:mainMessage, panelAddNewGroupName:panelAddNewGroupName2, panelAddNewGroupName:headerAddNewGroupNameId"
+                                             styleClass="GreenButton Fs14 White MarTop5"
+                                             actionListener="#{buildTemplateFlowController.prepareAddGroup}"
+                                             style="width: 100%;"
+                                             oncomplete="PF('dlgAddNewGroupName').show()" />
+
+                            <p:commandButton onclick="PF('loadingDialog').show()"
+                                             oncomplete="PF('loadingDialog').hide()" icon="fa fa-sliders"
+                                             rendered="#{(buildTemplateFlowController.selectedFlowTemplate != null)
+											and (not empty buildTemplateFlowController.actionOfFlowss)
+											and (buildTemplateFlowController.selectedFlowTemplate.status != 9)
+											and (buildTemplateFlowController.selectedFlowTemplate.status != 1)}"
+                                             title="#{msg['label.set.default.param']}" process="@this"
+                                             update="panelSetParamDefault, form:mainMessage"
+                                             actionListener="#{buildTemplateFlowController.buildParamGroup}"
+                                             styleClass="AquaButton Fs14 White MarTop5" style="width: 100%;" />
+
+                            <p:commandButton onclick="PF('loadingDialog').show()"
+                                             oncomplete="PF('loadingDialog').hide()"
+                                             icon="fa fa-object-group "
+                                             rendered="#{(buildTemplateFlowController.selectedFlowTemplate != null)
+											and (not empty buildTemplateFlowController.actionOfFlowss)
+											and (buildTemplateFlowController.selectedFlowTemplate.status != 9)
+											and (buildTemplateFlowController.selectedFlowTemplate.status != 1)}"
+                                             title="#{msg['label.btn.param.reference']}" process="@this"
+                                             update="panelSetParamReference, form:mainMessage"
+                                             styleClass="Fs14 White MarTop5"
+                                             actionListener="#{buildTemplateFlowController.buildParamInOutData}"
+                                             style="width: 100%;" />
+                            <p:commandButton icon="fa fa-wrench"
+                                             title="#{msg['view.button.show.node.layer']}"
+                                             actionListener="#{nodeLayerController.buildNodeLayer}"
+                                             oncomplete="PF('loadingDialog').hide();PF('showNodeLayer').show()"
+                                             onclick="PF('loadingDialog').show()" update=":showNodeLayer"
+                                             rendered="#{(buildTemplateFlowController.selectedFlowTemplate != null)
+											and (not empty buildTemplateFlowController.actionOfFlowss)}"
+                                             styleClass="BlueButton Fs14 White MarTop5 " style="width: 100%;">
+                            </p:commandButton>
+
+                            <p:commandButton icon="fa fa-sitemap"
+                                             title="#{msg['view.button.show.top']}"
+                                             actionListener="#{drawTopoStatusExecController.buildTopoDiagram(buildTemplateFlowController.selectedFlowTemplate, true)}"
+                                             oncomplete="PF('loadingDialog').hide();PF('showTopo').show()"
+                                             onclick="PF('loadingDialog').show()" update=":showTopo"
+                                             rendered="#{(buildTemplateFlowController.selectedFlowTemplate != null)
+											and (not empty buildTemplateFlowController.actionOfFlowss)}"
+                                             styleClass="BlueButton Fs14 White MarTop5 " style="width: 100%;">
+                            </p:commandButton>
+                            <p:commandButton onclick="PF('loadingDialog').show()"
+                                             oncomplete="PF('loadingDialog').hide()"
+                                             icon="fa fa-chain"
+                                             rendered="#{(buildTemplateFlowController.selectedFlowTemplate != null)
+											 and (not empty buildTemplateFlowController.actionOfFlowss)}"
+                                             title="#{msg['label.template.map.param.alarm']}" process="@this"
+                                             update="panelMapParamAlarm, form:mainMessage"
+                                             styleClass="Fs14 White MarTop5"
+                                             actionListener="#{buildTemplateFlowController.buildParamInTemplate}"
+                                             style="width: 100%;"/>
+
+                            <p:commandButton icon="fa fa-check"
+                                             rendered="#{buildTemplateFlowController.selectedFlowTemplate.status != 9}"
+                                             title="#{msg['tooltip.btn.approval.template']}"
+                                             update="form:listActionOfFlow, form:selectItemTemplate, form:mainMessage"
+                                             style="width: 100%;" styleClass="BlueButton Fs14 White MarTop5"
+                                             actionListener="#{buildTemplateFlowController.approveTemplateLevel}" />
+
+                            <p:commandButton icon="fa fa-unlock"
+                                             rendered="#{buildTemplateFlowController.selectedFlowTemplate.status == 9}"
+                                             title="#{msg['tooltip.btn.cancel.Approval.template']}"
+                                             update="form:listActionOfFlow, form:selectItemTemplate, form:mainMessage"
+                                             style="width: 100%;" styleClass="BlueButton Fs14 White MarTop5"
+                                             actionListener="#{buildTemplateFlowController.cancelApprovalTemplate}" />
+
+                        </p:outputPanel>
+
+                        <c:forEach items="#{buildTemplateFlowController.actionOfFlowss}"
+                                   var="lstActionFlow" varStatus="loop">
+
+                            <br />
+                            <p:panel toggleable="true"
+                                     header="#{buildTemplateFlowController.getActionGroupNameData(loop.index)}">
+                                <f:facet name="header">
+                                    <div class="Container100 NoPadding"
+                                         style="width: calc(100% -    16px) !important;">
+                                        <div class="Card NoPadding" style="background: transparent;">
+                                            <div class="Container5" style="text-align: left;">
+                                                <p:commandButton title="#{msg['label.btn.rename.group']}"
+                                                                 icon="fa fa-edit"
+                                                                 disabled="#{buildTemplateFlowController.selectedFlowTemplate.status == 9
+																or buildTemplateFlowController.selectedFlowTemplate.status == 1}"
+                                                                 oncomplete="PF('dlgAddNewGroupName').show()"
+                                                                 update="panelAddNewGroupName:dlgAddNewGroupNameId"
+                                                                 styleClass="OrangeButton Fs14 White"
+                                                                 actionListener="#{buildTemplateFlowController.prepareRenameGroup(loop.index)}" />
+                                            </div>
+                                            <div class="Container5" style="text-align: left;">
+                                                <p:commandButton title="#{msg['label.btn.delete.group']}"
+                                                                 icon="fa fa-trash"
+                                                                 disabled="#{buildTemplateFlowController.selectedFlowTemplate.status == 9
+																or buildTemplateFlowController.selectedFlowTemplate.status == 1}"
+                                                                 oncomplete="PF('deleteGroupAction').show()"
+                                                                 actionListener="#{buildTemplateFlowController.setIndexOfGroupActionToDel(loop.index)}"
+                                                                 update="deleteGroupActionId"
+                                                                 styleClass="RedButton Fs14 White" />
+
+
+                                            </div>
+                                            <div class="Container10"
+                                                 style="text-align: left; padding-top: 10px"></div>
+
+                                            <div class="Container60 Responsive50 MarTop10 TexAlCenter">
+                                                <h:outputText
+                                                        value="#{buildTemplateFlowController.getActionGroupNameData(loop.index)}" />
+                                            </div>
+                                            <div class="Container20" style="text-align: right;">
+
+                                                <p:commandButton
+                                                        disabled="#{loop.index == 0
+													or buildTemplateFlowController.selectedFlowTemplate.status == 9
+													or buildTemplateFlowController.selectedFlowTemplate.status == 1}"
+                                                        title="#{msg['btn.move.up']}"
+                                                        styleClass="AquaButton Fs14 White" icon="fa fa-arrow-up"
+                                                        style="" update="form:mainMessage, form:listActionOfFlow"
+                                                        actionListener="#{buildTemplateFlowController.moveUp(loop.index)}" />
+                                                <p:commandButton
+                                                        disabled="#{loop.index == buildTemplateFlowController.actionOfFlowss.size()-1
+														or buildTemplateFlowController.selectedFlowTemplate.status == 9
+														or buildTemplateFlowController.selectedFlowTemplate.status == 1}"
+                                                        title="#{msg['btn.move.down']}"
+                                                        styleClass="AquaButton Fs14 White" icon="fa fa-arrow-down"
+                                                        style="margin-left: 10px;"
+                                                        update="form:mainMessage, form:listActionOfFlow"
+                                                        actionListener="#{buildTemplateFlowController.moveDown(loop.index)}" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </f:facet>
+                                <p:dataTable draggableRows="true" value="#{lstActionFlow}"
+                                             id="actionFlowId-#{loop.index}" rowIndexVar="idx" var="cmd"
+                                             editable="true" editMode="cell">
+
+                                    <p:ajax event="cellEdit" update="actionFlowId-#{loop.index}"
+                                            listener="#{buildTemplateFlowController.onCellEdit}" />
+
+                                    <p:ajax event="rowReorder"
+                                            listener="#{buildTemplateFlowController.reorderDataTable}"
+                                            update="actionFlowId-#{loop.index}" process="@none"
+                                            partialSubmit="true" />
+
+                                    <p:column width="30" headerText="#{msg['label.order']}"
+                                              styleClass="TexAlCenter">
+                                        <h:outputText value="#{cmd.stepNumberLabel}" />
+                                    </p:column>
+
+                                    <p:column headerText="#{msg['label.action.name']}">
+                                        <p:inputText value="#{cmd.action.name}"
+                                                     styleClass="inputInRow" readonly="true" />
+                                    </p:column>
+
+                                    <p:column headerText="#{msg['label.group.action.name']}"
+                                              rendered="false">
+                                        <h:outputText value="#{cmd.groupActionName}" />
+                                    </p:column>
+
+                                    <p:column width="100"
+                                              headerText="#{msg['label.actionFlow.previousStep']}">
+                                        <p:cellEditor>
+                                            <f:facet name="output">
+                                                <h:outputText value="#{cmd.preStepsNumberLabel}" />
+                                            </f:facet>
+                                            <f:facet name="input">
+                                                <p:selectCheckboxMenu value="#{cmd.preStepsNumber}"
+                                                                      label="#{cmd.preStepsNumberLabel}"
+                                                                      style="width: 70%; height: 30px;"
+                                                                      onHide="setPreStepAction([{name:'groupActionIndex', value:'#{loop.index}'}, {name:'actionFlowIndex', value:'#{idx}'}, {name:'actionFlowRowId', value:'actionFlowId-#{loop.index}'}])"
+                                                                      filter="true" filterMatchMode="startsWith"
+                                                                      scrollHeight="200">
+
+                                                    <p:ajax event="toggleSelect"
+                                                            listener="#{buildTemplateFlowController.setPreStepsData(cmd, loop.index, idx)}" />
+
+                                                    <p:ajax event="change"
+                                                            listener="#{buildTemplateFlowController.setPreStepsData(cmd, loop.index, idx)}" />
+
+                                                    <f:selectItem itemLabel="#{msg['common.choose']}"
+                                                                  itemValue="" noSelectionOption="true" />
+                                                    <f:selectItems
+                                                            value="#{buildTemplateFlowController.buidLstPreStepItem(cmd)}"
+                                                            var="index" itemValue="#{index}" itemLabel="#{index}" />
+
+                                                </p:selectCheckboxMenu>
+                                            </f:facet>
+                                        </p:cellEditor>
+                                    </p:column>
+
+                                    <p:column width="100"
+                                              headerText="#{msg['label.actionOfFlow.condition']}">
+                                        <p:cellEditor>
+                                            <f:facet name="output">
+                                                <p:inputText value="#{cmd.preStepsCondition}"
+                                                             readonly="true" style="width: 70%;" />
+                                            </f:facet>
+                                            <f:facet name="input">
+                                                <p:inputText value="#{cmd.preStepsCondition}"
+                                                             style="width: 70%;"
+                                                             title="#{msg['label.condition.action.tip']}">
+                                                </p:inputText>
+                                            </f:facet>
+                                        </p:cellEditor>
+                                    </p:column>
+
+                                    <p:column headerText="#{msg['label.schedule.rollack']}"
+                                              width="10%">
+                                        <p:inputSwitch value="#{cmd.rollbackStatus}" />
+                                    </p:column>
+
+                                    <p:column headerText="#{msg['action.flow.delay_time']}"
+                                              width="10%">
+                                        <p:inputNumber style="width: 70%;"
+                                                       onkeypress="if( event.keyCode == 13){return false;}"
+                                                       value="#{cmd.delayTime}" minValue="1" maxValue="1000000" />
+                                    </p:column>
+
+                                    <p:column style="width: 10%; text-align: left">
+
+                                        <p:tooltip position="left" />
+                                        <p:commandButton id="btnViewCmdInActionTemp"
+                                                         title="#{msg['label.view.command.action']}"
+                                                         oncomplete="PF('dlgShowCmdsActionTemplate').show()"
+                                                         update="panelShowCmdsActionTemplate" icon="fa fa-terminal"
+                                                         styleClass="Fs14 White"
+                                                         actionListener="#{buildTemplateFlowController.prepareShowCmd(cmd)}"
+                                                         style="color:green; font-weight: bold;font-size: 13px ">
+                                        </p:commandButton>
+                                        <p:spacer width="2px;" />
+
+                                        <p:commandButton id="btnDelActionFlowTemp"
+                                                         disabled="#{buildTemplateFlowController.selectedFlowTemplate.status == 9
+													or buildTemplateFlowController.selectedFlowTemplate.status == 1}"
+                                                         title="#{msg['label.del']}"
+                                                         update="form:listActionOfFlow, form:mainMessage"
+                                                         icon="fa fa-trash" styleClass="RedButton Fs14 White"
+                                                         actionListener="#{buildTemplateFlowController.deleteActionOfFlow(cmd,idx)}"
+                                                         style="color:green; font-weight: bold;font-size: 13px ">
+                                        </p:commandButton>
+                                    </p:column>
+
+                                </p:dataTable>
+
+                                <p:remoteCommand name="setPreStepAction"
+                                                 actionListener="#{buildTemplateFlowController.updatePreStepAction}" />
+                            </p:panel>
+                        </c:forEach>
+                    </h:panelGroup>
+                </p:layoutUnit>
+            </p:layout>
+
+
+            <p:confirmDialog global="true"
+                             header="#{msg['label.btn.delete.group']}" id="deleteGroupActionId"
+                             showEffect="face" hideEffect="scale" widgetVar="deleteGroupAction">
+                <f:facet name="message">
+                    <h:outputText value="#{msg['title.confirm.delete']}" />
+                    <p:spacer width="100%" height="1px"></p:spacer>
+                    <h:outputText style="color: black; font-weight: bold;"
+                                  value="#{msg['label.group.action']}: " />
+                    <h:outputText style="color: black"
+                                  value="#{buildTemplateFlowController.getActionGroupNameData(buildTemplateFlowController.indexOfGroupActionToDel)}" />
+                </f:facet>
+
+                <p:commandButton value="Yes"
+                                 update=":form:listActionOfFlow, form:mainMessage" process="@this"
+                                 oncomplete="PF('deleteGroupAction').hide()"
+                                 actionListener="#{buildTemplateFlowController.deleteGroup(buildTemplateFlowController.indexOfGroupActionToDel)}"
+                                 styleClass="ui-confirmdialog-yes AquaButton"
+                                 icon="ui-icon-check fa fa-check Fs14 White" />
+                <p:commandButton value="No" type="button"
+                                 styleClass="ui-confirmdialog-no RedButton"
+                                 onclick="PF('deleteGroupAction').hide()"
+                                 icon="ui-icon-close fa fa-close Fs14 White" />
+            </p:confirmDialog>
+
+        </h:form>
+
+        <h:form id="confirmApprovalTemp">
+            <p:confirmDialog id="confApprovalTempDlg"
+                             widgetVar="confApprovalTempDlg"
+                             header="#{msg['confirm.approval.header']}"
+                             message="#{buildTemplateFlowController.selectedFlowTemplate.flowTemplateName}">
+
+                <h:panelGrid columns="3">
+                    <p:commandButton type="submit" value="#{msg['button.confirm']}"
+                                     update="form:panelFlowTempalteInfo, form:listActionOfFlow, form:mainMessage"
+                                     style="width: 120px; height: 25px;font-size: 12px" process="@this"
+                                     actionListener="#{buildTemplateFlowController.approvalTemplate}"
+                                     oncomplete="PF('confApprovalTempDlg').hide()" />
+                    <p:spacer height="10px;" />
+                    <p:commandButton type="submit" value="#{msg['label.cancel']}"
+                                     onclick="PF('confApprovalTempDlg').hide()"
+                                     style="width: 120px; height: 25px;font-size: 12px" />
+                </h:panelGrid>
+            </p:confirmDialog>
+        </h:form>
+
+        <h:form id="panelShowCmdsActionTemplate">
+            <p:dialog id="dlgShowCmdsActionTemplate"
+                      widgetVar="dlgShowCmdsActionTemplate"
+                      header="#{buildTemplateFlowController.selectedActionView.name}"
+                      width="70%" style="top:50px; bottom:50px; overflow: auto"
+                      modal="true" resizable="true">
+
+                <c:forEach
+                        items="#{buildTemplateFlowController.selectedActionView.actionDetails}"
+                        var="detail">
+
+                    <p:dataTable value="#{detail.actionCommands}" var="actionCmd"
+                                 rowIndexVar="idx">
+                        <f:facet name="header">
+                            <h:outputText
+                                    value="#{detail.vendor.vendorName}
+									- #{detail.nodeType.typeName}
+									- #{detail.version.versionName}" />
+                        </f:facet>
+
+                        <p:column headerText="#{msg['label.order']}" style="width: 10%;">
+                            <h:outputText value="#{idx + 1}" />
+                        </p:column>
+
+                        <p:column width="30%"
+                                  headerText="#{msg['label.action.command.name']}">
+                            <h:outputText value="#{actionCmd.commandDetail.commandName}" />
+                        </p:column>
+
+                        <p:column headerText="#{msg['label.cmd']}">
+                            <h:outputText
+                                    value="#{actionCmd.commandDetail.commandTelnetParser.cmd}" />
+                        </p:column>
+
+                    </p:dataTable>
+                    <br />
+                </c:forEach>
+
+            </p:dialog>
+        </h:form>
+
+        <h:form id="panelSetParamReference">
+            <p:dialog id="dlgParamReference" widgetVar="dlgParamReference"
+                      header="#{msg['label.btn.param.reference']}: #{buildTemplateFlowController.selectedFlowTemplate.flowTemplateName}"
+                      modal="true" width="100%"
+                      style="top: 60px; bottom: 20px; overflow: auto" resizable="true">
+
+                <p:dataTable id="paramInOutTable" rowIndexVar="idx" lazy="true"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+                             paginatorPosition="bottom" paginator="true" rows="10"
+                             rowsPerPageTemplate="5,10,15"
+                             value="#{buildTemplateFlowController.lstParamInOutObject}"
+                             var="paramGroup" editable="true" editMode="cell">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['label.btn.param.reference']}" />
+                    </f:facet>
+
+                    <p:column headerText="#{msg['label.order']}" style="width: 5%">
+                        <h:outputText value="#{idx + 1}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.paramCode']}">
+                        <h:outputText value="#{paramGroup.paramInput.paramCode}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.cmd']}">
+                        <h:outputText
+                                value="#{paramGroup.paramInput.commandDetail.commandTelnetParser.cmd}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.cmd.info']}">
+                        <h:outputText
+                                value="#{paramGroup.paramInput.commandDetail.vendor.vendorName}
+									 :
+								 	#{paramGroup.paramInput.commandDetail.nodeType.typeName}
+								 	 :
+								 	#{paramGroup.paramInput.commandDetail.version.versionName}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.action.name']}">
+                        <h:outputText
+                                value="#{paramGroup.actionOfFlowByActionFlowInId.groupActionName} :
+								#{paramGroup.actionOfFlowByActionFlowInId.action.name}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.action.reference']}">
+                        <h:outputText
+                                rendered="#{paramGroup.actionOfFlowByActionFlowOutId != null}"
+                                value="#{paramGroup.actionOfFlowByActionFlowOutId.groupActionName} :
+								#{paramGroup.actionOfFlowByActionFlowOutId.action.name}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.cmd.reference']}">
+                        <h:outputText
+                                rendered="#{paramGroup.actionOfFlowByActionFlowOutId != null}"
+                                value="#{paramGroup.actionCommandByActionCommandOutputId.commandDetail.commandTelnetParser.cmd}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.actionOfFlow.condition']}">
+                        <div class="TexAlCenter">
+                            <p:tooltip for="btnAddReferCmd" showEffect="clip"
+                                       hideEffect="explode" value="#{msg['label.cmd.reference']}" />
+                            <p:commandButton icon="fa fa-external-link" id="btnAddReferCmd"
+                                             actionListener="#{buildTemplateFlowController.buildLstActionSelect(paramGroup)}"
+                                             styleClass="Fs14 White"
+                                             update="form:mainMessage, panelAddParamRefernce">
+                            </p:commandButton>
+                            <p:spacer />
+                            <p:tooltip value="#{msg['label.btn.add.reference']}"
+                                       for="btnDelReferCmd" showEffect="clip" hideEffect="explode" />
+                            <p:commandButton icon="fa fa-trash" id="btnDelReferCmd"
+                                             rendered="#{paramGroup.actionOfFlowByActionFlowOutId != null}"
+                                             styleClass="Fs14 White"
+                                             actionListener="#{buildTemplateFlowController.prepareDelCmdRef(paramGroup)}"
+                                             update="form:mainMessage, panelDelCmdReference"
+                                             oncomplete="PF('confDlgDelCmdReference').show()">
+                            </p:commandButton>
+                        </div>
+                    </p:column>
+
+                </p:dataTable>
+
+            </p:dialog>
+        </h:form>
+
+        <h:form id="panelDelCmdReference">
+            <p:confirmDialog id="confDlgDelCmdReference" width="60%"
+                             widgetVar="confDlgDelCmdReference"
+                             header="#{msg['label.confirm.del']}"
+                             message="#{buildTemplateFlowController.selectedParamInOut.paramInput.paramCode}-
+							#{buildTemplateFlowController.selectedParamInOut.paramInput.commandDetail.commandName}">
+
+                <h:panelGrid columns="3">
+                    <p:commandButton type="submit" value="#{msg['label.del']}"
+                                     update="panelSetParamReference:paramInOutTable, form:mainMessage"
+                                     style="width: 120px; height: 25px;font-size: 12px"
+                                     actionListener="#{buildTemplateFlowController.delCmdReference}"
+                                     oncomplete="PF('confDlgDelCmdReference').hide()" />
+                    <p:spacer height="10px;" />
+                    <p:commandButton type="submit" value="#{msg['label.cancel']}"
+                                     onclick="PF('confDlgDelCmdReference').hide()"
+                                     style="width: 120px; height: 25px;font-size: 12px" />
+                </h:panelGrid>
+            </p:confirmDialog>
+        </h:form>
+
+        <h:form id="panelAddParamRefernce">
+            <p:dialog id="dlgAddParamRefer" widgetVar="dlgAddParamRefer"
+                      modal="true" width="60%" closable="false"
+                      header="#{msg['label.header.add.cmd.reference']}">
+                <h:panelGrid style="width: 100%" columns="2">
+                    <h:outputText value="#{msg['label.paramCode']}: " />
+                    <h:outputText
+                            value="#{buildTemplateFlowController.selectedParamInOut.paramInput.paramCode}" />
+
+                    <h:outputText value="#{msg['label.action.command.name']}: " />
+                    <h:outputText
+                            value="#{buildTemplateFlowController.selectedParamInOut.paramInput.commandDetail.commandName}" />
+
+                    <h:outputText value="#{msg['label.cmd']}: " />
+                    <h:outputText
+                            value="#{buildTemplateFlowController.selectedParamInOut.paramInput.commandDetail.commandTelnetParser.cmd}" />
+
+                    <h:outputText value="#{msg['label.cmd.info']}: " />
+                    <h:outputText
+                            value="#{buildTemplateFlowController.selectedParamInOut.paramInput.commandDetail.vendor.vendorName}
+												 :
+												 #{buildTemplateFlowController.selectedParamInOut.paramInput.commandDetail.nodeType.typeName}
+												 :
+												 #{buildTemplateFlowController.selectedParamInOut.paramInput.commandDetail.version.versionName}" />
+
+                    <h:outputText value="#{msg['label.action.name']}: " />
+                    <h:outputText
+                            value="#{buildTemplateFlowController.selectedParamInOut.actionOfFlowByActionFlowInId.action.name}" />
+
+                    <h:outputText value="#{msg['label.group.action.name']}: " />
+                    <h:outputText
+                            value="#{buildTemplateFlowController.selectedParamInOut.actionOfFlowByActionFlowInId.groupActionName}" />
+
+                </h:panelGrid>
+
+                <p:separator />
+
+                <div class="ui-g">
+                    <p:selectOneMenu
+                            value="#{buildTemplateFlowController.selectedActionFlow}"
+                            converter="actionFlowConverter" autoWidth="false">
+                        <f:selectItem itemLabel="#{msg['label.auto.action.name']}"
+                                      itemValue="-1" noSelectionOption="true" />
+                        <p:ajax event="change"
+                                listener="#{buildTemplateFlowController.buildLstActionCmdSelect}"
+                                update="selectActionCmdId" process="@this" />
+                        <f:selectItems
+                                value="#{buildTemplateFlowController.lstActionFlow}"
+                                var="actionFlow" itemValue="#{actionFlow}"
+                                itemLabel="#{actionFlow.groupActionName} - #{actionFlow.action.name}" />
+                    </p:selectOneMenu>
+                </div>
+
+                <div class="ui-g">
+                    <p:selectOneMenu panelStyle="width:200px" id="selectActionCmdId"
+                                     maxlength="200" autoWidth="false" var="cmdObj"
+                                     value="#{buildTemplateFlowController.selectedActionCmd}"
+                                     converter="actionCommandConverter">
+                        <f:selectItem itemLabel="#{msg['label.cmd.reference']}"
+                                      noSelectionOption="true"/>
+                        <f:selectItems
+                                value="#{buildTemplateFlowController.lstActionCommand}"
+                                itemValue="#{cmd}" var="cmd"
+                                itemLabel="#{cmd.commandDetail.commandTelnetParser.cmd}
+								== #{cmd.commandDetail.vendor.vendorName}
+								== #{cmd.commandDetail.nodeType.typeName}
+								== #{cmd.commandDetail.version.versionName}" />
+                        <p:column headerText="#{msg['label.cmd.reference']}">
+                            <h:outputText value="#{cmdObj.commandDetail.commandTelnetParser.cmd}"/>
+                        </p:column>
+                        <p:column>
+                            <h:outputText value="#{cmdObj.commandDetail.vendor.vendorName}"/>
+                        </p:column>
+                        <p:column>
+                            <h:outputText value="#{cmdObj.commandDetail.nodeType.typeName}"/>
+                        </p:column>
+                        <p:column>
+                            <h:outputText value="#{cmdObj.commandDetail.version.versionName}"/>
+                        </p:column>
+                    </p:selectOneMenu>
+                </div>
+
+                <div class="ui-g">
+                    <p:autoComplete value="#{buildTemplateFlowController.selectedNode}"
+                                    converter="nodeConverter" placeholder="#{msg['label.effectip']}"
+                                    completeMethod="#{buildTemplateFlowController.autoNodeMethod}"
+                                    var="node" itemLabel="#{node.nodeIp}" itemValue="#{node}"
+                                    dropdown="true" size="60">
+
+                    </p:autoComplete>
+                </div>
+
+                <div class="row"
+                     style="margin-top: 20px; text-align: center; margin-left: auto; margin-right: auto; display: block">
+                    <p:commandButton value="#{msg['label.update']}"
+                                     update="form:mainMessage, panelSetParamReference:paramInOutTable"
+                                     actionListener="#{buildTemplateFlowController.saveSelectedCmdReference}" />
+
+                    <p:commandButton value="#{msg['button.close']}"
+                                     actionListener="#{buildTemplateFlowController.closeDlgCmdReference}"
+                                     update="panelAddParamRefernce"
+                                     oncomplete="PF('dlgAddParamRefer').hide()" />
+                </div>
+            </p:dialog>
+        </h:form>
+
+        <h:form id="panelSetParamDefault">
+            <p:dialog id="dlgParamDefault" widgetVar="dlgParamDefault"
+                      header="#{msg['header.title.paramGroup']}" modal="true" width="100%"
+                      style="top: 60px; bottom: 20px; overflow: auto" resizable="false">
+
+                <p:remoteCommand name="onCellEdit" process="@this"
+                                 update="form:mainMessage"
+                                 actionListener="#{buildTemplateFlowController.onUpdateParamDefault}" />
+                <p:dataTable id="paramGroupTable" rowIndexVar="idx"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+                             paginatorPosition="bottom" paginator="true" rows="10"
+                             rowsPerPageTemplate="5,10,15"
+                             value="#{buildTemplateFlowController.lstParamGroup}"
+                             var="paramGroup" editable="true" editMode="cell">
+                    <f:facet name="header">
+                        <p:commandButton value="#{msg['button.update']}"
+                                         actionListener="#{buildTemplateFlowController.saveParamGroupDefault}"
+                                         update="form:mainMessage, panelSetParamDefault:paramGroupTable" />
+                    </f:facet>
+
+                    <!-- 20161014 hanhnv68 comment do khong can gan gia tri cac ten tham so giong nhau thi nhu nhau. -->
+                    <!-- ma phan biet theo template, vendor, nodetype, version -->
+                    <!--
+                        <p:ajax event="cellEdit" oncomplete="onCellEdit()"
+                            listener="#{buildTemplateFlowController.onCellEditParam}" />
+                     -->
+
+                    <p:column headerText="#{msg['label.order']}" width="5%;">
+                        <h:outputText value="#{idx + 1}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['view.tilte.param']}" width="10%;">
+                        <h:outputText value="#{paramGroup.paramInput.paramCode}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.cmd']}" width="45%;">
+                        <h:outputText
+                                value="#{paramGroup.paramInput.commandDetail.commandTelnetParser.cmd}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.auto.vendor.name']}"
+                              width="10%;">
+                        <h:outputText
+                                value="#{paramGroup.paramInput.commandDetail.vendor.vendorName}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.auto.nodeType.name']}"
+                              width="10%;">
+                        <h:outputText
+                                value="#{paramGroup.paramInput.commandDetail.nodeType.typeName}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.versionName']}" width="10%;">
+                        <h:outputText
+                                value="#{paramGroup.paramInput.commandDetail.version.versionName}" />
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.paramDefault']}" width="10%;">
+                        <p:cellEditor>
+                            <f:facet name="output">
+                                <h:outputText value="#{paramGroup.paramDefault}" />
+                            </f:facet>
+                            <f:facet name="input">
+                                <p:inputText value="#{paramGroup.paramDefault}"
+                                             style="width: 80%" />
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <ui:remove>
+                        <p:column headerText="#{msg['label.group.code']}">
+                            <p:cellEditor>
+                                <f:facet name="output">
+                                    <h:outputText
+                                            value="#{paramGroup.groupCode eq 0 ? paramGroup.groupCode : ''}" />
+                                </f:facet>
+                                <f:facet name="input">
+                                    <p:inputText value="#{paramGroup.groupCode}" style="width: 80%" />
+                                </f:facet>
+                            </p:cellEditor>
+                        </p:column>
+                    </ui:remove>
+
+                </p:dataTable>
+
+            </p:dialog>
+        </h:form>
+
+        <h:form id="panelDelTemplate">
+            <p:confirmDialog id="confDlgDelTemplate"
+                             widgetVar="confDlgDelTemplate" header="#{msg['label.confirm.del']}"
+                             message="#{buildTemplateFlowController.selectedFlowTemplate.flowTemplateName}">
+
+                <h:panelGrid columns="3">
+                    <p:commandButton type="submit" value="#{msg['label.del']}"
+                                     update="form:panelFlowTempalteInfo, form:listActionOfFlow, form:mainMessage"
+                                     style="width: 120px; height: 25px;font-size: 12px" process="@this"
+                                     actionListener="#{buildTemplateFlowController.deleteTemplate}"
+                                     oncomplete="PF('confDlgDelTemplate').hide()" />
+                    <p:spacer height="10px;" />
+                    <p:commandButton type="submit" value="#{msg['label.cancel']}"
+                                     onclick="PF('confDlgDelTemplate').hide()"
+                                     style="width: 120px; height: 25px;font-size: 12px" />
+                </h:panelGrid>
+            </p:confirmDialog>
+        </h:form>
+
+        <h:form id="panelCopyTemplate">
+            <p:dialog id="dlgCopyTemplate" widgetVar="dlgCopyTemplate"
+                      modal="true" header="#{msg['dlg.header.add.template']}"
+                      focus="copyTemplateNameId">
+                <h:panelGroup>
+
+                    <div class="ui-g">
+                        <p:inputTextarea rows="1" autoResize="true" style="width: 435px;"
+                                         placeholder="#{msg['label.template.imput.name']}"
+                                         id="copyTemplateNameId"
+                                         value="#{buildTemplateFlowController.copyFlowTemplateName}" />
+                    </div>
+                    <div class="ui-g">
+                        <p:selectOneMenu
+                                value="#{buildTemplateFlowController.flowTemplateType}"
+                                title="#{msg['view.choose.cr']}" validator="notNullValidator"
+                                required="true" requiredMessage="#{msg['view.require.choosecr']}">
+
+                            <f:selectItem itemValue="-1"
+                                          itemLabel="#{msg['mop.flow.execute']}" />
+                            <f:selectItem itemValue="1"
+                                          itemLabel="#{msg['mop.execute.validate.gnoc']}" />
+                            <!--<f:selectItem itemValue="2"-->
+                            <!--itemLabel="#{msg['mop.execute.validate.voffice']}" />-->
+                            <f:selectItem itemValue="3"
+                                          itemLabel="#{msg['mop.execute.validate.normal']}" />
+
+                        </p:selectOneMenu>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="ui-g">
+                        <div class="ui-g6">
+                            <p:commandButton value="#{msg['button.save']}"
+                                             update="form:panelFlowTempalteInfo, form:listActionOfFlow, form:mainMessage"
+                                             actionListener="#{buildTemplateFlowController.prepareCopyTemplate}" />
+                        </div>
+                        <div class="ui-g6">
+                            <p:commandButton value="#{msg['button.cancel']}"
+                                             update="form:selectItemTemplate" style="margin-left: 5px;"
+                                             oncomplete="PF('dlgCopyTemplate').hide()"
+                                             actionListener="#{buildTemplateFlowController.clean}" />
+                        </div>
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
+        </h:form>
+
+        <h:form id="panelAddNewTemplate">
+            <p:dialog id="dlgAddNewTemplate" widgetVar="dlgAddNewTemplate"
+                      modal="true" header="#{msg['dlg.header.add.template']}">
+                <h:panelGroup>
+
+                    <div class="ui-g">
+                        <p:inputTextarea rows="1" autoResize="true" style="width: 435px;"
+                                         placeholder="#{msg['label.template.imput.name']}"
+                                         value="#{buildTemplateFlowController.flowTemplateName}" />
+                    </div>
+                    <div class="ui-g">
+                        <p:autoComplete id="autoTemplateGroup" size="54" style="margin-top: 5px;"
+                                        placeholder="#{msg['label.template.group']}" dropdown="true"
+                                        scrollHeight="200" value="#{buildTemplateFlowController.selectTemplateGroup}"
+                                        completeMethod="#{buildTemplateFlowController.autoCompleTemplateGroup}"
+                                        var="obj"
+                                        converter="templateGroupConverter" itemLabel="#{obj.groupName}"
+                                        itemValue="#{obj}">
+                        </p:autoComplete>
+                    </div>
+                    <div class="ui-g">
+                        <p:selectOneMenu
+                                value="#{buildTemplateFlowController.flowTemplateType}"
+                                title="#{msg['view.choose.cr']}" validator="notNullValidator"
+                                required="true" requiredMessage="#{msg['view.require.choosecr']}">
+
+                            <f:selectItem itemValue="-1"
+                                          itemLabel="#{msg['mop.flow.execute']}" />
+                            <f:selectItem itemValue="1"
+                                          itemLabel="#{msg['mop.execute.validate.gnoc']}" />
+                            <!--<f:selectItem itemValue="2"-->
+                            <!--itemLabel="#{msg['mop.execute.validate.voffice']}" />-->
+                            <f:selectItem itemValue="3"
+                                          itemLabel="#{msg['mop.execute.validate.normal']}" />
+
+                        </p:selectOneMenu>
+                    </div>
+                    <br />
+                    <div class="ui-g">
+                        <div class="ui-g6">
+                            <p:commandButton value="#{msg['button.save']}"
+                                             update="form:selectItemTemplate, form:listActionOfFlow,
+									form:mainMessage, panelSetParamDefault"
+                                             process="@parent"
+                                             actionListener="#{buildTemplateFlowController.updateFlowTemplate}" />
+                        </div>
+                        <div class="ui-g6">
+                            <p:commandButton value="#{msg['button.cancel']}"
+                                             update="form:panelFlowTempalteInfo, form:listActionOfFlow"
+                                             style="margin-left: 5px;"
+                                             oncomplete="PF('dlgAddNewTemplate').hide()"
+                                             actionListener="#{buildTemplateFlowController.clean}" />
+                        </div>
+                    </div>
+                </h:panelGroup>
+            </p:dialog>
+        </h:form>
+
+        <h:form id="panelActionFlow">
+            <p:dialog id="dlgActionFlow" widgetVar="dlgActionFlow" width="50%"
+                      header="#{msg['header.action.dialogAdd']}: #{actionDbServerController.selectedAction.name}"
+                      modal="true">
+                <p:outputPanel styleClass="ui-g" id="panelActionFlow2">
+                    <p:selectOneMenu autoWidth="false"
+                                     value="#{buildTemplateFlowController.selectedGroupActionName}">
+                        <f:selectItem itemLabel="#{msg['label.group.flow.selectitem']}"
+                                      itemValue="" />
+                        <f:selectItems
+                                value="#{buildTemplateFlowController.lstItemGroupName}"
+                                var="group" itemValue="#{group}" itemLabel="#{group}" />
+                    </p:selectOneMenu>
+                </p:outputPanel>
+                <p:separator />
+                <div class="Container100 Flex">
+                    <p:commandButton value="#{msg['label.add']}"
+                                     style="margin-left: 5px;"
+                                     update="form:listActionOfFlow, form:mainMessage"
+                                     actionListener="#{buildTemplateFlowController.addActiontoFlowTemplate(actionDbServerController.selectedNode)}" />
+                </div>
+            </p:dialog>
+        </h:form>
+
+        <h:form id="panelAddNewGroupName">
+            <p:dialog id="dlgAddNewGroupNameId" widgetVar="dlgAddNewGroupName"
+                      focus="btAddGroupId" modal="true" width="50%">
+                <f:facet name="header">
+                    <h:outputText id="headerAddNewGroupNameId"
+                                  value="#{msg[!buildTemplateFlowController.changeGroupActionName?'label.header.add.group':'label.btn.rename.group']}" />
+                </f:facet>
+                <p:outputPanel id="panelAddNewGroupName2">
+                    <div class="ui-g">
+                        <p:inputText style="width: 100%;"
+                                     rendered="#{buildTemplateFlowController.changeGroupActionName}"
+                                     disabled="true"
+                                     value="#{buildTemplateFlowController.oldGroupActionName}" />
+                    </div>
+                    <div class="ui-g">
+                        <p:inputText style="width: 100%;"
+                                     placeholder="#{msg['label.group.action.name']}"
+                                     value="#{buildTemplateFlowController.newGroupActionName}" />
+                    </div>
+                </p:outputPanel>
+                <f:facet name="footer">
+                    <div style="width: 100%; text-align: right;">
+                        <p:commandButton value="#{msg['label.update']}"
+                                         update="form:mainMessage, form:listActionOfFlow"
+                                         id="btAddGroupId"
+                                         actionListener="#{buildTemplateFlowController.saveOrUpdateGroupName}" />
+                    </div>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+
+        <h:form id="panelShowCmdsInAction">
+            <p:dialog id="dlgShowCmdsInAction" widgetVar="dlgShowCmdsInAction"
+                      header="#{actionDbServerController.selectedAction.name}" width="60%"
+                      modal="true" resizable="true"
+                      style="top:50px; bottom:50px; overflow: auto;">
+
+                <c:forEach
+                        items="#{actionDbServerController.selectedAction.actionDetails}"
+                        var="detail">
+
+                    <p:dataTable value="#{detail.actionCommands}" var="actionCmd"
+                                 rowIndexVar="idx">
+                        <f:facet name="header">
+                            <h:outputText
+                                    value="#{detail.vendor.vendorName}
+									- #{detail.nodeType.typeName}
+									- #{detail.version.versionName}" />
+                        </f:facet>
+
+                        <p:column headerText="#{msg['label.order']}" style="width: 10%;">
+                            <h:outputText value="#{idx + 1}" />
+                        </p:column>
+
+                        <p:column width="30%"
+                                  headerText="#{msg['label.action.command.name']}">
+                            <h:outputText value="#{actionCmd.commandDetail.commandName}" />
+                        </p:column>
+
+                        <p:column headerText="#{msg['label.cmd']}">
+                            <h:outputText
+                                    value="#{actionCmd.commandDetail.commandTelnetParser.cmd}" />
+                        </p:column>
+
+                    </p:dataTable>
+                    <br />
+                </c:forEach>
+
+            </p:dialog>
+        </h:form>
+
+        <h:form id="formActionDetail">
+            <p:dialog id="dlgActionDetail" widgetVar="dlgActionDetail"
+                      modal="true"
+                      header="#{msg['header.action.detail']}: #{actionDbServerController.selectedAction.name}"
+                      width="100%" resizable="false"
+                      style="top: 50px; bottom: 50px; overflow:auto">
+                <h:panelGroup id="panelAddActionDetail">
+                    <div class="ui-g">
+                        <div class="ui-g-12 ui-md-6 ui-lg-3">
+                            <p:autoComplete id="autoVendorConvert" size="20"
+                                            placeholder="#{msg['label.auto.vendor.name']}" dropdown="true"
+                                            scrollHeight="200"
+                                            value="#{actionDbServerController.selectedVendor}"
+                                            completeMethod="#{actionDbServerController.autoCompleVendor}"
+                                            var="obj" converter="vendorConverter"
+                                            itemLabel="#{obj.vendorName}" itemValue="#{obj}" />
+                        </div>
+                        <div class="ui-g-12 ui-md-6 ui-lg-3">
+                            <p:autoComplete id="autoNodeTypeConvert" size="20"
+                                            placeholder="#{msg['label.auto.nodeType.name']}" dropdown="true"
+                                            scrollHeight="200"
+                                            value="#{actionDbServerController.selectedNodeType}"
+                                            completeMethod="#{actionDbServerController.autoCompleNodeType}"
+                                            var="obj" converter="nodeTypeConverter"
+                                            itemLabel="#{obj.typeName}" itemValue="#{obj}" />
+                        </div>
+
+                        <div class="ui-g-12 ui-md-6 ui-lg-3">
+                            <p:autoComplete id="autoVersionConvert" size="20"
+                                            placeholder="#{msg['label.versionName']}" dropdown="true"
+                                            scrollHeight="200"
+                                            value="#{actionDbServerController.selectedVersion}"
+                                            completeMethod="#{actionDbServerController.autoCompleteVersion}"
+                                            var="obj" converter="versionConverter"
+                                            itemLabel="#{obj.versionName}" itemValue="#{obj}" />
+                        </div>
+
+                        <div class="ui-g-12 ui-md-6 ui-lg-3">
+                            <p:commandButton value="#{msg['label.add']}"
+                                             actionListener="#{actionDbServerController.addActionDetail}"
+                                             update="layoutActionDetail, panelAddActionDetail, :form:mainMessage" />
+                        </div>
+
+                    </div>
+                </h:panelGroup>
+
+                <p:layout style="width: 100%; height: 400px;"
+                          id="layoutActionDetail">
+                    <p:layoutUnit position="west" size="200" id="actionDetailList"
+                                  header="#{msg['label.actionDetail.list']}" minSize="230"
+                                  resizable="true" closable="false" collapsible="true">
+
+                        <p:contextMenu for="listActionDetailOrder">
+                            <p:menuitem value="#{msg['label.del']}"
+                                        update=":formDelActionDetail"
+                                        oncomplete="PF('confDlgDelActionDetail').show()"
+                                        icon="ui-icon-circle-minus" />
+
+                        </p:contextMenu>
+
+                        <p:orderList style="height: 100%;" id="listActionDetailOrder"
+                                     value="#{actionDbServerController.selectedAction.actionDetails}"
+                                     var="detail" itemValue="#{detail}" controlsLocation="none"
+                                     itemLabel="#{detail.vendor.vendorName} #{detail.nodeType.typeName} #{detail.version.versionName}"
+                                     converter="actionDetailConverter">
+                            <p:ajax event="select"
+                                    listener="#{actionDbServerController.onSelectActionDetail}"
+                                    update="panelCmdsTable" />
+                            <p:ajax event="unselect"
+                                    listener="#{actionDbServerController.onUnSelectActionDetail}"
+                                    update="panelCmdsTable" />
+                        </p:orderList>
+
+                    </p:layoutUnit>
+                    <p:layoutUnit position="center" id="layoutCmdDetailCenter">
+                        <p:panel id="panelCmdsTable"
+                                 header="#{msg['title.commandReport']}
+									#{actionDbServerController.selectedActionDetail.vendor.vendorName}
+									#{actionDbServerController.selectedActionDetail.nodeType.typeName}
+									#{actionDbServerController.selectedActionDetail.version.versionName}">
+                            <div class="ui-grid-row" style="padding-bottom: 5px;">
+                                <p:autoComplete id="autoCommandTelnet"
+                                                style="width: 100% !important;"
+                                                placeholder="#{msg['label.cmd']}" dropdown="true"
+                                                scrollHeight="200"
+                                                value="#{actionDbServerController.selectedCmdDetail}"
+                                                completeMethod="#{actionDbServerController.autoCmdMethod}"
+                                                var="obj" converter="commandDetailConverter" itemValue="#{obj}"
+                                                itemLabel="#{obj.commandTelnetParser.cmd}">
+                                    <p:column headerText="#{msg['label.cmd']}">
+                                        <h:outputText value="#{obj.commandTelnetParser.cmd}" />
+                                    </p:column>
+                                    <p:column headerText="#{msg['label.cmdName']}">
+                                        <h:outputText value="#{obj.commandName}" />
+                                    </p:column>
+                                    <p:ajax event="itemSelect"
+                                            listener="#{actionDbServerController.addActionCommand}"
+                                            update="panelCmdsTable" process="@this" />
+                                </p:autoComplete>
+                            </div>
+
+                            <div class="ui-grid-row">
+
+                                <p:dataTable id="listCmdDetail" draggableRows="true"
+                                             value="#{actionDbServerController.lstActionCommand}" var="cmd"
+                                             editable="true" editMode="single" rowIndexVar="index">
+                                    <f:facet name="footer">
+                                        <p:commandButton value="#{msg['label.update']}"
+                                                         actionListener="#{actionDbServerController.submitActionCommandData}"
+                                                         update="listCmdDetail, :form:mainMessage" />
+                                    </f:facet>
+                                    <p:ajax event="rowReorder"
+                                            listener="#{actionDbServerController.reorderDataTable}"
+                                            update="listCmdDetail" process="@none" partialSubmit="true" />
+
+                                    <p:column style="width: 5%" headerText="#{msg['label.order']}">
+                                        <h:outputText value="#{cmd.orderRun}" />
+                                    </p:column>
+
+                                    <p:column style="width: 5%"
+                                              headerText="#{msg['button.delete']}">
+                                        <p:commandLink value="#{msg['label.del']}"
+                                                       update="listCmdDetail, form:mainMessage"
+                                                       actionListener="#{actionDbServerController.deleteCmdDetail(cmd, index)}"
+                                                       style="color:green; font-weight: bold;font-size: 13px ">
+                                        </p:commandLink>
+                                    </p:column>
+
+                                    <p:column width="20%" headerText="#{msg['label.cmdName']}">
+                                        <p:inputText styleClass="inputInRow"
+                                                     value="#{cmd.commandDetail.commandName}" readonly="true" />
+                                    </p:column>
+
+                                    <p:column headerText="#{msg['label.cmd']}" width="50%">
+                                        <p:inputText styleClass="inputInRow"
+                                                     value="#{cmd.commandDetail.commandTelnetParser.cmd}"
+                                                     readonly="true" />
+                                    </p:column>
+
+                                    <p:column
+                                            headerText="#{msg['label.auto.vendor.name']}-#{msg['label.versionName']}"
+                                            width="20%">
+                                        <p:inputText styleClass="inputInRow"
+                                                     value="#{cmd.commandDetail.vendor.vendorName} - #{cmd.commandDetail.version.versionName}"
+                                                     readonly="true" />
+                                    </p:column>
+                                </p:dataTable>
+
+                            </div>
+                        </p:panel>
+                    </p:layoutUnit>
+                </p:layout>
+                <p:ajax event="close" update="form:treeAction"
+                        listener="#{actionDbServerController.closeDlgActionDetail()}"></p:ajax>
+            </p:dialog>
+        </h:form>
+        <h:form id="formDelActionDetail">
+            <p:confirmDialog id="confDlgDelActionDetail"
+                             widgetVar="confDlgDelActionDetail"
+                             header="#{msg['label.confirm.del']}"
+                             message="#{actionDbServerController.selectedActionDetail.vendor.vendorName} #{actionDbServerController.selectedActionDetail.nodeType.typeName}">
+
+                <h:panelGrid columns="3">
+                    <p:commandButton id="delActionDetail" type="submit"
+                                     value="#{msg['label.del']}"
+                                     update=":formActionDetail:layoutActionDetail, form:mainMessage"
+                                     style="width: 120px; height: 25px;font-size: 12px"
+                                     actionListener="#{actionDbServerController.deleteActionDetail}"
+                                     oncomplete="PF('confDlgDelActionDetail').hide()" />
+                    <p:spacer height="10px;" />
+                    <p:commandButton id="cancelActionDetailConfirm" type="submit"
+                                     value="#{msg['label.cancel']}"
+                                     onclick="PF('confDlgDelActionDetail').hide()"
+                                     style="width: 120px; height: 25px;font-size: 12px" />
+                </h:panelGrid>
+            </p:confirmDialog>
+        </h:form>
+
+        <h:form id="formAddAction">
+            <p:dialog id="dlgAddAction" widgetVar="dlgAddAction" modal="true"
+                      focus="cancelAction1" width="60%">
+                <f:facet name="header">
+
+                    <c:if test="#{actionDbServerController.clone == 'true'}">
+                        <h:outputText
+                                value="#{msg['button.clone']} #{actionDbServerController.actionNameToClone}" />
+                    </c:if>
+                    <c:if
+                            test="#{actionDbServerController.edit == 'true' and actionDbServerController.clone == 'false'}">
+                        <h:outputText
+                                value="#{msg['button.update']} #{actionDbServerController.insertNode.name}" />
+                    </c:if>
+                    <c:if
+                            test="#{actionDbServerController.edit == 'false' and actionDbServerController.clone == 'false'}">
+                        <h:outputText value="#{msg['label.action.addDetail']}" />
+                    </c:if>
+
+                </f:facet>
+                <div class="Card" style="width: 100%">
+                    <p:fieldset legend="#{msg['label.action.name']}">
+                        <p:inputText value="#{actionDbServerController.insertNode.name}"
+                                     title="#{msg['label.action.name']}"
+                                     style="width: calc(100% - 2em);"
+                                     placeholder="#{msg['label.action.name']}" id="actionNameInputId" />
+                    </p:fieldset>
+                </div>
+                <div class="Card" style="width: 100%">
+                    <p:fieldset legend="#{msg['label.action.desc']}">
+                        <p:inputTextarea style="width: calc(100% - 2em);"
+                                         value="#{actionDbServerController.insertNode.description}"
+                                         placeholder="#{msg['label.action.desc']}" autoResize="true"
+                                         title="#{msg['label.action.desc']}" rows="1" />
+                    </p:fieldset>
+                </div>
+
+                <div class="Container100 Flex">
+                    <div
+                            style="text-align: center; margin-left: auto; margin-right: auto; display: block">
+                        <p:commandButton id="saveAction" type="submit"
+                                         value="#{msg['label.update']}" icon="fa fa-save"
+                                         styleClass="Fs14 White"
+                                         update="form:treeAction, form:mainMessage"
+                                         actionListener="#{actionDbServerController.insertChildNode}" />
+                        <p:spacer height="10px;" />
+                        <p:commandButton id="cancelAction1" type="submit"
+                                         icon="fa fa-close" value="#{msg['label.cancel']}"
+                                         styleClass="GrayButton Fs14"
+                                         actionListener="#{actionDbServerController.clean}"
+                                         update=":formAddAction" oncomplete="PF('dlgAddAction').hide()" />
+                    </div>
+                </div>
+            </p:dialog>
+        </h:form>
+
+        <h:form id="formDelAction">
+            <p:confirmDialog id="confDlgDelAction" widgetVar="confDlgDelAction"
+                             header="#{msg['label.confirm.del']}"
+                             message="#{actionDbServerController.getNameActionSelected()}">
+
+                <h:panelGrid columns="3">
+                    <p:commandButton id="delAction" type="submit"
+                                     value="#{msg['label.del']}" update="form:treeAction"
+                                     style="width: 120px; height: 25px;font-size: 12px"
+                                     actionListener="#{actionDbServerController.deleteActionNode}"
+                                     oncomplete="PF('confDlgDelAction').hide()" />
+                    <p:spacer height="10px;" />
+                    <p:commandButton id="cancelActionConfirm" type="submit"
+                                     value="#{msg['label.cancel']}"
+                                     onclick="PF('confDlgDelAction').hide()"
+                                     style="width: 120px; height: 25px;font-size: 12px" />
+                </h:panelGrid>
+            </p:confirmDialog>
+        </h:form>
+
+        <!--20180316_Quytv7_Them chuc nang cau hinh map tham so canh bao start-->
+        <h:form id="panelMapParamAlarm">
+            <p:dialog id="dlgMapParamAlarm" widgetVar="dlgMapParamAlarm"
+                      header="#{msg['label.template.map.param.alarm']}: #{buildTemplateFlowController.selectedFlowTemplate.flowTemplateName}"
+                      modal="true" width="95%"
+                      style="top: 60px; bottom: 20px; overflow: auto" resizable="true">
+                <p:fieldset style="margin-bottom: 10px; width: 100%" toggleable="true">
+                    <h:form id="addCategoryForm">
+                        <div class="ui-g">
+                            <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px">
+                                <h:outputText class="ui-g-3" value="#{msg['label.category.domain.system.type']}"/>
+                                <p:selectOneMenu class="ui-g-8"
+                                                 disabled="#{(buildTemplateFlowController.selectedFlowTemplate.status == 9)}"
+                                                 value="#{buildTemplateFlowController.systemTypeMapParam}">
+                                    <f:selectItem itemLabel="#{msg['label.category.domain.system.type.nocpro']}"
+                                                  itemValue="#{msg['label.category.domain.system.type.nocpro']}"/>
+                                    <f:selectItem itemLabel="#{msg['label.category.domain.system.type.vsmart']}"
+                                                  itemValue="#{msg['label.category.domain.system.type.vsmart']}"/>
+                                    <p:ajax event="change" update="groupDomain"
+                                            listener="#{buildTemplateFlowController.afterSystemTypeSelected}"/>
+                                </p:selectOneMenu>
+                            </p:outputPanel>
+
+                            <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad"
+                                           style="margin-top: 10px;">
+                                <h:outputText class="cd-text-required ui-g-3"
+                                              value="#{msg['label.category.domain.get.node']}"/>
+                                <p:selectOneMenu class="ui-g-8"
+                                                 disabled="#{(buildTemplateFlowController.selectedFlowTemplate.status == 9)}"
+                                                 value="#{buildTemplateFlowController.categoryConfigGetNodeGroup}"
+                                                 filter="true" filterMatchMode="contains"
+                                                 converter="operatorConverter">
+                                    <f:selectItem itemValue="" itemLabel="#{msg['common.choose']}"/>
+                                    <f:selectItems var="groupConfigGetNode" itemLabel="#{groupConfigGetNode.label}"
+                                                   itemValue="#{groupConfigGetNode}"
+                                                   value="#{buildTemplateFlowController.categoryConfigGetNodeGroups}"/>
+                                    <p:ajax event="change" update="@widgetVar(mapParamNodeAlarmTable)"
+                                            listener="#{buildTemplateFlowController.getListParamNodes}"/>
+
+                                </p:selectOneMenu>
+                            </p:outputPanel>
+                            <p:outputPanel id="groupDomain" class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad"
+                                           style="margin-top: 10px;">
+                                <h:outputText class="cd-text-required ui-g-3"
+                                              value="#{msg['label.category.domain.groupName']}"/>
+                                <p:selectOneMenu class="ui-g-8"
+                                                 disabled="#{(buildTemplateFlowController.selectedFlowTemplate.status == 9)}"
+                                                 value="#{buildTemplateFlowController.categoryGroupDomain}"
+                                                 filter="true" filterMatchMode="contains"
+                                                 id="groupDomainSelected" converter="categoryGroupDomainConverter">
+                                    <f:selectItem itemValue="" itemLabel="#{msg['common.choose']}"/>
+                                    <f:selectItems var="groupDomain" itemLabel="#{groupDomain.groupName}"
+                                                   itemValue="#{groupDomain}"
+                                                   value="#{buildTemplateFlowController.categoryGroupDomains}"/>
+                                    <p:ajax event="change"
+                                            update="@widgetVar(mapParamAlarmTable),@widgetVar(mapParamNodeAlarmTable)"
+                                            listener="#{buildTemplateFlowController.getListCategoryDomain(true)}"/>
+
+                                </p:selectOneMenu>
+                            </p:outputPanel>
+                        </div>
+                    </h:form>
+                </p:fieldset>
+                <p:dataTable id="mapParamNodeAlarmTable" rowIndexVar="idx" widgetVar="mapParamNodeAlarmTable"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+                             paginatorPosition="bottom" paginator="true" rows="10"
+                             rowsPerPageTemplate="5,10,15"
+                             value="#{buildTemplateFlowController.lstParamNodeAlarmInTempates}"
+                             var="mapParamAlarmNode" editable="true" editMode="cell">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['label.template.map.param.node']}"/>
+                    </f:facet>
+
+                    <p:column headerText="#{msg['label.order']}" style="width: 5%">
+                        <h:outputText value="#{idx + 1}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.paramCode']}" style="width: 20%"
+                              filterBy="#{mapParamAlarmNode.paramCode}" filterMatchMode="contains">
+                        <h:outputText value="#{mapParamAlarmNode.paramCode}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.category.domain.domainCode']}" style="width: 20%"
+                              filterBy="#{mapParamAlarmNode.domain.domainCode}" filterMatchMode="contains">
+                        <p:cellEditor>
+                            <f:facet name="input">
+                                <p:selectOneMenu class="ui-g-8" value="#{mapParamAlarmNode.domain}"
+                                                 filter="true" filterMatchMode="contains"
+                                                 disabled="#{(buildTemplateFlowController.selectedFlowTemplate.status == 9)}"
+                                                 id="domainSelectedNode" converter="categoryDomainConverter">
+                                    <f:selectItem itemValue="" itemLabel="#{msg['common.choose']}"/>
+                                    <f:selectItems var="domain" itemLabel="#{domain.domainCode}"
+                                                   itemValue="#{domain}"
+                                                   value="#{buildTemplateFlowController.categoryDomains}"/>
+                                </p:selectOneMenu>
+                            </f:facet>
+                            <f:facet name="output">
+                                <h:outputText value="#{mapParamAlarmNode.domain.domainCode}"/>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.regex']}" style="width: 40%"
+                              filterBy="#{mapParamAlarmNode.regex}" filterMatchMode="contains">
+                        <p:cellEditor>
+                            <f:facet name="input">
+                                <h:inputText style="width: 90%"
+                                             disabled="#{(buildTemplateFlowController.selectedFlowTemplate.status == 9)}"
+                                             value="#{mapParamAlarmNode.regex}"/>
+                            </f:facet>
+                            <f:facet name="output">
+                                <h:outputText
+                                        value="#{mapParamAlarmNode.regex}"/>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.category.domain.description']}" style="width: 15%"
+                              filterBy="#{mapParamAlarmNode.description}" filterMatchMode="contains">
+                        <p:cellEditor>
+                            <f:facet name="input">
+                                <h:inputText style="width: 90%"
+                                             disabled="#{(buildTemplateFlowController.selectedFlowTemplate.status == 9)}"
+                                             value="#{mapParamAlarmNode.description}"/>
+                            </f:facet>
+                            <f:facet name="output">
+                                <h:outputText
+                                        value="#{mapParamAlarmNode.description}"/>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                </p:dataTable>
+                <p:dataTable id="mapParamAlarmTable" rowIndexVar="idx" widgetVar="mapParamAlarmTable"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+                             paginatorPosition="bottom" paginator="true" rows="10"
+                             rowsPerPageTemplate="5,10,15"
+                             value="#{buildTemplateFlowController.lstParamAlarmInTempates}"
+                             var="mapParamAlarm" editable="true" editMode="cell">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['label.template.map.param.alarm']}"/>
+                    </f:facet>
+
+                    <p:column headerText="#{msg['label.order']}" style="width: 5%">
+                        <h:outputText value="#{idx + 1}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.paramCode']}" style="width: 20%"
+                              filterBy="#{mapParamAlarm.paramCode}" filterMatchMode="contains">
+                        <h:outputText value="#{mapParamAlarm.paramCode}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.category.domain.domainCode']}" style="width: 20%"
+                              filterBy="#{mapParamAlarm.domain.domainCode}" filterMatchMode="contains">
+                        <p:cellEditor>
+                            <f:facet name="input">
+                                <p:selectOneMenu class="ui-g-8" value="#{mapParamAlarm.domain}"
+                                                 filter="true" filterMatchMode="contains"
+                                                 disabled="#{(buildTemplateFlowController.selectedFlowTemplate.status == 9)}"
+                                                 id="domainSelected" converter="categoryDomainConverter">
+                                    <f:selectItem itemValue="" itemLabel="#{msg['common.choose']}"/>
+                                    <f:selectItems var="domain" itemLabel="#{domain.domainCode}"
+                                                   itemValue="#{domain}"
+                                                   value="#{buildTemplateFlowController.categoryDomains}"/>
+                                </p:selectOneMenu>
+                            </f:facet>
+                            <f:facet name="output">
+                                <h:outputText value="#{mapParamAlarm.domain.domainCode}"/>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.regex']}" style="width: 40%"
+                              filterBy="#{mapParamAlarm.regex}" filterMatchMode="contains">
+                        <p:cellEditor>
+                            <f:facet name="input">
+                                <h:inputText style="width: 90%"
+                                             disabled="#{(buildTemplateFlowController.selectedFlowTemplate.status == 9)}"
+                                             value="#{mapParamAlarm.regex}"/>
+                            </f:facet>
+                            <f:facet name="output">
+                                <h:outputText
+                                        value="#{mapParamAlarm.regex}"/>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column headerText="#{msg['label.category.domain.description']}" style="width: 15%"
+                              filterBy="#{mapParamAlarm.description}" filterMatchMode="contains">
+                        <p:cellEditor>
+                            <f:facet name="input">
+                                <h:inputText style="width: 90%"
+                                             disabled="#{(buildTemplateFlowController.selectedFlowTemplate.status == 9)}"
+                                             value="#{mapParamAlarm.description}"/>
+                            </f:facet>
+                            <f:facet name="output">
+                                <h:outputText
+                                        value="#{mapParamAlarm.description}"/>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                </p:dataTable>
+                <p:outputPanel class="Container100 TexAlCenter">
+                    <p:commandButton icon="fa fa-save" styleClass="White Fs14 OrangeButton" type="submit"
+                                     disabled="#{(buildTemplateFlowController.selectedFlowTemplate.status == 9)}"
+                                     value="#{msg['button.save']}"
+                                     style="size: 111px"
+                                     actionListener="#{buildTemplateFlowController.onSaveOrUpdateMapParamAlarm}"
+                                     onstart="PF('loadingDialog').show()" oncomplete="PF('loadingDialog').hide()"
+                                     update="form:mainMessage"
+                    >
+                    </p:commandButton>
+                </p:outputPanel>
+
+            </p:dialog>
+        </h:form>
+        <!--20180316_Quytv7_Them chuc nang cau hinh map tham so canh bao end-->
+
+        <ui:include src="../topo/index.xhtml" />
+
+        <ui:include src="node-layer.xhtml" />
+
+        <p:dialog modal="true" class="transparent-dialog" showHeader="false"
+                  widgetVar="loadingDialog" draggable="false" closable="false"
+                  resizable="false">
+            <p:graphicImage name="/other/images/loading.gif"
+                            style="background: transparent; margin: -20px;" width="50"
+                            height="50" />
+        </p:dialog>
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+                var currentTabID = "tab-1";
+                ChangeTab(currentTabID);
+                setLayoutForm();
+                /* delay = (function() {
+                 var timer = 0;
+                 return function(callback, ms) {
+                 alert(callback);
+                 clearTimeout (timer);
+                 timer = setTimeout(callback, ms);
+                 };
+                 })(); */
+                $("#form\\:searchTreeId").bind("keypress", function(e) {
+                    if (e.keyCode == 13) {
+                        return false;
+                    }
+                });
+
+            });
+
+            function setLayoutForm(event) {
+                var heightLayout = window.innerHeight - 47 - 20;
+                $("#form\\:layoutData").css('height', heightLayout);
+                $("#form\\:layoutData").children().css('height', heightLayout);
+                $("#form\\:layoutData").children().children().css('height',
+                    heightLayout);
+
+                $("#panelSetParamReference\\:dlgParamReference").css('height',
+                    (500));
+            }
+
+            function beforeOpenDialog() {
+                $('body').css('overflow', 'hidden');
+            }
+            function afterCloseDialog() {
+                $('body').css('overflow', 'auto');
+            }
+            function onNodeClick(node, event) {
+                //var tree = document.getElementById("form:treeAction");
+                var str = "";
+                var test = node;
+                //var node = sd.util.getObj(node);
+                //for ( var prop in node) {
+                //	str += prop + ": " + node[prop];
+                //}
+
+            }
+            function handleDrop(event, ui) {
+                //ui.draggable({ revert: 'invalid' }); //fade out the dropped item
+                ui.draggable.draggable('option', 'revert', true);
+            }
+            //<![CDATA[
+            PrimeFaces.widget.Droppable.prototype.bindDropListener = function() {
+                var _self = this;
+                this.cfg.drop = function(event, ui) {
+                    if (_self.cfg.onDrop) {
+                        _self.cfg.onDrop.call(_self, event, ui);
+                    }
+                    if (_self.cfg.behaviors) {
+                        var dropBehavior = _self.cfg.behaviors['drop'];
+                        if (dropBehavior) {
+                            var ext = {
+                                params : [ {
+                                    name : _self.id + '_dragId',
+                                    value : ui.draggable.attr('id')
+                                }, {
+                                    name : _self.id + '_dropId',
+                                    value : _self.cfg.target
+                                }, {
+                                    name : ui.draggable.attr('id') + '_left',
+                                    value : ui.position.left
+                                }, {
+                                    name : ui.draggable.attr('id') + '_top',
+                                    value : ui.position.top
+                                } ]
+                            };
+                            console.log(ui);
+                            dropBehavior.call(_self, ext);
+                        }
+                    }
+                };
+            }
+            // ]]>
+        </script>
+        <style type="text/css">
+            #form\:listCmdDetail.ui-orderlist .ui-orderlist-list {
+                width: 95% !important;
+            }
+
+            /*.ui-selectonemenu-table {*/
+            /*width: 700px !important;*/
+            /*}*/
+
+            /*.ui-selectonemenu {*/
+            /*width: 100% !important;*/
+            /*}*/
+
+            /*.ui-selectonemenu-label {*/
+            /*width: 100% !important;*/
+            /*}*/
+
+            .TransparentButton .ui-button-text {
+                background-color: white;
+                border: none;
+                color: white;
+            }
+
+            .ui-treenode-leaf,.ui-treenode-label {
+                height: 20px !important;
+            }
+
+            #form\:treeAction .ui-tree-container {
+                overflow: hidden !important;
+            }
+
+            #form\:panelControll button {
+                opacity: 0.5;
+            }
+
+            #form\:panelControll button:HOVER {
+                opacity: 1;
+            }
+
+            #form\:autoCommandTelnet_input {
+                width: 97%;
+            }
+
+            .ui-panel-titlebar-icon {
+                margin-left: 0px !important;
+            }
+
+            .inputInRow {
+                width: calc(100% -        20px);
+                border: none;
+                background: transparent;
+            }
+
+            .ui-cell-editor-input .ui-selectonemenu {
+                width: calc(100% -        54px) !important;
+            }
+
+            .ui-menu {
+                width: auto;
+            }
+
+            #layout-footer {
+                display: none;
+                height: 0px;
+            }
+
+            .ui-layout-container .ui-layout-unit {
+                border: 0px;
+                border-radius: 0px;
+                font-family: "latoregular";
+            }
+
+            .ui-layout-unit {
+                padding: 0em;
+                visibility: hidden;
+            }
+        </style>
+    </ui:define>
+</ui:composition>

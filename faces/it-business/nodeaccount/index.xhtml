@@ -1,0 +1,332 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions"
+                template="/layout/olympos/template.xhtml">
+
+    <ui:define name="content">
+        <h:form id="form-node">
+
+            <p:dialog modal="true" class="transparent-dialog" showHeader="false"
+                      widgetVar="loadingDialog" draggable="false" closable="false" resizable="false" >
+            <span class="fa-stack fa-2x" style="width: 5em; height: 5em; line-height: 5em;" >
+                <i class="fa fa-fire fa-stack-1x" style="bottom: 40px; color: #FAFAFA; font-size: 0.8em"  ></i>
+                <i class="fa fa-spinner fa-pulse fa-3x fa-fw fa-stack-2x" style="color: #00AAFF; font-size: 3em;"></i>
+                <i class="fa fa-coffee fa-stack-1x" style="color: #975524; bottom: 20px;font-size: 1.2em"></i>
+            </span>
+            </p:dialog>
+
+            <p:growl id="mainMessage" showDetail="true" showSummary="false" life="5000"/>
+            <p:panel header="#{msg['header.search']}" style="width: 98%;">
+                <div class="ui-g">
+                    <p:autoComplete dropdown="true"
+                                    value="#{itNodeAccountController.selectedServerNode}" id="chooseNode"
+                                    var="n" itemValue="#{n}" queryDelay="1"
+                                    itemLabel="#{n.nodeIp}" scrollHeight="300" dropdownMode="current"
+                                    completeMethod="#{itNodeAccountController.completeSearchNode}"
+                                    converter="nodeConverter" style="max-height: 100px; overflow: auto;"
+                                    title="#{msg['view.choose.node.search']}" >
+                    </p:autoComplete>
+
+                    <p:commandButton style="float: right; margin-left: 5px;" icon="fa fa-search"
+                                     onclick="PF('loadingDialog').show()"
+                                     actionListener="#{itNodeAccountController.handleSelectNode}"
+                                     oncomplete="PF('loadingDialog').hide()"
+                                     update="tableNode" title="#{msg['button.insert']}"/>
+                </div>
+            </p:panel>
+            <p:dataTable var="obj"
+                         value="#{itNodeAccountController.lazyNode}" id="tableNode"
+                         widgetVar="tableNode" style="width: 99%"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+                         paginator="true" rows="10" filterEvent="keyup"
+                         rowIndexVar="rowIndex" paginatorPosition="bottom"
+                         resizableColumns="true" rowsPerPageTemplate="10,15,20"
+                         sortMode="mutiple" rowKey="#{obj.id}" selectionMode="single"
+                         sortOrder="descending" emptyMessage="#{msg['datatable.empty']}"
+                         lazy="true" editable="true">
+                <f:facet name="header">
+                    <h:outputText style="float: left;" value="#{msg['label.itNode.header']}" />
+                    <p:commandButton style="float: right;" icon="fa fa-plus-square"
+                                     actionListener="#{itNodeAccountController.clear()}"
+                                     oncomplete="PF('dlgNodeInfo').show()"
+                                     update="nodeInfoForm" title="#{msg['button.insert']}"
+                                     styleClass="White" />
+                    <ui:remove>
+                        <p:commandButton style="float: right;" icon="fa fa-share-square"
+                                         title="#{msg['button.export']}" ajax="false" styleClass="White">
+                            <pe:exporter type="xlsx" target="tableNode" pageOnly="false" fileName="nodes" />
+                        </p:commandButton>
+                    </ui:remove>
+
+                    <p:commandButton style="visibility: hidden; display: none">
+                        <div style="clear: both"></div>
+                    </p:commandButton>
+                </f:facet>
+                <p:column style="width : 5%;">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['label.order']}"/>
+                    </f:facet>
+                    <h:outputText value="#{rowIndex + 1}" />
+                </p:column>
+                <p:column sortBy="#{obj.username}" filterBy="#{obj.username}"
+                          style="width : 15%;">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['it.title.userName']}"/>
+                    </f:facet>
+                    <h:outputText value="#{obj.username}" />
+                </p:column>
+
+                <p:column style="width : 30%;">
+                    <f:facet name="header">
+                        <h:outputText value="Server"/>
+                    </f:facet>
+                    <h:outputText value="#{itNodeAccountController.displayServerInfo(obj)}" />
+                </p:column>
+
+                <p:column headerText="#{msg['label.account']}" style="width:14%"
+                          filterBy="#{obj.accountType}">
+                    <f:facet name="filter">
+                        <p:selectOneMenu onchange="PF('tableNode').filter()">
+                            <f:selectItem itemLabel="#{msg['label.selectItem']}"
+                                          itemValue="" />
+                            <f:selectItem
+                                    itemLabel="#{msg['label.account.server']}"
+                                    itemValue="5" />
+                            <f:selectItem
+                                    itemLabel="#{msg['label.account.database']}"
+                                    itemValue="2" />
+                            <f:selectItem
+                                    itemLabel="#{msg['label.account.webservice']}"
+                                    itemValue="4" />
+                            <f:selectItem
+                                    itemLabel="#{msg['label.account.provisoning']}"
+                                    itemValue="3" />
+                        </p:selectOneMenu>
+                    </f:facet>
+
+                    <p:outputPanel style="width: 100%; text-align:center"
+                                   rendered="#{obj.accountType == 2}">
+                        <br />
+                        <h:outputText value="#{msg['label.account.database']}"
+                                      rendered="#{obj.accountType == 2}"
+                                      style="color: #00BFFF;text-shadow: 0px 0px 4px #fff;font-weight: bold;" />
+                    </p:outputPanel>
+
+                    <p:outputPanel style="width: 100%; text-align:center"
+                                   rendered="#{obj.accountType == 5}">
+                        <br />
+                        <h:outputText value="#{msg['label.account.server']}"
+                                      style="color: #4169E1; text-shadow: 0px 0px 4px #fff;font-weight: bold;" />
+                    </p:outputPanel>
+
+                    <p:outputPanel style="width: 100%; text-align:center"
+                                   rendered="#{obj.accountType == 3}">
+                        <br />
+                        <h:outputText value="#{msg['label.account.provisoning']}"
+                                      style="color: #4169E1; text-shadow: 0px 0px 4px #fff;font-weight: bold;" />
+                    </p:outputPanel>
+
+                    <p:outputPanel style="width: 100%; text-align:center"
+                                   rendered="#{obj.accountType == 4}">
+                        <br />
+                        <h:outputText value="#{msg['label.account.webservice']}"
+                                      style="color: #4169E1; text-shadow: 0px 0px 4px #fff;font-weight: bold;" />
+                    </p:outputPanel>
+
+                </p:column>
+
+                <!--20181210_hoangnd_show them active_start-->
+                <p:column style="width : 5%;">
+                    <f:facet name="header">
+                        <h:outputText value="Active"/>
+                    </f:facet>
+                    <h:outputText value="#{obj.active != null ? obj.active : 0}" />
+                </p:column>
+                <!--20181210_hoangnd_show them active_end-->
+
+                <ui:remove>
+                    <p:column headerText="#{msg['common.action']}" style="width:14%"
+                              filterBy="#{obj.impactOrMonitor}">
+                        <f:facet name="filter">
+                            <p:selectOneMenu onchange="PF('tableNode').filter()">
+                                <f:selectItem itemLabel="#{msg['label.selectItem']}"
+                                              itemValue="" />
+                                <f:selectItem
+                                        itemLabel="#{msg['common.action']}"
+                                        itemValue="1" />
+                                <f:selectItem
+                                        itemLabel="#{msg['common.monitor']}"
+                                        itemValue="2" />
+                            </p:selectOneMenu>
+                        </f:facet>
+
+                        <p:outputPanel style="width: 100%; text-align:center"
+                                       rendered="#{obj.impactOrMonitor == 1}">
+                            <br />
+                            <h:outputText value="#{msg['common.action']}"
+                                          rendered="#{obj.impactOrMonitor == 1}"
+                                          style="color: #00BFFF;text-shadow: 0px 0px 4px #fff;font-weight: bold;" />
+                        </p:outputPanel>
+
+                        <p:outputPanel style="width: 100%; text-align:center"
+                                       rendered="#{obj.impactOrMonitor == 2}">
+                            <br />
+                            <h:outputText value="#{msg['common.monitor']}"
+                                          style="color: #4169E1; text-shadow: 0px 0px 4px #fff;font-weight: bold;" />
+                        </p:outputPanel>
+
+
+                    </p:column>
+                </ui:remove>
+
+                <p:column style="width: 10%;" exportable="false"
+                          headerText="#{msg['datatable.header.action']}">
+
+                    <p:tooltip position="left" />
+                    <p:commandButton title="#{msg['title.update']}"
+                                     rendered="#{obj.itBusinessNode == 1}"
+                                     styleClass="Fs14 White" icon="fa fa-edit"
+                                     actionListener="#{itNodeAccountController.prepareEdit(obj)}" update="nodeInfoForm"
+                                     oncomplete="PF('dlgNodeInfo').show()"
+                                     style="color:green; font-weight: bold;font-size: 13px ">
+                    </p:commandButton>
+                    <p:spacer width="2px;" />
+                    <p:commandButton id="btnDel" title="#{msg['label.del']}"
+                                     rendered="#{obj.itBusinessNode == 1}"
+                                     icon="fa fa-trash" styleClass="RedButton Fs14 White"
+                                     update="dlgDelNode"
+                                     oncomplete="PF('dlgDelNode').show()"
+                                     actionListener="#{itNodeAccountController.prepareDel(obj)}"
+                                     style="color:green; font-weight: bold;font-size: 13px ">
+                    </p:commandButton>
+                </p:column>
+            </p:dataTable>
+        </h:form>
+
+        <p:dialog id="dlgNodeInfo" widgetVar="dlgNodeInfo" width="70%"
+                  height="50%" modal="true" header="#{msg['label.node.header']}">
+            <h:form id="nodeInfoForm" enctype="multipart/form-data">
+                <div class="Container100 Flex FlexWrap">
+                    <div class="ui-g" style="width: 100%">
+                        <h:inputHidden value="#{itNodeAccountController.selectedNode.id}"/>
+
+                        <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                            <h:outputText class="ui-g-3 cd-text-required" value="#{msg['it.title.userName']}"/>
+                            <p:inputText class="ui-g-8" maxlength="200" id="username"
+                                         value="#{itNodeAccountController.selectedNode.username}"/>
+                        </p:outputPanel>
+
+                        <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                            <h:outputText class="ui-g-3" value="#{msg['label.account']}"/>
+
+                            <p:selectOneMenu id="console" filter="true" filterMatchMode="contains" class="ui-g-8"
+                                             value="#{itNodeAccountController.selectedNode.accountType}">
+                                <f:selectItem itemLabel="#{msg['common.choose2']}" itemValue="" noSelectionOption="true" />
+                                <f:selectItem itemLabel="#{msg['label.account.server']}" itemValue="5" />
+                                <f:selectItem itemLabel="#{msg['label.account.database']}" itemValue="2" />
+                                <f:selectItem itemLabel="#{msg['label.account.provisoning']}" itemValue="3" />
+                                <f:selectItem itemLabel="#{msg['label.account.webservice']}" itemValue="4" />
+                                <p:ajax listener="#{itNodeAccountController.filterServerByVendor}" update="serverId, saveNode"
+                                        event="change"/>
+                            </p:selectOneMenu>
+                        </p:outputPanel>
+
+                        <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                            <h:outputText class="ui-g-3 cd-text-required" value="Password"/>
+                            <p:password class="ui-g-8" maxlength="200" id="password" redisplay="true"
+                                        value="#{itNodeAccountController.selectedNode.password}"/>
+                        </p:outputPanel>
+
+                        <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad">
+                            <h:outputText class="ui-g-3" value="Server"/>
+                            <p:autoComplete id="serverId" maxResults="20" forceSelection="true" inputStyle="width:90%" style="width:67%"
+                                            placeholder="#{msg['label.export.db.choose.ip']}" dropdown="true"
+                                            scrollHeight="200" queryDelay="100"
+                                            value="#{itNodeAccountController.selectedServer}"
+                                            var="obj" converter="nodeConverter"
+                                            itemLabel="#{obj.nodeCountry}" itemValue="#{obj}"
+                                            completeMethod="#{itNodeAccountController.autoServerMethod}"
+                                    />
+                        </p:outputPanel>
+
+                        <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                            <h:outputText class="ui-g-3 cd-text-required" value="Shell"/>
+                            <p:inputText class="ui-g-8" maxlength="200" id="shell"
+                                         value="#{itNodeAccountController.selectedNode.shell}"/>
+                        </p:outputPanel>
+
+
+
+
+
+
+
+                        <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                            <h:outputText class="ui-g-3" value="#{msg['common.action']}"/>
+
+                            <p:selectOneMenu id="console1" value="#{itNodeAccountController.selectedNode.impactOrMonitor}" class="ui-g-8">
+                                <f:selectItem itemLabel="#{msg['label.selectItem']}" itemValue="" />
+                                <f:selectItem itemLabel="#{msg['common.action']}" itemValue="1" />
+                                <f:selectItem itemLabel="#{msg['common.monitor']}" itemValue="2" />
+                            </p:selectOneMenu>
+                        </p:outputPanel>
+
+                    </div>
+
+                    <div class="Container100 Flex">
+                        <div style="text-align: center; margin-left: auto; margin-right: auto; display: block">
+                            <!--20180709_hoangnd_fix bug insert nhieu lan_start-->
+                            <p:commandButton id="saveNode" type="submit" widgetVar="saveNode"
+                                             value="#{msg['label.update']}" icon="fa fa-save"
+                                             styleClass="Fs14 White"
+                                             update="form-node:tableNode, form-node:mainMessage"
+                                             actionListener="#{itNodeAccountController.saveNode}"
+                                             onclick="saveNode.disable()" oncomplete="saveNode.enable()" />
+                            <!--20180709_hoangnd_fix bug insert nhieu lan_end-->
+                            <p:spacer height="10px;" />
+                            <p:commandButton id="cancelAction" type="submit"
+                                             icon="fa fa-close" value="#{msg['label.cancel']}"
+                                             styleClass="GrayButton Fs14"
+                                             actionListener="#{itNodeAccountController.clear}"
+                                             oncomplete="PF('dlgNodeInfo').hide()" />
+                        </div>
+                    </div>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <p:confirmDialog global="true"
+                         header="#{msg['label.del.form.node']}" id="dlgDelNode"
+                         showEffect="face" hideEffect="scale" widgetVar="dlgDelNode">
+
+            <f:facet name="message">
+                <h:outputText
+                        value="#{msg['title.confirm.delete']}" />
+            </f:facet>
+
+            <p:commandButton value="#{msg['button.delete']}"
+                             update="form-node:tableNode, form-node:mainMessage" process="@this"
+                             oncomplete="PF('dlgDelNode').hide()"
+                             actionListener="#{itNodeAccountController.delNode()}"
+                             styleClass="ui-confirmdialog-yes AquaButton"
+                             icon="ui-icon-check fa fa-check Fs14 White" />
+            <p:commandButton value="#{msg['button.cancel']}" type="button"
+                             styleClass="ui-confirmdialog-no RedButton"
+                             onclick="PF('dlgDelNode').hide()"
+                             icon="ui-icon-close fa fa-close Fs14 White" />
+        </p:confirmDialog>
+
+        <script type="text/javascript">
+            $(document).ready(function () {
+                var currentTabID = "tab-2";
+                var currentIconID = "15";
+                ChangeTab(currentTabID, currentIconID);
+            });
+        </script>
+    </ui:define>
+
+</ui:composition>

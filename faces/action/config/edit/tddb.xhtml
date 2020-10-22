@@ -1,0 +1,687 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <p:growl showDetail="false" widgetVar="tdDbGrowl" life="10"/>
+
+
+    <p:panel header="#{msg['impact.database']}" toggleable="false">
+        <div class="button-area fa" align="right" style="padding-top: 8px; padding-bottom: 8px">
+            <p:commandButton rendered="#{actionController.newObj.mopType eq 0}" style="color: white;" icon="fa fa-cloud-upload"
+                             actionListener="#{actionDetailDatabaseController.onImportDbClick()}"
+                             oncomplete="PF('importDbDialog').show()"
+                             update=":mop:lst:flow:objectTableUpcode mop:lst:importDbResult mop:lst:fileZipDb mop:lst:fileExcelDb" value="#{msg['button.import']}"/>
+            <p:commandButton value="#{msg['button.insert']}" disabled="#{actionController.viewOnly}"
+                             update=":mop:lst:editDialogDb" styleClass="GreenButton" icon="fa fa-plus White"
+                             oncomplete="PF('editDialogDb').show()"
+                             process="@this" actionListener="#{actionDetailDatabaseController.clear()}"/>
+        </div>
+
+        <div class="cl h6"></div>
+        <p:dataTable var="obj" value="#{actionDetailDatabaseController.detailDatabases}"
+                     paginator="true" rows="25" filterEvent="keyup" rowKey="#{obj.id}"
+                     rowIndexVar="rowIndex" paginatorPosition="bottom" id="objectTableDb"
+                     widgetVar="objectTableDb" rowsPerPageTemplate="25, 50, 100"
+                     lazy="false" editable="false" emptyMessage="#{msg['common.data.not.found']}" scrollable="true"
+                     scrollWidth="100%" frozenColumns="0">
+
+            <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                    oncomplete="PF('blockUiSearch').unblock()"/>
+
+            <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                    oncomplete="PF('blockUiSearch').unblock()"/>
+
+            <p:column style="width: 20px; text-align: center; white-space: nowrap" headerText="#{msg['label.order']}">
+                <h:outputText value="#{rowIndex+ 1}"/>
+            </p:column>
+
+            <p:column id="line" style="width: 164px; text-align: center; white-space: nowrap"
+                      headerText="#{msg['common.action']}">
+                <p:splitButton value="#{msg['common.edit']}" process="@this" disabled="#{actionController.viewOnly}"
+                               actionListener="#{actionDetailDatabaseController.prepareEdit(obj)}"
+                               onclick="PF('blockUiSearch').block()"
+                               oncomplete="PF('blockUiSearch').unblock();PF('editDialogDb').show()"
+                               update=":mop:lst:panelDb" icon="fa fa-edit White">
+
+                    <p:menuitem value="#{msg['common.duplicate']}" process="@this"
+                                actionListener="#{actionDetailDatabaseController.duplicate(obj)}"
+                                onclick="PF('blockUiSearch').block()"
+                                oncomplete="PF('blockUiSearch').unblock();PF('editDialogDb').show()"
+                                update=":mop:lst:panelDb" icon="fa fa-copy">
+                    </p:menuitem>
+
+                    <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                onclick="PF('blockUiSearch').block()"
+                                update=":mop:lst:confirmDeleteDb"
+                                oncomplete="PF('blockUiSearch').unblock();PF('confirmDeleteDb').show()"
+                                icon="fa fa-remove">
+                        <f:setPropertyActionListener
+                                target="#{actionDetailDatabaseController.selectedObj}" value="#{obj}"/>
+                    </p:menuitem>
+                </p:splitButton>
+            </p:column>
+
+            <p:column id="testbedMode" style="width: 120px; text-align: center; white-space: nowrap"
+                       headerText="#{msg['run.mode']}">
+                <h:outputText value="#{obj.testbedMode == '1' ? msg['run.mode.testbed'] :  msg['run.mode.normal']}"/>
+            </p:column>
+
+            <p:column id="databaseCode" style="width: 120px; text-align: center; white-space: nowrap"
+                       headerText="#{msg['database']}">
+                <h:outputText value="#{obj.serviceDatabase.username}/#{obj.serviceDatabase.dbName}"/>
+            </p:column>
+
+            <p:column id="action" style="width: 96px; text-align: center; white-space: nowrap" rendered="false"
+                      sortBy="#{obj.action}" headerText="#{msg['common.action']}">
+                <h:outputText value="#{obj.action == '0' ? msg['common.backup'] :  msg['common.action']}"/>
+            </p:column>
+
+            <p:column id="kbgroup" style="width: 40px; text-align: center; white-space: nowrap"
+                      sortBy="#{obj.kbGroup}" headerText="#{msg['module.kb.group']}">
+                <h:outputText value="#{obj.kbGroup}"/>
+            </p:column>
+
+            <p:column id="actionOrder" style="width: 40px; text-align: center; white-space: nowrap"
+                      sortBy="#{obj.actionOrder}" headerText="#{msg['ordinal']}">
+                <h:outputText value="#{obj.actionOrder}"/>
+            </p:column>
+
+            <p:column id="scriptBackup" style="width: 120px; text-align: center; white-space: nowrap"
+                      sortBy="#{obj.scriptBackup}" headerText="#{msg['script.backup']}">
+                <p:commandLink rendered="#{obj.typeImport eq 1}" ajax="false" process="@this" immediate="true">
+                    <h:outputText value="#{obj.scriptBackup}"/>
+                    <p:fileDownload value="#{actionDetailDatabaseController.downloadFile(obj.scriptBackup)}"/>
+                </p:commandLink>
+
+                <h:outputText value="#{obj.backupText}" rendered="#{obj.typeImport eq 0}"/>
+            </p:column>
+
+            <p:column id="scriptExecute" style="width: 120px; text-align: center; white-space: nowrap"
+                      sortBy="#{obj.scriptExecute}" headerText="#{msg['script.impaction']}">
+
+                <p:commandLink rendered="#{obj.typeImport eq 1}" ajax="false" process="@this" immediate="true">
+                    <h:outputText value="#{obj.scriptExecute}"/>
+                    <p:fileDownload value="#{actionDetailDatabaseController.downloadFile(obj.scriptExecute)}"/>
+                </p:commandLink>
+
+                <h:outputText value="#{obj.scriptText}" rendered="#{obj.typeImport eq 0}"/>
+            </p:column>
+
+            <p:column id="scriptRollback" style="width: 120px; text-align: center; white-space: nowrap"
+                      sortBy="#{obj.rollbackFile}" headerText="#{msg['script.rollback']}">
+                <p:commandLink rendered="#{obj.typeImport eq 1}" ajax="false" process="@this" immediate="true">
+                    <h:outputText value="#{obj.rollbackFile}"/>
+                    <p:fileDownload value="#{actionDetailDatabaseController.downloadFile(obj.rollbackFile)}"/>
+                </p:commandLink>
+                <h:outputText value="#{obj.rollbackText}" rendered="#{obj.typeImport eq 0}"/>
+            </p:column>
+
+            <p:column id="type" style="width: 64px; text-align: center; white-space: nowrap"
+                      sortBy="#{obj.type}" headerText="#{msg['common.type']}">
+                <h:outputText value="#{msg['common.batch']}" rendered="#{obj.type eq 1}"/>
+                <h:outputText value="#{msg['common.script']}" rendered="#{obj.type eq 0}"/>
+            </p:column>
+
+            <p:column id="template" style="width: 120px; text-align: center; white-space: nowrap" rendered="false"
+                      sortBy="#{obj.template}" headerText="#{msg['template']}">
+                <h:outputText value="#{obj.template}"/>
+            </p:column>
+
+            <p:column id="templatePath" style="width: 120px; text-align: center; white-space: nowrap" rendered="false"
+                      sortBy="#{obj.templatePath}" headerText="#{msg['template.path']}">
+                <h:outputText value="#{obj.templatePath}"/>
+            </p:column>
+
+            <p:column id="cmdCompile" style="width: 120px; text-align: center; white-space: nowrap" rendered="false"
+                      sortBy="#{obj.cmdCompile}" headerText="#{msg['command.compile']}">
+                <h:outputText value="#{obj.cmdCompile}"/>
+            </p:column>
+        </p:dataTable>
+
+        <p:dialog id="editDialogDb" widgetVar="editDialogDb" width="70%"
+                  resizable="false" showEffect="clip" hideEffect="clip" modal="true"
+                  header="#{msg['page.title']}" draggable="true">
+            <p:panel id="panelDb" header="#{msg['edit.info']}" toggleable="false">
+                <!--20181024_hoangnd_timeout db_start-->
+                <!--<h:panelGrid columns="4" cellpadding="5" width="100%">-->
+                <table width="100%">
+                    <tr>
+                        <th width="20%">
+                        </th>
+                        <th width="30%">
+                        </th>
+                        <th width="20%">
+                        </th>
+                        <th width="30%">
+                        </th>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h:outputText value="#{msg['common.action']}" rendered="false"/>
+                        </td>
+                        <td>
+                            <p:selectOneMenu id="action" value="#{actionDetailDatabaseController.newObj.action}"
+                                             rendered="false"
+                                             style="width:119px">
+                                <f:selectItem itemValue="0" itemLabel="#{msg['common.backup']}"/>
+                                <f:selectItem itemValue="1" itemLabel="#{msg['common.impact']}"/>
+                            </p:selectOneMenu>
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h:outputText value="#{msg['database']}"/>
+                        </td>
+                        <td>
+                            <p:selectOneMenu value="#{actionDetailDatabaseController.newObj.appDbId}" style="width:119px"
+                                             required="false" requiredMessage="Chưa chọn database">
+                                <f:selectItems value="#{actionDetailDatabaseController.listDatabases}" var="obj"
+                                               itemLabel="#{obj.label()}" itemValue="#{obj.value()}"/>
+                                <p:ajax update="panelDb" onstart="PF('blockUiDbDialog').block()" listener="#{actionDetailDatabaseController.loadDb}"
+                                        oncomplete="PF('blockUiDbDialog').unblock()"/>
+                            </p:selectOneMenu>
+                        </td>
+                        <td>
+                            <h:outputText value="#{msg['ordinal']}"/>
+                        </td>
+                        <td>
+                            <!--20-11-2018 KienPD can le start-->
+                            <p:inputText id="actionOrder" value="#{actionDetailDatabaseController.newObj.actionOrder}"/>
+                            <!--20-11-2018 KienPD can le end-->
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h:outputText value="#{msg['module.kb.group']}"/>
+                        </td>
+                        <td>
+                            <p:inputText id="kbGroup" value="#{actionDetailDatabaseController.newObj.kbGroup}"/>
+                        </td>
+                        <td>
+                            <h:outputText value="#{msg['db.type']}"/>
+                        </td>
+                        <td>
+                            <h:panelGrid columns="1">
+                                <h:outputText id="dbType" value="#{msg['database.type.'.concat(actionDetailDatabaseController.selectedServiceDb.dbType)]}"/>
+                            </h:panelGrid>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h:outputText value="#{msg['db.ip']}"/>
+                        </td>
+                        <td>
+                            <h:panelGrid columns="1">
+                                <h:outputText id="ipServer" value="#{actionDetailDatabaseController.selectedServiceDb.ipVirtual}"/>
+                            </h:panelGrid>
+                        </td>
+                        <td>
+                            <h:outputText value="#{msg['common.type']}"/>
+                        </td>
+                        <td>
+                            <p:selectOneMenu id="type" value="#{actionDetailDatabaseController.newObj.type}" style="width:119px"
+                                             disabled="false">
+                                <f:selectItem itemValue="0" itemLabel="#{msg['run.script']}"/>
+                                <f:selectItem itemValue="1" itemLabel="#{msg['button.import']}" itemDisabled="false"/>
+                                <f:selectItem itemValue="2" itemLabel="#{msg['on.off.flag']}" itemDisabled="false"/>
+                                <p:ajax update="panelDb" onstart="PF('blockUiDbDialog').block()"
+                                        oncomplete="PF('blockUiDbDialog').unblock()"/>
+                            </p:selectOneMenu>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h:outputText value="#{msg['input']}"/>
+                        </td>
+                        <td>
+                            <p:selectOneMenu id="typeImport" value="#{actionDetailDatabaseController.newObj.typeImport}"
+                                             style="width:119px" disabled="#{actionDetailDatabaseController.newObj.type eq 1}">
+                                <f:selectItem itemValue="1" itemLabel="#{msg['import.file']}"/>
+                                <f:selectItem itemValue="0" itemLabel="#{msg['text']}"/>
+                                <p:ajax event="change" listener="#{actionDetailDatabaseController.disabledTimeOut}" update="panelDb" onstart="PF('blockUiDbDialog').block()"
+                                        oncomplete="PF('blockUiDbDialog').unblock()"/>
+                            </p:selectOneMenu>
+                        </td>
+                        <td>
+                            <h:outputText value="#{msg['run.mode']}"/>
+                        </td>
+                        <td>
+                            <p:selectOneMenu id="runmode" value="#{actionDetailDatabaseController.newObj.testbedMode}"
+                                             style="width:119px">
+                                <f:selectItem itemValue="1" itemLabel="#{msg['run.mode.testbed']}" itemDisabled="#{empty actionController.lstTestBedImpactModules}"/>
+                                <f:selectItem itemValue="0" itemLabel="#{msg['run.mode.normal']}"/>
+                                <p:ajax update="panelDb" onstart="PF('blockUiDbDialog').block()"
+                                        oncomplete="PF('blockUiDbDialog').unblock()"/>
+                            </p:selectOneMenu>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h:outputText value="#{msg['command.compile']}" rendered="false"/>
+                        </td>
+                        <td>
+                            <p:inputText id="cmdCompile" value="#{actionDetailDatabaseController.newObj.cmdCompile}"
+                                         rendered="false"
+                                         required="false" requiredMessage="#{msg['you.have.not.entered.compile']}"/>
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h:outputText value="#{msg['script.backup']}"
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 1)}"/>
+                        </td>
+                        <td>
+                            <h:panelGroup id="pnl" rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 1)}">
+
+                                <p:fileUpload fileUploadListener="#{actionDetailDatabaseController.handleFileUploadBakup}"
+                                              rendered="#{((actionDetailDatabaseController.newObj.type eq 0) and (actionDetailDatabaseController.newObj.typeImport eq 1)) or actionDetailDatabaseController.newObj.type eq 1 }"
+                                              mode="advanced" update="scriptBackup timeOutBackup :insertEditForm:designGrowl"
+                                              auto="true" sizeLimit="100000000" allowTypes="/(\.|\/)(sql)$/">
+                                </p:fileUpload>
+
+                                <p:commandButton value="#{msg['enter.script']}" update=":mop:lst:checkForm"
+                                                 styleClass="GreenButton"
+                                                 icon="fa #{(empty actionDetailDatabaseController.newObj.backupText) ? 'fa-edit' : 'fa-check'} White"
+                                                 rendered="#{(actionDetailDatabaseController.newObj.type eq 0) and (actionDetailDatabaseController.newObj.typeImport eq 0) }"
+                                                 oncomplete="PF('scriptBackupDlg').show()"
+                                                 process="@this"/>
+                            </h:panelGroup>
+                        </td>
+                        <td>
+                            <h:outputText value=""
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 1)}"/>
+                        </td>
+                        <td>
+                            <h:panelGroup id="scriptBackup"
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 1)}">
+                                <p:commandLink
+                                        rendered="#{((actionDetailDatabaseController.newObj.type eq 0) and (actionDetailDatabaseController.newObj.typeImport eq 1)) or actionDetailDatabaseController.newObj.type eq 1}"
+                                        ajax="false" process="@this" immediate="true">
+                                    <h:outputText value="#{actionDetailDatabaseController.newObj.scriptBackup}"/>
+                                    <p:fileDownload value="#{actionDetailDatabaseController.downloadFile(actionDetailDatabaseController.newObj.scriptBackup)}"/>
+                                </p:commandLink>
+                            </h:panelGroup>
+                        </td>
+                    </tr>
+
+                    <!--20180918_tudn_start them thoi gian timeout-->
+                    <tr>
+                        <td>
+                            <h:outputText value="#{msg['timeout.script.backup']}"
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 1)}" />
+                        </td>
+                        <td>
+                            <!--20-11-2018 KienPD check max length start-->
+                            <p:inputText id="timeOutBackup" value="#{actionDetailDatabaseController.newObj.timeOutBackup}" maxlength="9" placeholder="#{msg['label.second']}" onkeypress="return isNumberKey(event);"
+                                         rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 1)}"
+                                         disabled="#{actionDetailDatabaseController.disabledTimeOutBackUp}"/>
+                            <!--20-11-2018 KienPD check max length end-->
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <!--20180918_tudn_end them thoi gian timeout-->
+
+                    <tr>
+                        <td>
+                            <h:panelGroup id="scriptLabel" rendered="#{(actionDetailDatabaseController.newObj.type eq 0)}">
+                                <h:outputText value="#{msg['script.impaction']}"/>
+                            </h:panelGroup>
+                            <h:panelGroup id="flagOffLabel" rendered="#{(actionDetailDatabaseController.newObj.type eq 2)}">
+                                <h:outputText value="#{msg['script.turn.off.flag']}"/>
+                            </h:panelGroup>
+                        </td>
+                        <td>
+                            <h:panelGroup id="scriptFile"
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 2)}">
+                                <p:fileUpload id="templatePath"
+                                              rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 2) and (actionDetailDatabaseController.newObj.typeImport eq 1) }"
+                                              fileUploadListener="#{actionDetailDatabaseController.handleFileUpload}"
+                                              mode="advanced" update="scriptExecute :insertEditForm:designGrowl timeOutImpact"
+                                              auto="true" sizeLimit="100000000" allowTypes="/(\.|\/)(sql)$/"/>
+
+                                <p:commandButton value="#{msg['enter.script']}" update=":mop:lst:checkForm"
+                                                 styleClass="GreenButton"
+                                                 icon="fa #{(empty actionDetailDatabaseController.newObj.scriptText) ? 'fa-edit' : 'fa-check'} White"
+                                                 rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 2) and (actionDetailDatabaseController.newObj.typeImport eq 0) }"
+                                                 oncomplete="PF('scriptDlg').show()"
+                                                 process="@this"/>
+                            </h:panelGroup>
+                        </td>
+                        <td>
+                            <h:panelGroup id="labelScriptExecute"
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 2)}">
+                                <h:outputText value=""
+                                              rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 2) and (actionDetailDatabaseController.newObj.typeImport eq 1)}"/>
+                            </h:panelGroup>
+                        </td>
+                        <td>
+                            <h:panelGroup id="scriptExecute"
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 2)}">
+                                <p:commandLink
+                                        rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 2) and (actionDetailDatabaseController.newObj.typeImport eq 1)}"
+                                        ajax="false" process="@this" immediate="true">
+                                    <h:outputText value="#{actionDetailDatabaseController.newObj.scriptExecute}"/>
+                                    <p:fileDownload
+                                            value="#{actionDetailDatabaseController.downloadFile(actionDetailDatabaseController.newObj.scriptExecute)}"/>
+                                </p:commandLink>
+                            </h:panelGroup>
+                        </td>
+                    </tr>
+
+                    <!--20180918_tudn_start them thoi gian timeout-->
+                    <tr>
+                        <td>
+                            <h:outputText value="#{msg['timeout.script.impact']}"
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 0)}"/>
+                            <!--01-11-2018 KienPD validate time out start-->
+                            <h:outputText value="#{msg['timeout.script.turn.off.flag']}"
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 2)}"/>
+                            <!--01-11-2018 KienPD validate time out end-->
+                        </td>
+                        <td>
+                            <!--01-11-2018 KienPD validate time out start-->
+                            <h:panelGroup id="timeOutImpact">
+                                <p:inputText value="#{actionDetailDatabaseController.newObj.timeOutImpact}" maxlength="9" placeholder="#{msg['label.second']}"
+                                             rendered="#{(actionDetailDatabaseController.newObj.type eq 0)}" onkeypress="return isNumberKey(event);"
+                                             disabled="#{actionDetailDatabaseController.disabledTimeOutImpact}"/>
+                                <p:inputText value="#{actionDetailDatabaseController.newObj.timeOutTurnOff}" maxlength="9" placeholder="#{msg['label.second']}"
+                                             rendered="#{(actionDetailDatabaseController.newObj.type eq 2)}" onkeypress="return isNumberKey(event);"
+                                             disabled="#{actionDetailDatabaseController.disabledTimeOutImpact}"/>
+                            </h:panelGroup>
+                            <!--01-11-2018 KienPD validate time out end-->
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <!--20180918_tudn_end them thoi gian timeout-->
+
+                    <tr>
+                        <td>
+                            <h:outputText value="#{msg['script.rollback']}"
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 1)}"/>
+                            <h:outputText value="#{msg['script.turn.on.flag']}"
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 2)}"/>
+                        </td>
+                        <td>
+                            <p:fileUpload fileUploadListener="#{actionDetailDatabaseController.handleFileUploadRollback}"
+                                          rendered="#{((actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 2) and (actionDetailDatabaseController.newObj.typeImport eq 1)) or actionDetailDatabaseController.newObj.type eq 1 }"
+                                          mode="advanced" update="scriptRollback timeOutRollback :insertEditForm:designGrowl"
+                                          auto="true" sizeLimit="100000000" allowTypes="/(\.|\/)(sql)$/" style="padding: 0px; margin: 0px"/>
+                            <p:commandButton value="#{msg['enter.script']}" update=":mop:lst:checkForm" styleClass="GreenButton"
+                                             icon="fa #{(empty actionDetailDatabaseController.newObj.rollbackText) ? 'fa-edit' : 'fa-check'} White"
+                                             rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 2) and (actionDetailDatabaseController.newObj.typeImport eq 0) }"
+                                             oncomplete="PF('scriptRollbackDlg').show()"
+                                             process="@this"/>
+                        </td>
+                        <td>
+                            <h:outputText value=""/>
+                        </td>
+                        <td>
+                            <p:commandLink id="scriptRollback"
+                                           rendered="#{((actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 2) and (actionDetailDatabaseController.newObj.typeImport eq 1)) or actionDetailDatabaseController.newObj.type eq 1}"
+                                           ajax="false" process="@this" immediate="true">
+                                <h:outputText value="#{actionDetailDatabaseController.newObj.rollbackFile}"/>
+                                <p:fileDownload
+                                        value="#{actionDetailDatabaseController.downloadFile(actionDetailDatabaseController.newObj.rollbackFile)}" />
+                            </p:commandLink>
+                        </td>
+                    </tr>
+
+                    <!--20180918_tudn_start them thoi gian timeout-->
+                    <tr>
+                        <td>
+                            <h:outputText value="#{msg['timeout.script.rollback']}"
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 1)}" />
+                            <!--01-11-2018 KienPD validate time out start-->
+                            <h:outputText value="#{msg['timeout.script.turn.on.flag']}"
+                                          rendered="#{(actionDetailDatabaseController.newObj.type eq 2)}" />
+                            <!--01-11-2018 KienPD validate time out end-->
+                        </td>
+                        <td>
+                            <!--01-11-2018 KienPD validate time out start-->
+                            <h:panelGroup id="timeOutRollback">
+                                <p:inputText value="#{actionDetailDatabaseController.newObj.timeOutRollback}" maxlength="9" placeholder="#{msg['label.second']}"
+                                             rendered="#{(actionDetailDatabaseController.newObj.type eq 0 or actionDetailDatabaseController.newObj.type eq 1)}" onkeypress="return isNumberKey(event);"
+                                             disabled="#{actionDetailDatabaseController.disabledTimeOutRollback}"/>
+                                <p:inputText value="#{actionDetailDatabaseController.newObj.timeOutTurnOn}" maxlength="9" placeholder="#{msg['label.second']}"
+                                             rendered="#{(actionDetailDatabaseController.newObj.type eq 2)}" onkeypress="return isNumberKey(event);"
+                                             disabled="#{actionDetailDatabaseController.disabledTimeOutRollback}"/>
+                            </h:panelGroup>
+                            <!--01-11-2018 KienPD validate time out end-->
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <!--20180918_tudn_end them thoi gian timeout-->
+
+                    <tr>
+                        <td>
+                            <h:panelGroup id="speratorLabel" rendered="#{(actionDetailDatabaseController.newObj.type eq 1)}">
+                                <h:outputText value="#{msg['separator']}"/>
+                            </h:panelGroup>
+                        </td>
+                        <td>
+                            <h:panelGroup id="sperator" rendered="#{actionDetailDatabaseController.newObj.type eq 1}">
+                                <p:inputText value="#{actionDetailDatabaseController.newObj.sperator}"
+                                             required="false" requiredMessage="#{msg['you.have.not.entered.separator']}"/>
+                            </h:panelGroup>
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <!--</h:panelGrid>-->
+                </table>
+                <!--20181024_hoangnd_timeout db_end-->
+
+                <h:panelGrid columns="2" cellpadding="5" width="100%" columnClasses="cl1, cl2"
+                             rendered="#{actionDetailDatabaseController.newObj.type eq 1}">
+                    <h:outputText value="#{msg['command.import']}"/>
+                    <p:inputTextarea cols="90" rows="4" autoResize="false"
+                                     value="#{actionDetailDatabaseController.newObj.template}"/>
+                </h:panelGrid>
+
+                <h:panelGrid columns="4" cellpadding="5" width="100%" columnClasses="cl1, cl2"
+                             rendered="#{actionDetailDatabaseController.newObj.type eq 1}">
+                    <h:outputText value="#{msg['data.file']}"/>
+                    <p:fileUpload fileUploadListener="#{actionDetailDatabaseController.handleFileUploadData}"
+                                  mode="advanced" update="panelDb  :insertEditForm:designGrowl" allowTypes="/(\.|\/)(txt)$/"
+                                  auto="true" sizeLimit="1000000000"/>
+
+                    <h:outputText value=""/>
+                    <h:outputText id="importDataFile" value="#{actionDetailDatabaseController.newObj.importDataFile}"/>
+                </h:panelGrid>
+
+                <h:panelGrid columns="2" cellpadding="5">
+                    <p:commandButton process="panelDb" styleClass="GreenButton" icon="fa fa-check White"
+                                     value="#{actionDetailDatabaseController.isEdit ? msg['button.update'] : msg['button.insert']}"
+                                     update=":mop:lst:objectTableDb panelDb :insertEditForm:designGrowl"
+                                     actionListener="#{actionDetailDatabaseController.saveOrUpdate}"/>
+
+                    <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                     onclick="PF('editDialogDb').hide()"
+                                     styleClass="ButtonRed"/>
+                </h:panelGrid>
+            </p:panel>
+        </p:dialog>
+
+        <p:confirmDialog id="confirmDeleteDb"
+                         message="#{msg['confirm.sure.delete']}?"
+                         header="#{msg['button.confirm']}" severity="alert" widgetVar="confirmDeleteDb">
+            <p:commandButton value="#{msg['button.confirm']}" icon="fa fa-check White"
+                             actionListener="#{actionDetailDatabaseController.delete()}"
+                             update=":mop:lst:objectTableDb"
+                             process="@this" oncomplete="PF('confirmDeleteDb').hide()"/>
+            <p:commandButton value="#{msg['button.cancel']}?" icon="fa fa-remove White"
+                             onclick="PF('confirmDeleteDb').hide()"/>
+        </p:confirmDialog>
+
+        <!--20190122_hoangnd_fix bug can chinh dialog_start-->
+        <h:panelGroup id="checkForm">
+            <p:dialog id="scriptDlg" modal="true" header="#{msg['script.impaction']}"
+                      widgetVar="scriptDlg" showEffect="explode"
+                      height="500px" width="70%">
+                <!--23-11-2018 KienPD check disabled time out start-->
+                <h:inputTextarea value="#{actionDetailDatabaseController.newObj.scriptText}"
+                                 style="width: 99%;height: 400px;font-family: Courier New;">
+                    <p:ajax event="change"/>
+                </h:inputTextarea>
+                <h:panelGrid columns="2" cellpadding="5">
+
+                    <p:commandButton process="@form" styleClass="GreenButton"
+                                     value="#{msg['button.update']}" icon="fa fa-check White">
+                        <p:ajax event="click" listener="#{actionDetailDatabaseController.checkDisabledTimeOut}" oncomplete="PF('scriptDlg').hide()" update="timeOutImpact"/>
+                    </p:commandButton>
+
+                    <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                     onclick="PF('scriptDlg').hide()"
+                                     styleClass="ButtonRed"/>
+                </h:panelGrid>
+                <!--23-11-2018 KienPD check disabled time out end-->
+            </p:dialog>
+
+            <p:dialog id="scriptBackupDlg" modal="true" header="Script backup"
+                      widgetVar="scriptBackupDlg" showEffect="explode" height="500px" width="70%">
+                <!--23-11-2018 KienPD check disabled time out start-->
+                <h:inputTextarea value="#{actionDetailDatabaseController.newObj.backupText}"
+                                 style="width: 99%;height: 400px;font-family: Courier New;">
+                    <p:ajax event="change"/>
+                </h:inputTextarea>
+                <!--<pe:codeMirror id="codeMirror" mode="sql"
+                               theme="eclipse" value="#{actionDetailDatabaseController.newObj.backupText}" lineNumbers="true"/>-->
+                <h:panelGrid columns="2" cellpadding="5">
+
+                    <p:commandButton process="@form" styleClass="GreenButton"
+                                     value="#{msg['button.update']}" icon="fa fa-check White">
+                        <p:ajax event="click" listener="#{actionDetailDatabaseController.checkDisabledTimeOut}" oncomplete="PF('scriptBackupDlg').hide()" update="timeOutBackup"/>
+                    </p:commandButton>
+
+                    <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                     onclick="PF('scriptBackupDlg').hide()"
+                                     styleClass="ButtonRed"/>
+                </h:panelGrid>
+                <!--23-11-2018 KienPD check disabled time out end-->
+            </p:dialog>
+
+            <p:dialog id="scriptRollbackDlg" modal="true" header="Script rollback"
+                      widgetVar="scriptRollbackDlg" showEffect="explode"
+                      height="500px" width="70%">
+                <!--23-11-2018 KienPD check disabled time out start-->
+                <h:inputTextarea value="#{actionDetailDatabaseController.newObj.rollbackText}"
+                                 style="width: 99%;height: 400px;font-family: Courier New;">
+                    <p:ajax event="change"/>
+                </h:inputTextarea>
+                <h:panelGrid columns="2" cellpadding="5">
+                    <p:commandButton process="@form" styleClass="GreenButton"
+                                     value="#{msg['button.update']}" icon="fa fa-check White">
+                        <p:ajax event="click" listener="#{actionDetailDatabaseController.checkDisabledTimeOut}" oncomplete="PF('scriptRollbackDlg').hide()" update="timeOutRollback"/>
+                    </p:commandButton>
+
+                    <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                     onclick="PF('scriptRollbackDlg').hide()"
+                                     styleClass="ButtonRed"/>
+                </h:panelGrid>
+                <!--23-11-2018 KienPD check disabled time out end-->
+            </p:dialog>
+            <!--20190122_hoangnd_fix bug can chinh dialog_end-->
+        </h:panelGroup>
+
+        <p:dialog modal="true" id="importDbDialog" widgetVar="importDbDialog" header="#{msg['title.importFile']}"
+                  width="600" draggable="false" closable="false" resizable="false">
+
+            <div class="Container100 NoPadding">
+                <p:growl id="importMessage" showDetail="true" />
+                <h:outputText value="#{msg['database.list']}"/>
+                <p:fileUpload value="#{actionDetailDatabaseController.searchUploadFilePath}" allowTypes="/(\.|\/)(xls|xlsx)$/"
+                              uploadLabel="#{msg['button.import']}"
+                              fileUploadListener="#{actionDetailDatabaseController.handUploadFileExcelDb}"
+                              label="#{msg['label.fileImport']}" update=":mop:lst:objectTableDb mop:lst:importDbResult fileExcelDb"
+                              invalidFileMessage="#{msg['message.invalid.file.excel']}"
+                              invalidSizeMessage="#{msg['message.invalid.file.size']}"
+                              mode="advanced" skinSimple="true" sizeLimit="2097152" auto="true">
+                </p:fileUpload>
+                <h:outputText id="fileExcelDb" value="#{actionDetailDatabaseController.nameFileExcelDb}" />
+
+                <div id="excl" style="padding-top: 5px;">
+                <h:outputText value="#{msg['scripts.file']}"/>
+            </div>
+                <p:fileUpload value="#{actionDetailDatabaseController.searchUploadFilePath}" allowTypes="/(\.|\/)(zip)$/"
+                              uploadLabel="#{msg['button.import']}"
+                              fileUploadListener="#{actionDetailDatabaseController.handUploadFileZipDb}"
+                              label="#{msg['label.fileImport']}" update=":mop:lst:objectTableDb mop:lst:importDbResult fileZipDb"
+                              invalidFileMessage="#{msg['message.invalid.file.zip']}"
+                              invalidSizeMessage="#{msg['message.invalid.file.size']}"
+                              mode="advanced" skinSimple="true" sizeLimit="2097152" auto="true">
+                </p:fileUpload>
+
+                <h:outputText id="fileZipDb" value="#{actionDetailDatabaseController.nameFileZipDb}"/>
+
+                <div class="row" style="margin-top: 20px;text-align: center;margin-left: auto;margin-right: auto;display: block ;
+                        padding: 20px 20px 6px 60px">
+
+                    <p:commandButton style="color: white;" icon="fa fa-download" ajax="false"
+                                     value="#{msg['button.download.template']}">
+                        <p:fileDownload value="#{actionDetailDatabaseController.onDownloadDatabaseTemp()}" />
+                    </p:commandButton>
+                    <p:commandButton id="importDbResult" style="color: white;" icon="fa fa-remove" ajax="false"
+                                     disabled="#{actionDetailDatabaseController.importSuccess}"
+                                     value="#{msg['button.download.result']}" >
+                        <p:fileDownload value="#{actionDetailDatabaseController.onDownloadImportDbResult()}" />
+                    </p:commandButton>
+                    <div class="row" style="margin-top: 20px;text-align: center;margin-left: auto;margin-right: auto;display: block">
+                        <p:commandButton style="color: white; " icon="fa fa-save"
+                                         update=":mop:lst:objectTableDb mop:lst:importDbResult"
+                                         actionListener="#{actionDetailDatabaseController.importFileDatabase}" styleClass="GreenButton" value="#{msg['button.save']}"/>
+                        <p:commandButton style="color: white;" icon="fa fa-close"
+                                         onclick="PF('importDbDialog').hide()" value="#{msg['button.close']}"/>
+                    </div>
+                </div>
+            </div>
+        </p:dialog>
+    </p:panel>
+
+    <script>
+        //01-11-2018 KienPD only enter number start
+        function isNumberKey(evt){
+            var charCode = (evt.which) ? evt.which : evt.keyCode
+            return !(charCode > 31 &amp; (charCode &lt; 48 || charCode > 57));
+        }
+        //01-11-2018 KienPD only enter number end
+    </script>
+
+    <style>
+        .c1 {
+            vertical-align: top;
+            width: 70%
+        }
+        .c2 {
+            vertical-align: top;
+            width: 30%
+        }
+        /*20181026_hoangnd_fix bug can chinh label timeout_start*/
+        .ui-fileupload-content {
+            display: none;
+        }
+        /*20181026_hoangnd_fix bug can chinh label timeout_end*/
+
+        /*20-11-2018 KienPD start*/
+        .ui-fileupload-buttonbar{
+            padding: 0px !important;
+        }
+
+        /*20-11-2018 KienPD end*/
+    </style>
+</ui:composition>

@@ -1,0 +1,72 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+	<p:growl showDetail="false" widgetVar="checklistAppGrowl" />
+
+	<p:panel header="#{msg['checklist.service']}" toggleable="false">
+		<h:panelGrid style="width:100%;margin-left:0px" columns="1"
+			columnClasses="c1,c2">
+
+			<h:panelGrid columns="5">
+				<p:inputText value="#{actionController.fitterAppName}"
+					id="fitterAppName" style="width: 180px;">
+					<p:ajax event="keyup" listener="#{actionController.fitter}"
+						update="cklTreeTable" />
+				</p:inputText>
+				<p:watermark value="#{msg['module.name']}" for="fitterAppName" />
+
+				<p:inputText value="#{actionController.fitterAppIp}"
+					id="fitterAppIp" style="width: 180px;">
+					<p:ajax event="keyup" listener="#{actionController.fitter}"
+						update="cklTreeTable" />
+				</p:inputText>
+				<p:watermark value="#{msg['module.ip']}" for="fitterAppIp" />
+
+				<p:selectCheckboxMenu style="width: 180px;"
+					value="#{actionController.fitterKpiIds}" label="App Kpi"
+					filter="false" panelStyle="width:300px;">
+					<f:selectItems value="#{actionController.appKpis}" var="obj"
+						itemValue="#{obj.id}" itemLabel="#{obj.name}" />
+
+					<p:ajax listener="#{actionController.fitter}" update="cklTreeTable" />
+					<p:ajax event="toggleSelect" listener="#{actionController.fitter}"
+						update="cklTreeTable" />
+				</p:selectCheckboxMenu>
+			</h:panelGrid>
+
+			<p:treeTable value="#{actionController.cklDefaultRoot}" var="obj"
+				showUnselectableCheckbox="true" widgetVar="cklTreeTable"
+				id="cklTreeTable" selectionMode="checkbox" emptyMessage=""
+				style="width:70%"
+				selection="#{actionController.cklListSelectedNodes}">
+
+				<p:column filterBy="#{obj.name}">
+					<h:outputText value="#{obj.name}" />
+				</p:column>
+
+				<p:ajax event="select"
+					listener="#{actionController.onAppNodeSelect}" />
+				<p:ajax event="unselect"
+					listener="#{actionController.onAppNodeUnselect}" />
+
+			</p:treeTable>
+
+
+		</h:panelGrid>
+	</p:panel>
+
+	<style>
+.c1 {
+	vertical-align: top;
+	width: 70%
+}
+
+.c2 {
+	vertical-align: top;
+	width: 30%
+}
+</style>
+</ui:composition>

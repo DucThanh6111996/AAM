@@ -1,0 +1,353 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/layout/olympos/template.xhtml">
+    <ui:define name="content">
+        <p:messages id="mainMessage" showDetail="true" showSummary="false" closable="true"/>
+        <h:form id="form">
+            <!--<p:messages id="mainMessage3" showDetail="true" showSummary="false" closable="true"/>-->
+            <p:growl id="growl" showDetail="true" showSummary="false" widgetVar="growl"/>
+            <p:dataTable value="#{categoryDomainController.lazyDataModel}"
+                         var="category" rows="10" rowKey="#{category.id}"
+                         lazy="true" widgetVar="categoryWidget" id="categoryId"
+                         paginatorPosition="bottom"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+                         paginator="true" styleClass="Table Container100 NoPadding MarTop10"
+                         editable="true" editMode="cell"
+                         rowsPerPageTemplate="10,20,30" rowIndexVar="categoryIdx"
+                         selection="#{categoryDomainController.categoryDomains}">
+                <f:facet name="header">
+                    <div class="Card NoPadding" style="background: transparent;">
+                        <div class="Container10" style="text-align: left;">
+                            <p:tooltip position="right" for="addCategory"></p:tooltip>
+                            <p:commandButton id="addCusId" icon="fa fa-plus-circle" styleClass="OrangeButton White"
+                                             style="margin-top: 5px"
+                                             onclick="PF('block').show()"
+                                             oncomplete="PF('addCategory').show();PF('block').hide()"
+                                             update=":form,addCategory"
+                                             actionListener="#{categoryDomainController.preAddCategory}"
+                                             title="#{msg['button.insert']}"
+                            />
+                        </div>
+                        <div class="Container80 Responsive50">
+                            <h:outputText styleClass="Fs20" value="#{msg['menu.title.category.domain']}"/>
+                        </div>
+                        <div class="Container10" style="text-align: right">
+                            <p:commandButton id="toggler" type="button"
+                                             style="float:right" icon="fa fa-sliders"
+                                             styleClass="Fs14 White GreenButton"/>
+                            <p:columnToggler datasource="categoryId" trigger="toggler"/>
+                            <ui:remove>
+                                <p:commandButton style="color: white;float: right" icon="fa fa-cloud-upload"
+                                                 oncomplete="PF('importDialog').show()"
+                                                 styleClass="Fs14 White YellowButton"
+                                                 update="importForm" title="#{msg['button.import']}"/>
+                            </ui:remove>
+                        </div>
+                    </div>
+
+                </f:facet>
+
+                <p:ajax event="page" onstart="PF('block').show()" oncomplete="PF('block').hide()"></p:ajax>
+                <p:ajax event="filter" onstart="PF('block').show()" oncomplete="PF('block').hide()"></p:ajax>
+                <p:column headerText="#{msg['datatable.header.stt']}" width="20" style="text-align: center">
+                    <h:outputText value="#{categoryIdx +1}"/>
+                </p:column>
+                <p:column selectionMode="multiple" width="20">
+                </p:column>
+
+                <p:column headerText="#{msg['label.category.domain.system.type']}" width="100"
+                          filterBy="#{category.systemType}" filterMatchMode="contains">
+                    <h:outputText value="#{category.systemType}"/>
+                </p:column>
+                <p:column headerText="#{msg['label.category.domain.groupName']}" width="100"
+                          filterBy="#{category.groupDomain.groupName}" filterMatchMode="contains" >
+                    <h:outputText value="#{category.groupDomain.groupName}"/>
+                </p:column>
+                <p:column headerText="#{msg['label.category.domain.domainCode']}" width="100"
+                          filterBy="#{category.domainCode}" filterMatchMode="contains">
+                    <h:outputText value="#{category.domainCode}"/>
+                </p:column>
+                <p:column headerText="#{msg['label.category.domain.description']}" width="100"
+                          filterBy="#{category.description}" filterMatchMode="contains">
+                    <h:outputText value="#{category.description}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['label.updateTime']}"
+                          filterBy="#{category.updateTime}" filterMatchMode="contains"
+                          width="120" style="text-align: center;">
+                    <h:outputText value="#{category.updateTime}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss"/>
+                    </h:outputText>
+                </p:column>
+
+                <p:column headerText="#{msg['datatable.header.createby']}"
+                          filterBy="#{category.createUser}" filterMatchMode="contains"
+                          width="80">
+                    <h:outputText value="#{category.createUser}"/>
+                </p:column>
+                <p:column headerText="#{msg['table.header.action']}" width="30" style="text-align: center">
+                    <div style="text-align: center">
+                        <p:tooltip position="top"></p:tooltip>
+                        <p:commandButton id="update" type="submit"
+                                         title="#{msg['label.update']}" icon="fa fa-edit"
+                                         onstart="PF('block').show()"
+                                         update="form, categoryId,addCategory"
+                                         oncomplete="PF('addCategory').show();PF('block').hide()"
+                                         styleClass="Fs14 White GreenButton"
+                                         style="color:green; font-weight: bold;font-size: 13px "
+                                         actionListener="#{categoryDomainController.preUpdateCategory(category)}"/>
+                    </div>
+                </p:column>
+
+            </p:dataTable>
+            <p:outputPanel id="actionPanel" style="position: fixed;right: 0px; bottom: 30px;width: 45px;" >
+                <p:tooltip position="top" />
+                <p:commandButton icon="fa fa-trash" actionListener="#{categoryDomainController.preDeleteCategory}"
+                                 update="@widgetVar(comfirmDeleteCategory),:form"
+                                 title="#{msg['label.del']}" styleClass="White RedButton Fs14 MarTop5" >
+                </p:commandButton>
+            </p:outputPanel>
+
+        </h:form>
+        <p:dialog widgetVar="addCategory" width="75%"
+                  id="addCategory"
+                  height="80%" modal="true" showEffect="size" hideEffect="scale">
+            <f:facet name="header">
+                <h:outputText value="#{msg['label.add']}" rendered="#{!categoryDomainController.update}"/>
+                <h:outputText value="#{msg['label.update']}" rendered="#{categoryDomainController.update}"/>
+            </f:facet>
+            <h:form id="addCategoryForm">
+                <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px">
+                    <h:outputText class="ui-g-3" value="#{msg['label.category.domain.system.type']}"/>
+                    <p:selectOneMenu class="ui-g-8"
+                                     value="#{categoryDomainController.categoryDomain.systemType}" >
+                        <f:selectItem itemLabel="#{msg['label.category.domain.system.type.nocpro']}" itemValue="#{msg['label.category.domain.system.type.nocpro']}"/>
+                        <f:selectItem itemLabel="#{msg['label.category.domain.system.type.vsmart']}" itemValue="#{msg['label.category.domain.system.type.vsmart']}"/>
+                        <f:selectItem itemLabel="#{msg['label.category.domain.system.type.ncms']}" itemValue="#{msg['label.category.domain.system.type.ncms']}"/>
+                        <p:ajax event="change" update="groupDomain"
+                                listener="#{categoryDomainController.afterSystemTypeSelected}"/>
+                    </p:selectOneMenu>
+                </p:outputPanel>
+
+                <p:outputPanel id="groupDomain" class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                    <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.category.domain.groupName']}"/>
+                    <p:selectOneMenu class="ui-g-8" value="#{categoryDomainController.categoryDomain.groupDomain}"
+                                     filter="true" filterMatchMode="contains"
+                                     id="groupDomainSelected" converter="categoryGroupDomainConverter">
+                        <f:selectItem itemValue="" itemLabel="#{msg['common.choose']}"/>
+                        <f:selectItems var="groupDomain" itemLabel="#{groupDomain.groupName}"
+                                       itemValue="#{groupDomain}" value="#{categoryDomainController.categoryGroupDomains}"/>
+
+                    </p:selectOneMenu>
+                </p:outputPanel>
+                <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px">
+                    <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.category.domain.domainCode']}"/>
+                    <p:inputText value="#{categoryDomainController.categoryDomain.domainCode}" class="ui-g-8">
+
+                    </p:inputText>
+                </p:outputPanel>
+                <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-12 ui-g-nopad" style="margin-top: 10px">
+                    <h:outputText class="responsive125" value="#{msg['label.category.domain.description']}"/>
+                    <p:inputTextarea autoResize="false" class="responsive875" maxlength="1000" id="cmdDes"
+                                     value="#{categoryDomainController.categoryDomain.description}"/>
+                </p:outputPanel>
+
+                <div class="Container100 Flex FlexWrap NoPadding TexAlCenter"
+                     style="overflow: hidden;text-align: center">
+
+                    <p:outputPanel class="Container100 TexAlCenter" id="add">
+                        <p:commandButton icon="fa fa-save" styleClass="White Fs14" value="#{msg['button.save']}"
+                                         style="size: 111px"
+                                         actionListener="#{categoryDomainController.onSaveOrUpdateCategory}"
+                                         onstart="PF('block').show()" oncomplete="PF('block').hide()"
+                                         update="form, :form:categoryId">
+                        </p:commandButton>
+                        <p:commandButton style="color: white;" icon="fa fa-close" id="close"
+                                         oncomplete="PF('addCategory').hide()"
+                                         value="#{msg['button.close']}">
+                        </p:commandButton>
+                    </p:outputPanel>
+                </div>
+            </h:form>
+        </p:dialog>
+        <p:confirmDialog global="true" header="#{msg['button.delete']}"  showEffect="face" hideEffect="scale"
+                         widgetVar="comfirmDeleteCategory" id="comfirmDeleteCategory">
+            <f:facet name="message">
+                <h:outputText value="#{msg['title.confirm.delete']}" />
+                <p:spacer width="100%" height="1px"></p:spacer>
+            </f:facet>
+
+            <p:commandButton value="Yes" update=":form" process="@this"
+                             actionListener="#{categoryDomainController.deleteCategory}"
+                             styleClass="ui-confirmdialog-yes RedButton" icon="ui-icon-check fa fa-check Fs14 White" />
+            <p:commandButton value="No" styleClass="ui-confirmdialog-no AquaButton" process="@this"
+                             oncomplete ="PF('comfirmDeleteRiSgRcPlan').hide()"
+                             actionListener="#{categoryDomainController.categoryDomains.clear()}"
+                             update=":form"
+                             icon="ui-icon-close fa fa-close Fs14 White" />
+        </p:confirmDialog>
+        <ui:remove>
+            <p:dialog modal="true" widgetVar="importDialog" header="#{msg['title.import.category.station.festival']}"
+                      width="60%" draggable="false" closable="true" resizable="false">
+                <h:form id="importForm" enctype="multipart/form-data">
+                    <p:growl id="importMsg" showDetail="true"/>
+
+                    <p:fileUpload value="#{categoryDomainController.uploadFile}" allowTypes="/(\.|\/)(xls|xlsx)$/"
+                                  uploadLabel="#{msg['button.import']}"
+                                  fileUploadListener="#{categoryDomainController.onImport}"
+                                  label="#{msg['label.fileImport']}"
+                                  update="form,resultImportForm,form:categoryStationFestival"
+                                  invalidFileMessage="#{msg['message.invalid.file.excel']}"
+                                  invalidSizeMessage="#{msg['message.invalid.file.size']}"
+                                  mode="advanced" skinSimple="true" sizeLimit="2097152">
+                    </p:fileUpload>
+
+                    <div class="row"
+                         style="margin-top: 20px;text-align: center;margin-left: auto;margin-right: auto;display: block">
+                        <p:commandButton style="color: white;" icon="fa fa-download" ajax="false"
+                                         value="#{msg['button.download.template']}">
+                            <p:fileDownload value="#{categoryDomainController.onDownloadTemplate()}"/>
+                        </p:commandButton>
+                        <p:commandButton style="color: violet;" icon="fa fa-close"
+                                         onclick="PF('importDialog').hide()" value="#{msg['button.close']}"/>
+                    </div>
+                </h:form>
+            </p:dialog>
+            <p:dialog modal="true" widgetVar="resultImportDialog" header="#{msg['title.result.import']}"
+                      width="40%" draggable="false" closable="true" resizable="false">
+                <h:form id="resultImportForm" enctype="multipart/form-data">
+                    <div class="row"
+                         style="margin-top: 20px;text-align: center;margin-left: auto;margin-right: auto;display: block">
+                        <p:commandButton style="color: white;" icon="fa fa-download" ajax="false"
+                                         value="#{msg['report.result']}">
+                            <p:fileDownload value="#{categoryDomainController.getImportResult()}"/>
+                        </p:commandButton>
+                        <p:commandButton style="color: white;" icon="fa fa-close"
+                                         onclick="PF('resultImportDialog').hide()" value="#{msg['button.close']}"/>
+                    </div>
+                </h:form>
+            </p:dialog>
+        </ui:remove>
+
+        <p:dialog modal="true" class="transparent-dialog" showHeader="false"
+                  widgetVar="block" draggable="false" closable="false" resizable="false">
+            <span class="fa-stack fa-2x" style="width: 5em; height: 5em; line-height: 5em;">
+                <i class="fa fa-fire fa-stack-1x" style="bottom: 40px; color: #FAFAFA; font-size: 0.8em"></i>
+                <i class="fa fa-spinner fa-pulse fa-3x fa-fw fa-stack-2x" style="color: #00AAFF; font-size: 3em;"></i>
+                <i class="fa fa-coffee fa-stack-1x" style="color: #975524; bottom: 20px;font-size: 1.2em"></i>
+            </span>
+        </p:dialog>
+
+        <script type="text/javascript">
+            $(document).ready(function () {
+                var currentTabID = "tab-7";
+                var currentIconID = "10";
+                ChangeTab(currentTabID);
+            });
+
+
+        </script>
+        <style type="text/css">
+            .Table .ui-datatable-header {
+                background: #00aaff;
+                color: white;
+                text-transform: uppercase;
+            }
+
+            .Table .ui-datatable-header .ui-button {
+                padding: 0px !important;
+            }
+
+            .Table table thead tr th {
+                background: white;
+            }
+
+            .Table .ui-paginator {
+                background: white;
+            }
+
+            .Table .ui-datatable-odd {
+                background: #F4F4F4;
+            }
+
+            .Table .ui-paginator .ui-paginator-pages .ui-paginator-page {
+                padding: 1px 6px;
+                margin-right: 2px;
+                border-radius: 50% !important;
+            }
+
+            .Table .ui-paginator .ui-paginator-pages .ui-state-active,
+            .Table .ui-paginator .ui-paginator-pages .ui-state-focus {
+                background: rgb(0, 150, 136) none repeat scroll 0% 0% !important;
+                color: white !important;
+                border: none !important;
+            }
+
+            .ui-fieldset-legend {
+                background: transparent none repeat scroll 0% 0% !important;
+                color: rgb(82, 82, 82) !important;
+                padding-right: 6px !important;
+                padding-left: 6px !important;
+            }
+
+            .state tbody tr td {
+                text-align: center;
+            }
+
+            .state thead tr td {
+                font-weight: bold;
+            }
+
+            .SlimButton {
+                width: 16px !important;
+                min-width: 8px !important;
+                height: 16px !important;
+                min-height: 8px !important;
+            }
+
+            .SlimButton .ui-button-text {
+                padding: 0px !important;
+            }
+
+            .ui-datatable .ui-column-filter {
+                width: 95% !important;
+                padding-left: 0px !important;
+                padding-right: 0px !important;
+            }
+
+            .ui-filter-column {
+                vertical-align: bottom;
+            }
+
+            tr td.ui-selection-column {
+                padding: 0px !important;
+                text-align: center;
+            }
+
+            tr td.ui-selection-column div .ui-chkbox-box {
+                margin: 0px !important;
+            }
+
+            div.DataSrt div table.ui-datagrid-data tbody tr.ui-datagrid-row td.ui-datagrid-column {
+                padding: 5px 0px !important;
+            }
+
+            .ui-datatable table tbody tr td.NodeSrt {
+                padding: 6px 3px !important;
+                text-align: center !important;
+            }
+
+            .timeRunClass::-moz-placeholder {
+                /* Mozilla Firefox 19+ */
+                color: red;
+                opacity: 1;
+                content: "Enter your number";
+            }
+
+        </style>
+    </ui:define>
+</ui:composition>

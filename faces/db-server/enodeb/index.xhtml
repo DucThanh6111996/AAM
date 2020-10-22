@@ -1,0 +1,911 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	template="/layout/olympos_db_server/template.xhtml">
+
+	<ui:define name="content">
+
+		<p:growl id="growl" showDetail="true" showSummary="false" />
+		<h:form id="dataForm">
+			<div class="Container100 Flex FlexWrap MarTop10">
+				<p:dataTable value="#{generateFlowRunController.lazyFlowRunAction}" id="tableFlowRunId"
+					lazy="true" var="flowRunAction" rowKey="#{flowRunAction.flowRunId}"
+					rows="10" paginator="true" paginatorPosition="bottom"
+					rowIndexVar="flowIdx"  
+					paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					 currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+					rowsPerPageTemplate="5,10,15" widgetVar="WdflowRunActionTable"
+					emptyMessage="#{msg['datatable.empty']}" styleClass="">
+					<f:facet name="header">
+						<div class="Card NoPadding" style="background: transparent;">
+							<div class="Container20 Responsive50" style="text-align: left;">
+								<p:tooltip position="right" for="addFlowRunId"></p:tooltip>
+								<p:commandButton id="addFlowRunId" icon="fa fa-plus-circle" styleClass="GreenButton Fs14 White"  oncomplete="PF('addEditFlowRunDlg').show()" 
+									update=":actForm"
+									rendered="#{!generateFlowRunController.tabExecute}"
+									disabled="#{!sessionUtil.createMop}"
+									 title="#{msg['label.add.template']}" actionListener="#{generateFlowRunController.preAddFlowRunAction}" />
+							</div>
+							<div class="Container60 Responsive50">
+								<h:outputText value="#{msg['datatable.header.flowrunaction']}" />
+							</div>
+							<div class="Container20" style="text-align: right;">
+								<p:commandButton id="toggler" type="button"  
+									style="float:right" icon="fa fa-sliders" styleClass="Fs14 White" />
+								<p:columnToggler datasource="tableFlowRunId" trigger="toggler" />
+							</div>
+						</div>
+
+					</f:facet>
+					<p:column headerText="#{msg['datatable.header.stt']}" width="20">
+						<h:outputText value="#{flowIdx +1 }" />
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.name.flowrunaction']}" filterBy="#{flowRunAction.flowRunName}"
+						width="150">
+						<h:outputText id="aaa" value="#{flowRunAction.flowRunName}" style="white-space: pre-line;" title="#{flowRunAction.flowRunName}">
+						</h:outputText>
+						<p:tooltip for="aaa" position="top"></p:tooltip>
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.createby']}" filterBy="#{flowRunAction.createBy}"
+						width="60">
+						<h:outputText value="#{flowRunAction.createBy}">
+							
+						</h:outputText>
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.executeby']}" filterBy="#{flowRunAction.executeBy}"
+						width="60">
+						<h:outputText value="#{flowRunAction.executeBy}">
+							
+						</h:outputText>
+					
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.crNumber']}" filterBy="#{flowRunAction.crNumber}"
+						width="60">
+						<p:inputTextarea value="#{flowRunAction.crNumber}" style="width: calc(100% - 0px);
+							background: transparent; border:none; white-space: pre-line;padding:0px !important " readonly="true"/>
+							
+					</p:column>
+					
+					<p:column headerText="#{msg['datatable.header.template']}" filterBy="#{flowRunAction.flowTemplates.flowTemplateName}"
+						width="150" style="text-align: center;">
+						<h:outputText style="white-space: pre-line;"
+							value="#{flowRunAction.flowTemplates.flowTemplateName}" />
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.time.create']}" filterBy="#{flowRunAction.createDate}"
+						width="80" visible="#{!generateFlowRunController.tabExecute}">
+						<h:outputText value="#{flowRunAction.createDate}">
+							<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.time.execute']}" id="timeRunId" filterStyleClass="timeRunClass" filterBy="#{flowRunAction.timeRun}"
+						width="80" style="text-align: center;">
+						<h:outputText value="#{flowRunAction.timeRun}">
+							<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+<!-- 						<p:watermark value="dd/MM/yyyy HH:mm:ss[-dd/MM/yyyy HH:mm:ss]"  for="timeRunId:filter"></p:watermark> -->
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.time.timeRunActual']}" 
+						filterBy="#{flowRunAction.timeRunActual}" visible="#{generateFlowRunController.tabExecute}"
+						width="80" style="text-align: center;">
+						<h:outputText value="#{flowRunAction.timeRunActual}">
+							<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+					</p:column>
+					
+					<p:column headerText="#{msg['datatable.header.time.endRun']}" filterBy="#{flowRunAction.endRun}"
+						width="80" visible="#{generateFlowRunController.tabExecute}" style="text-align: center;">
+						<h:outputText value="#{flowRunAction.endRun}">
+							<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+						</h:outputText>
+					</p:column>
+
+					<p:column headerText="#{msg['datatable.header.node']}">
+						<p:dataGrid value="#{flowRunAction.nodeRuns}" columns="2" 
+							style="background: transparent; max-height:170px;overflow: auto;" var="nodeRun" rowIndexVar="n" type="ordered"
+							emptyMessage="#{msg['datatable.empty']}">
+							<p:inputText value="#{n + 1}. #{nodeRun.node.nodeCode}" style="width: calc(100% - 0px);background: transparent;border:none; padding: 0px!important" readonly="true"/>
+					        
+					    </p:dataGrid>
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.status']}" width="50"  filterBy="#{flowRunAction.status}" >
+						<f:facet name="filter">
+							<p:selectOneMenu onchange="PF('WdflowRunActionTable').filter()" >
+								<f:selectItem itemLabel="#{msg['datatable.header.status']}" itemValue="" />
+								<f:selectItem itemLabel="#{msg['view.label.flowrunaction.status0']}" itemValue="0" />
+								<f:selectItem itemLabel="#{msg['view.label.flowrunaction.status1']}" itemValue="1" />
+								<f:selectItem itemLabel="#{msg['view.label.flowrunaction.status2']}" itemValue="2" />
+								<f:selectItem itemLabel="#{msg['view.label.flowrunaction.status3']}" itemValue="3" />
+								<f:selectItem itemLabel="#{msg['view.label.flowrunaction.status4']}" itemValue="4" />
+								<f:selectItem itemLabel="#{msg['view.label.flowrunaction.status6']}" itemValue="6" />
+								
+								
+								
+							</p:selectOneMenu>
+						</f:facet>
+						<p:outputPanel style="width: 100%; text-align:center" rendered="#{flowRunAction.status == 0}"> 
+							<i class="fa  fa-unlock-alt  Fs18 Gray" style=""></i> 
+							<br />
+							<h:outputText value="#{msg['view.label.flowrunaction.status0']}" title="#{msg['view.label.flowrunaction.status0']}" 
+								rendered="#{flowRunAction.status == 0}" style="color: gray; text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+						</p:outputPanel>
+						<p:outputPanel style="width: 100%; text-align:center" rendered="#{flowRunAction.status == 1}">
+							<i class="fa fa-clock-o Fs20" style="color: #00BFFF !important;"></i> 
+							<br />
+							<h:outputText value="#{msg['view.label.flowrunaction.status1']}" rendered="#{flowRunAction.status == 1}" 
+								style="color: #00BFFF;text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+						</p:outputPanel>	
+						
+						<p:outputPanel style="width: 100%; text-align:center" rendered="#{flowRunAction.status == 2}">
+							<i class="fa fa-spinner fa-pulse fa-fw Fs20" style="color: #4169E1 !important;"></i> 
+							<br />
+							<h:outputText value="#{msg['view.label.flowrunaction.status2']}"
+						 		style="color: #4169E1; text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+						</p:outputPanel> 
+						
+						<p:outputPanel style="width: 100%; text-align:center" rendered="#{flowRunAction.status == 3}">
+							<i class="fa fa-check-circle Fs20" style="color: #228B22 !important;"></i> 
+							<br />
+							<h:outputText value="#{msg['view.label.flowrunaction.status3']}"  
+							style="color: #228B22; text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+						</p:outputPanel>
+						
+						<p:outputPanel style="width: 100%; text-align:center" rendered="#{flowRunAction.status == 4}">
+							<i class="fa fa-warning Fs20" style="color: #FF8C00 !important;"></i> 
+							<br />
+							<h:outputText value="#{msg['view.label.flowrunaction.status4']}"  
+							style="color: #FF8C00; text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+						</p:outputPanel> 
+						 
+						<p:outputPanel style="width: 100%; text-align:center" rendered="#{flowRunAction.status == 6}">
+							<i class="fa fa-stop-circle Fs20" style="color: #FF4500 !important;"></i> 
+							<br />
+							<h:outputText value="#{msg['view.label.flowrunaction.status6']}" rendered="#{flowRunAction.status == 6}"
+							 style="color: #FF4500;text-shadow: 0px 0px 4px #fff;font-weight: bold;"/>
+						</p:outputPanel>	
+						
+						 
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.action']}"
+						width="#{generateFlowRunController.tabExecute?45:45}" styleClass="TexAlCenter">
+						<p:tooltip position="left" ></p:tooltip>
+						<p:commandButton icon="fa fa-eye" oncomplete="PF('loadingDialog').hide();PF('addEditFlowRunDlg').show();resizeDialogContent()"
+							onclick="PF('loadingDialog').show()" title="#{msg[!generateFlowRunController.tabExecute?'label.update':'label.view.dt']}"
+							actionListener="#{generateFlowRunController.preEditFlowRunAction(flowRunAction)}"
+							update=":actForm" styleClass="Fs14 White MarRight5">
+							
+						</p:commandButton>
+						
+						<p:commandButton icon="fa fa-location-arrow " title="#{msg['view.button.run.dt']}"
+                             actionListener="#{drawTopoStatusExecController.buildTopoDiagram(flowRunAction)}"
+                             oncomplete="PF('loadingDialog').hide();PF('showTopo').show();resizeDialogContent()"
+                             onclick="PF('loadingDialog').show()" update=":showTopo"
+                             rendered="#{generateFlowRunController.tabExecute}"
+								styleClass="OrangeButton Fs14 White MarTop5 ">
+						</p:commandButton>
+						
+						<p:commandButton icon="fa fa-copy" oncomplete="PF('loadingDialog').hide()"
+							onclick="PF('loadingDialog').show()" title="#{msg['button.clone']}"
+							actionListener="#{generateFlowRunController.cloneFlowRun(flowRunAction)}"
+							disabled="#{!sessionUtil.createMop}"
+							rendered="#{!generateFlowRunController.tabExecute}"
+							update="@form,:growl" styleClass="GreenButton Fs14 White MarTop5 MarRight5">
+						</p:commandButton>
+						<p:commandButton icon="fa fa-trash" oncomplete="PF('comfirmApprove#{flowRunAction.flowRunId}').show();PF('loadingDialog').hide()"
+							onstart="PF('loadingDialog').show()" 
+							disabled="#{!sessionUtil.createMop || flowRunAction.status &gt; 1}"
+							rendered="#{!generateFlowRunController.tabExecute}"
+							update="comfirmApproveId" title="#{msg['label.del']}" styleClass="RedButton Fs14 White MarTop5">
+						</p:commandButton>
+						<p:confirmDialog global="true" header="#{msg['view.dialog.header.del.flowrunaction']}" 
+							id="comfirmApproveId"
+							showEffect="face" hideEffect="scale" widgetVar="comfirmApprove#{flowRunAction.flowRunId}">
+								<f:facet name="message">
+									<h:outputText value="#{msg['title.confirm.delete']}"/>
+									<p:spacer width="100%" height="1px"></p:spacer>
+									<h:outputText style="color: black; font-weight: bold;" value="#{msg['datatable.header.name.flowrunaction']}"/>
+									<h:outputText value=": "/>
+									<h:outputText style="color: black" value="#{flowRunAction.flowRunName}"/>
+								</f:facet>
+							  
+                              <p:commandButton value="Yes" update="@form :growl" process="@this"  oncomplete="PF('comfirmApprove#{flowRunAction.flowRunId}').hide();PF('loadingDialog').hide()"
+                              	title="#{msg['view.dialog.header.del.flowrunaction']}"
+                              	onstart="PF('loadingDialog').show()" 
+                              	actionListener="#{generateFlowRunController.deleteFlowRunAction(flowRunAction)}"
+                              	styleClass="ui-confirmdialog-yes RedButton" icon="ui-icon-check fa fa-check Fs14 White" />
+                              <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no AquaButton" onclick="PF('comfirmApprove#{flowRunAction.flowRunId}').hide()"
+                              	icon="ui-icon-close fa fa-close Fs14 White" />
+                        </p:confirmDialog>
+                        
+                        
+                        
+						
+					</p:column>
+				</p:dataTable>
+			</div>
+		</h:form>
+		<p:dialog header="#{msg['view.dialog.header.update.flowrunaction']}" widgetVar="addEditFlowRunDlg" width="99%" styleClass="FlowRunDlg"
+				style="top:20px; bottom:5px;"  height="99%"  modal="true" draggable="true" resizable="true" id="dlgInput"  onShow="beforeOpenDialog()" onHide="afterCloseDialog()" >
+				
+			<f:facet name="header">
+				#{msg['view.dialog.header.update.flowrunaction']}
+			</f:facet>
+			
+			<h:form id="actForm">
+				<div id="p1" class="Container100 Flex FlexWrap NoPadding" style="overflow: hidden;">
+					<div class="Card">
+						<div class="Container25 Responsive50" style="padding-top: 5px">
+							<SPAN class="title-top"> 
+							<p:selectOneMenu value="#{generateFlowRunController.flowRunAction.crNumber}" title="#{msg['view.choose.cr']}"
+								disabled="#{!sessionUtil.createMop or generateFlowRunController.tabExecute or !generateFlowRunController.editMop or true}"
+								validator="notNullValidator"
+								 required="true" requiredMessage="#{msg['view.require.choosecr']}">
+								
+								<f:selectItems value="#{generateFlowRunController.crs}"></f:selectItems>
+								<p:ajax event="change" update="chooseTemplate,flowRunName,actionPanel1,@this,timeRunId" />
+								<p:ajax event="itemSelect" update="chooseTemplate,flowRunName,actionPanel1,@this,timeRunId" />
+							</p:selectOneMenu>
+							
+							<label class="title-elem" >#{msg['view.choose.cr2']}</label>
+							</SPAN>
+						</div>
+						<div class="Container25 Responsive50" style="padding-top: 5px">
+							<span class="md-inputfield">
+								<p:inputTextarea value="#{generateFlowRunController.flowRunAction.flowRunName}" id="flowRunName" 
+									title="#{msg['datatable.header.name.flowrunaction']}" rows="1"
+									validator="notNullValidator" 
+									disabled="#{generateFlowRunController.flowRunAction.crNumber == null || !sessionUtil.createMop || generateFlowRunController.tabExecute || !generateFlowRunController.editMop}"
+									 required="true" requiredMessage="#{msg['view.require.flowrunaction']}">
+									 <p:ajax event="keyup" update="chooseTemplate"/>
+									 <p:ajax event="blur" update="chooseTemplate,@this"/>
+									 
+								</p:inputTextarea>
+								
+								<label>#{msg['datatable.header.name.flowrunaction']}</label>
+							</span>
+							<p:message for="flowRunName"></p:message>
+						</div>
+
+						<div class="Container30 Responsive50" style="padding-top: 5px">
+							<SPAN class="title-top">
+							<p:selectOneMenu id="chooseTemplate" filter="true" filterMatchMode="contains"
+								value="#{generateFlowRunController.selectedFlowTemplates}"
+								converter="flowTemplateConverter" autoWidth="false" style="max-width: calc(100% - 55px)"
+								title="#{msg['datatable.header.template']}" validator="notNullValidator"
+								disabled="#{generateFlowRunController.flowRunAction.crNumber == null || generateFlowRunController.flowRunAction.flowRunName ==null
+									|| generateFlowRunController.flowRunAction.flowRunName.isEmpty()
+									|| !sessionUtil.createMop || generateFlowRunController.tabExecute || !generateFlowRunController.editMop}">
+								<f:selectItem itemLabel="#{msg['view.choose.flow.template']}"
+									itemValue="" />
+								<f:selectItems value="#{generateFlowRunController.flowTemplates}"
+									var="f" itemLabel="#{f.flowTemplateName}" itemValue="#{f}"></f:selectItems>
+								<p:ajax event="change" onstart="PF('loadingDialog').show()" oncomplete="PF('loadingDialog').hide()"
+									listener="#{generateFlowRunController.onChangeFlowTemplates()}"
+									update="chooseNodePanel,timeRunId, :searchNodeForm, actionPanel1,actionPanel2" />
+								
+	
+							</p:selectOneMenu>
+							<label class="title-elem" >#{msg['datatable.header.template']}</label>
+							</SPAN>
+						</div>
+						
+						 
+						<div class="Container20 Responsive50" style="padding-top: 5px;padding-left: 5px;text-align: right;">
+							<SPAN class="title-top"> 
+							<p:calendar id="timeRunId" value="#{generateFlowRunController.flowRunAction.timeRun}" locale="#{language.localeCode}"
+								mindate="#{generateFlowRunController.flowRunAction.createDate}" showButtonPanel="true"
+								title="#{msg['datatable.header.time.execute']}"  showOn="button" validator="notNullValidator"
+								 disabled="#{generateFlowRunController.flowRunAction.crNumber == null || !sessionUtil.createMop || generateFlowRunController.tabExecute || !generateFlowRunController.editMop}" 
+								 pattern="dd/MM/yyyy HH:mm:ss"   pages="2" effect="slideDown"
+								 required="true" requiredMessage="#{msg['view.require.time.execute']}" 
+								 showOtherMonths="true" selectOtherMonths="true" >
+								 <p:ajax event="dateSelect" update="chooseNodePanel" /> 
+							</p:calendar>	 
+							<label class="title-elem" style="padding-left: calc(100% - 35px - 170px - 22px)" >#{msg['datatable.header.time.execute']}</label>
+							</SPAN>	 
+							<p:message for="timeRunId"></p:message>	 
+						</div>
+	
+					</div>
+				</div>
+				<div  id="p2" class="Container100 Flex FlexWrap">
+					<p:outputPanel rendered="#{!generateFlowRunController.tabExecute and sessionUtil.createMop and generateFlowRunController.editMop}" 
+						id="chooseNodePanel" styleClass="Card Container100" style="padding-bottom: 0px;">
+						<p:outputPanel  styleClass="Container80 Responsive50" style="width: calc(100% - 90px)!important;">
+							<SPAN class="title-top"> 
+							<p:autoComplete multiple="true" dropdown="true"
+								value="#{generateFlowRunController.nodes}" id="chooseNode"  
+								styleClass="AutoComWid100" var="n" itemValue="#{n}"  
+								itemLabel="#{n.nodeCode}" scrollHeight="300" dropdownMode="current"
+								completeMethod="#{generateFlowRunController.completeNodeRun}"
+								converter="nodeConverter" style="max-height: 100px; overflow: auto;"
+								title="#{msg['view.choose.node.run']}"
+								rendered="#{generateFlowRunController.tabExecute?false:(generateFlowRunController.rerender || !sessionUtil.createMop)}"
+								disabled="#{generateFlowRunController.selectedFlowTemplates==null || generateFlowRunController.flowRunAction.timeRun==null || !sessionUtil.createMop || !generateFlowRunController.editMop}">
+								<p:ajax event="itemSelect" onstart="PF('loadingDialog').show()" oncomplete="PF('loadingDialog').hide();resizeDialogContent()"
+									listener="#{generateFlowRunController.handleSelectNode}" 
+									update="tabInputParam,@parent" />
+								<p:ajax event="itemUnselect" update="@parent,tabInputParam,:dataForm" onstart="PF('loadingDialog').show();" oncomplete="PF('loadingDialog').hide();resizeDialogContent()" />
+								
+								
+							</p:autoComplete>
+							<label class="title-elem" >#{msg['view.choose.node.run']}</label>
+							</SPAN>
+							<p:watermark value="#{msg['view.choose.node.run2']}" for="chooseNode"></p:watermark>
+						</p:outputPanel>
+						<div class="Container10" style="width: 45px !important;">
+							<p:commandButton icon="fa fa-search" styleClass="AquaButton Fs14 White" 
+									disabled="#{generateFlowRunController.selectedFlowTemplates==null || generateFlowRunController.flowRunAction.timeRun==null || !sessionUtil.createMop}"
+									actionListener="#{generateFlowRunController.preSearch}"
+									title="#{msg['view.choose.node.run.advance']}" 
+									rendered="#{!generateFlowRunController.tabExecute}"
+									update="chooseNodePanel,:searchNodeForm" process="@this"
+									oncomplete="PF('searchNodeRun').show()">
+							</p:commandButton>
+						</div>
+						<div class="Container10" style="width: 45px !important;">
+							<p:commandButton icon="fa fa-upload" styleClass="AquaButton Fs14 White" 
+									disabled="#{generateFlowRunController.selectedFlowTemplates==null || generateFlowRunController.flowRunAction.timeRun==null || !sessionUtil.createMop}"
+									oncomplete="PF('importDlg').show()" update="chooseNodePanel"
+									actionListener="#{generateFlowRunController.setRerender(false)}"
+									title="#{msg['view.title.import.param']}" process="@this"
+									rendered="#{!generateFlowRunController.tabExecute}"
+									>
+							</p:commandButton>
+						</div>
+					</p:outputPanel>
+				</div>
+				<div class="Container100 Flex FlexWrap">
+					<c:set  var="nodes" value="#{generateFlowRunController.nodes}"></c:set>
+					<p:tabView id="tabInputParam" scrollable="true" style="width: 100%">
+						<p:ajax event="tabChange" listener="#{generateFlowRunController.onChangeNode}"
+							onstart="PF('loadingDialog').show()" oncomplete="resizeDialogContent();PF('loadingDialog').hide()"
+							update="@this" />
+						<c:forEach items="#{nodes}" var="node">
+							<p:tab title="#{node.nodeCode}" id="tab-#{node.nodeId}">
+								<div class="Container100 Flex FlexWrap">
+									<c:set var="paramInputs" value="#{generateFlowRunController.getParamInputs(node)}"></c:set>
+									<div class="Container50 Responsive50">
+										<p:outputPanel styleClass="Card fixedElement" id="card-#{node.nodeId}">
+											<div class="Container100 Responsive50">
+												<h2 class="Container50 Responsive50 Fs20">
+													#{msg['view.tilte.param']}</h2>
+												<h2 class="Container50 Responsive50 Fs20">
+													#{msg['view.tilte.value']}</h2>
+											</div>
+											<p:outputPanel class="Container100 Responsive50" id="subcard-#{node.nodeId}">
+											<c:set var="paramInput2s" value="#{generateFlowRunController.distinctParamValueSameParamCode(paramInputs)}"></c:set>
+											<c:forEach
+												items="#{paramInput2s}"
+												var="param" varStatus="p">
+													<p:outputPanel styleClass="Container100 Responsive50" id="param-#{node.nodeId}-#{p.index}" >
+													<div class="Container50 MarTop10">
+															#{param.paramInput.paramCode}-#{param.paramInput.paramInputId}</div>
+													<p:outputPanel styleClass="Container50 ">
+														
+														<p:inputText placeholder="#{param.paramInput.inOut?msg['info.reference.value']:''}" 
+															title="#{param.paramInput.inOut?param.paramInput.cmdInOut:msg['view.tooltip.input.value']}" value="#{param.paramValue}"
+															id="inp#{node.nodeId}-#{p.index}" style="border-color:#{param.paramInput.color} !important"
+															disabled="#{param.paramInput.readOnly || param.paramInput.inOut || !sessionUtil.createMop || generateFlowRunController.tabExecute || !generateFlowRunController.editMop}">
+															<p:ajax event="blur" listener="#{generateFlowRunController.onKeyUpValueParam(param,paramInputs)}" 
+																update="previewCmd-#{node.nodeId},subcard-#{node.nodeId}" onstart="PF('loadingDialog').show()"  
+																oncomplete="PF('loadingDialog').hide()" />
+														</p:inputText>
+														<p:commandButton icon="fa fa-remove" styleClass="TransparentButton Fs16" process="@parent" 
+															disabled="#{param.paramInput.readOnly || param.paramInput.inOut || !sessionUtil.createMop || generateFlowRunController.tabExecute || !generateFlowRunController.editMop}"
+															 update="previewCmd-#{node.nodeId},card-#{node.nodeId}" actionListener="#{param.setParamValue(null)}" 
+															 oncomplete="$('#actForm\\:tabInputParam\\:inp#{node.nodeId}-#{p.index}').blur()" />
+	
+													</p:outputPanel>
+													</p:outputPanel>
+													
+											</c:forEach>
+											</p:outputPanel>
+										</p:outputPanel>
+										
+										
+									</div>
+									<p:outputPanel id="previewCmd-#{node.nodeId}"
+										styleClass="Container50 Responsive50">
+										<h2 class="Container100 Responsive50 Fs20 TexAlCenter">
+											#{msg['view.tilte.preview.dt']}</h2>
+										<c:forEach items="#{generateFlowRunController.mapGroupAction.get(node)}" var="groupAction" varStatus="g">
+											<c:if test="#{groupAction!=null}">
+											<p:outputPanel styleClass="Card" rendered="#{!groupAction.isNoCommand(node)}" >
+												<div class="Container100 Responsive50">
+													<DIV class="Container90 ">
+														<h2>
+															<h:outputText value="#{groupAction.groupActionName}"
+																style="color: blue" />
+														</h2>
+													</DIV>
+													
+													<div class="Container10 ">
+														
+														<p:inputSwitch rendered="#{groupAction!=null}" styleClass="MyInputSwitch" id="switchDeclare#{node.nodeId}-#{g.index}"
+														 disabled="#{!sessionUtil.createMop|| generateFlowRunController.tabExecute || !generateFlowRunController.editMop}"	
+														 value="#{groupAction.declare}" showLabels="true" style="width: 100px" >
+															<p:ajax update="@parent"></p:ajax>
+														</p:inputSwitch>
+														<p:tooltip for="switchDeclare#{node.nodeId}-#{g.index}" value="#{msg['view.swith.on.declare']} / #{msg['view.swith.on.nodeclare']}"></p:tooltip>
+														
+													</div>
+													
+												</div>
+												<p:outputPanel rendered="#{groupAction.declare}">
+													<p:repeat  value="#{groupAction.actionOfFlows}" var="actionOfFlow" >
+														<p:outputPanel styleClass="Container100 Responsive50 NoPadding" rendered="#{!actionOfFlow.isNoCommand(node)}"
+														style="background: #{actionOfFlow.isRollback==0?'#f1f2f3':'#e1e2e3'}; color:#{actionOfFlow.isRollback==0?'black':'red'}">
+																<p:outputPanel styleClass="Container100 Responsive50">
+																	<h:outputText value="#{actionOfFlow.action.name}"
+																		styleClass="Fs20 FontBold">
+																	</h:outputText>
+		
+																</p:outputPanel>
+																
+																<p:outputPanel styleClass="Container100 Responsive50 OvAuto" style="border: 1px solid white;border-left: none;border-right: none;">
+																	
+																	<p:outputPanel style="width: 100%; font-family: Console;">
+																		<ui:remove>
+																			<c:forEach items="#{actionOfFlow.action.actionDetails}" var="actionDetail">
+																				<c:if test="#{actionDetail.vendor==node.vendor and actionDetail.nodeType==node.nodeType and actionDetail.version==node.version }">
+																					<h:outputText escape="false" 
+																							value="#{actionDetail.buildCommand(paramInputs,true,actionOfFlow)}" />
+																					
+																				</c:if>
+																			</c:forEach>
+																		</ui:remove>
+																		<h:outputText escape="false" 
+																				value="#{actionOfFlow.buildCommand(paramInputs,true,node)}" />
+																	</p:outputPanel>
+																</p:outputPanel>
+															</p:outputPanel>
+														
+													</p:repeat>
+
+												</p:outputPanel>
+											</p:outputPanel>
+											</c:if>
+										</c:forEach>
+
+									</p:outputPanel>
+								</div>
+							</p:tab>
+							
+						</c:forEach>
+	
+					</p:tabView>
+					
+				</div>
+				
+				<p:outputPanel id="actionPanel1" style="position: fixed;right: 25px; bottom: 30px;width: 45px;">
+						<p:commandButton title="#{msg['view.button.export']}" ajax="false" process="@none"
+							disabled="#{generateFlowRunController.flowRunAction.crNumber==null || generateFlowRunController.selectedFlowTemplates==null}"
+							icon="fa fa-cloud-download" styleClass="Fs16 White" update="@none" 
+							actionListener="#{generateFlowRunController.exportDt}" />
+						
+						<p:commandButton title="#{msg['view.button.save']}"
+							disabled="#{generateFlowRunController.selectedFlowTemplates==null || !generateFlowRunController.editMop}"
+							icon="fa fa-save" styleClass="Fs16 White" 
+							actionListener="#{generateFlowRunController.saveDT}"
+							rendered="#{!generateFlowRunController.tabExecute and sessionUtil.createMop}"
+							update=":dataForm, :growl, :actForm" style="margin-top:2px" />
+				</p:outputPanel>
+				<p:outputPanel id="actionPanel2" style="position: fixed;right: 65px; bottom: 30px;width: 45px;">
+					
+					<p:commandButton title="#{msg[generateFlowRunController.approveMop?'view.button.check':'view.button.uncheck']}"
+							disabled="#{generateFlowRunController.selectedFlowTemplates==null || !generateFlowRunController.editMop}"
+							icon="fa #{generateFlowRunController.approveMop?'fa-check':'fa-unlock'}" styleClass="Fs16 White ForestButton"  
+							actionListener="#{generateFlowRunController.approveDT}"
+							rendered="#{!generateFlowRunController.tabExecute and sessionUtil.approveMop}"
+							update=":dataForm, :growl, :actForm"  />
+					<p:commandButton icon="fa fa-upload" styleClass="AquaButton White Fs16" style="margin-top:2px;" 
+							disabled="#{generateFlowRunController.selectedFlowTemplates==null || !sessionUtil.createMop}"
+							oncomplete="PF('importTempDlg').show()" 
+							title="#{msg['view.title.import.temp']}" process="@this"
+							rendered="#{!generateFlowRunController.tabExecute and sessionUtil.createMop}"
+							>
+					</p:commandButton>
+				</p:outputPanel>
+			</h:form>
+			<a class="cd-top" title="Về đầu trang"  />
+		</p:dialog>
+		<p:dialog id="searchNodeRunId" widgetVar="searchNodeRun" header="#{msg['view.choose.node.run']}" 
+				 width="95%" modal="true" style="top:20px" height="550" draggable="true" resizable="true" styleClass="searchNodeDlg">
+			
+			<p:ajax event="close" update=":actForm:chooseNodePanel,:actForm:tabInputParam" onstart="PF('loadingDialog').show()" oncomplete="PF('loadingDialog').hide()" 
+				listener="#{generateFlowRunController.copyNodeSearch}"></p:ajax>	 
+			
+			<h:form id="searchNodeForm">
+				<div class="Container100 NoPadding">
+					<div class="Container50 Responsive50">
+						
+						<p:dataTable value="#{generateFlowRunController.lazyNode}" var="node" rowKey="#{node.nodeId}" rows="10" paginator="true" paginatorPosition="bottom" lazy="true"
+							paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                            currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+                            pageLinks="5"
+							rowsPerPageTemplate="5,10,15" rowIndexVar="nodeIdx" selection="#{generateFlowRunController.preNodes}" id="tableSearchNode"
+							style="padding: 0px ! important;" widgetVar="availableNodeData">
+							<f:facet name="header">
+								<div class="Card NoPadding" style="background: transparent;">
+									<div class="Container25">
+										<p:selectOneButton styleClass="OneButtonNode" value="#{generateFlowRunController.searchNodeLab}">
+								            <f:selectItem itemLabel="Lab" itemValue="1" />
+								            <f:selectItem itemLabel="Net" itemValue="0" />	            
+								            <f:selectItem itemLabel="All" itemValue="-1" />
+								            <p:ajax listener="#{generateFlowRunController.changeTypeNode}" update="tableSearchNode,:searchNodeForm:ctmTableSearchNode"></p:ajax>
+								        </p:selectOneButton>
+										
+									</div>
+									<div class="Container50 TexAlCenter">
+										<h:outputText value="#{msg['datatable.header.node.available']}"/>
+									</div>
+									<div class="Container25 TexAlRight" >
+										<p:commandButton icon="fa fa-mail-forward " styleClass="Fs14 White" 
+											actionListener="#{generateFlowRunController.addNodeSearch}" 
+											title="#{msg['view.button.add.node.search']}"
+											process=":searchNodeForm"
+											update=":searchNodeForm">
+										</p:commandButton>
+									</div>
+								</div>	
+							</f:facet>
+							<p:column selectionMode="multiple" width="20" />
+
+							<p:column headerText="#{msg['datatable.header.stt']}" width="20">
+								<h:outputText value="#{nodeIdx +1 }" />
+							</p:column>
+							<p:column headerText="Node Code" filterBy="#{node.nodeCode}"  width="20%">
+								<h:outputText value="#{node.nodeCode}" title="#{node.nodeCode}" />
+							</p:column>
+							<p:column headerText="IP" filterBy="#{node.nodeIp}">
+								<h:outputText value="#{node.nodeIp}" title="#{node.nodeIp}" />
+							</p:column>
+							<p:column headerText="Vendor" filterBy="#{node.vendor.vendorName}">
+								<f:facet name="filter">
+									<p:selectOneMenu onchange="PF('availableNodeData').filter()">
+										<f:selectItem itemLabel="#{msg['common.choose']}" itemValue="" />
+	                                    <f:selectItems var="vendor" itemLabel="#{vendor.vendorName}"
+	                                                   itemValue="#{vendor.vendorName}" value="#{generateFlowRunController.vendor4Searchs}" />
+									</p:selectOneMenu>
+								</f:facet>	
+								<h:outputText value="#{node.vendor.vendorName}" />
+							</p:column>
+							<p:column headerText="Node Type" filterBy="#{node.nodeType.typeName}">
+								<f:facet name="filter">
+									<p:selectOneMenu onchange="PF('availableNodeData').filter()">
+										<f:selectItem itemLabel="#{msg['common.choose']}" itemValue="" />
+	                                    <f:selectItems var="typeObj" itemLabel="#{typeObj.typeName}"
+	                                                   itemValue="#{typeObj.typeName}" value="#{generateFlowRunController.nodeType4Searchs}" />
+									</p:selectOneMenu>
+								</f:facet>
+								<h:outputText value="#{node.nodeType.typeName}" />
+							</p:column>
+							<p:column headerText="Version" filterBy="#{node.version.versionName}">
+								<f:facet name="filter">
+									<p:selectOneMenu onchange="PF('availableNodeData').filter()">
+										<f:selectItem itemLabel="#{msg['common.choose']}" itemValue="" />
+	                                    <f:selectItems var="version" itemLabel="#{version.versionName}"
+	                                                   itemValue="#{version.versionName}" value="#{generateFlowRunController.version4Searchs}" />
+									</p:selectOneMenu>
+								</f:facet>	
+								<h:outputText value="#{node.version.versionName}" />
+							</p:column>
+						</p:dataTable>
+						<p:contextMenu for="tableSearchNode" id="ctmTableSearchNode"  >
+							<p:menuitem icon="ui-icon-circle-arrow-w" value="#{msg['view.menu.item.move.lab.node']}" 
+								disabled="#{generateFlowRunController.searchNodeLab == '1'}" update="tableSearchNode"
+								actionListener="#{generateFlowRunController.onChangeTypeNode(1)}"></p:menuitem>
+							<p:menuitem icon="ui-icon-circle-arrow-e" value="#{msg['view.menu.item.move.net.node']}" 
+								disabled="#{generateFlowRunController.searchNodeLab == '0'}" update="tableSearchNode"
+								actionListener="#{generateFlowRunController.onChangeTypeNode(0)}" ></p:menuitem>
+						</p:contextMenu>
+					</div>
+					<div class="Container50 Responsive50">
+
+						<p:dataTable value="#{generateFlowRunController.nodeSeachs}" var="node" rows="10" paginator="true" paginatorPosition="bottom" rowKey="#{node.nodeId}"
+							paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}" id="tableSelectedNode"
+							rowsPerPageTemplate="5,10,15" rowIndexVar="nodeIdx" style="padding: 0px ! important;"
+							selection="#{generateFlowRunController.tmpNodes}">
+
+							<f:facet name="header">
+								<div class="Card NoPadding" style="background: transparent;">
+									<div class="Container20 TexAlLeft">
+										<p:commandButton icon="fa fa-mail-reply " styleClass="RedButton Fs14 White" 
+											title="#{msg['view.button.remove.node.search']}" update=":searchNodeForm"
+											actionListener="#{generateFlowRunController.removeNodeSearch}"
+											process=":searchNodeForm">
+										</p:commandButton>
+										
+									</div>
+									<div class="Container60 TexAlCenter" >
+										<h:outputText value="#{msg['label.node.run']}"/>
+									</div>
+									<div class="Container20">
+									</div>
+								</div>	
+								
+								
+							</f:facet>
+							
+							<p:column selectionMode="multiple" width="20"/>
+
+							<p:column headerText="#{msg['datatable.header.stt']}" width="20">
+								<h:outputText value="#{nodeIdx +1 }" />
+							</p:column>
+							<p:column headerText="Node Code" filterBy="#{node.nodeCode}" width="20%">
+								<h:outputText value="#{node.nodeCode}" />
+							</p:column>
+							<p:column headerText="IP" filterBy="#{node.nodeIp}">
+								<h:outputText value="#{node.nodeIp}" />
+							</p:column>
+							<p:column headerText="Vendor" filterBy="#{node.vendor.vendorName}">
+								<h:outputText value="#{node.vendor.vendorName}" />
+							</p:column>
+							<p:column headerText="Node Type" filterBy="#{node.nodeType.typeName}">
+								<h:outputText value="#{node.nodeType.typeName}" />
+							</p:column>
+							<p:column headerText="Version" filterBy="#{node.version.versionName}">
+								<h:outputText value="#{node.version.versionName}" />
+							</p:column>
+
+						</p:dataTable>
+					</div>
+				</div>				
+			</h:form>	
+		</p:dialog>
+		
+		<p:dialog id="importDlgId" widgetVar="importDlg" header="#{msg['view.title.import.param']}" 
+				 width="50%" modal="true" draggable="true" resizable="true" styleClass="searchNodeDlg">
+			
+			<p:ajax event="close" update=":actForm:chooseNodePanel,:actForm:tabInputParam,:growl" onstart="PF('loadingDialog').show()" 
+				oncomplete="PF('loadingDialog').hide();resizeDialogContent()" 
+				listener="#{generateFlowRunController.pushParamToForm}"></p:ajax>	 
+			
+			<h:form id="importForm">
+				<div class="Container100 NoPadding">
+					<p:commandLink value="#{msg['button.download.template']}" ajax="false" onclick="PrimeFaces.monitorDownload(PF('statusDialog').show(), PF('statusDialog').hide())"
+						style="color:blue; margin-left:10px;font-weight: bold;font-size: 13px " process="@this"
+						actionListener="#{generateFlowRunController.exportTemplateImportParam}">
+						
+					</p:commandLink>
+					<p:fileUpload  allowTypes="/(\.|\/)(xls|xlsx)$/" 
+                             uploadLabel="#{msg['button.import']}" fileUploadListener="#{generateFlowRunController.handleImportParams}"
+                             label="#{msg['label.fileImport']}" oncomplete="PF('importDlg').hide()"
+                             invalidFileMessage="#{msg['message.invalid.file.excel']}" invalidSizeMessage="#{msg['message.invalid.file.size']}"
+                             mode="advanced" skinSimple="true" sizeLimit="2097152" dragDropSupport="true">
+               		</p:fileUpload>
+				</div>
+			</h:form>
+		</p:dialog>			
+		<p:dialog id="importTempDlgId" widgetVar="importTempDlg" header="#{msg['view.title.import.temp']}" 
+				 width="50%" modal="true" draggable="true" resizable="true" styleClass="searchNodeDlg">
+			
+			<p:ajax event="close" update=":actForm:chooseNodePanel,:actForm:tabInputParam,:growl" 
+				onstart="PF('loadingDialog').show()" 
+				oncomplete="PF('loadingDialog').hide();resizeDialogContent()" 
+				></p:ajax>	 
+			
+			<h:form id="importTempForm">
+				<div class="Container100 NoPadding">
+					<p:commandLink value="#{msg['button.download.old.temp']}" ajax="false" onclick="PrimeFaces.monitorDownload(PF('statusDialog').show(), PF('statusDialog').hide())"
+						style="color:blue; margin-left:10px;font-weight: bold;font-size: 13px " process="@this"
+						disabled="#{generateFlowRunController.exportOldTemp()==null}">
+						<p:fileDownload value="#{generateFlowRunController.exportOldTemp()}" contentDisposition="attachment" />
+					</p:commandLink>
+					<p:fileUpload  allowTypes="/(\.|\/)(xls|xlsx)$/" 
+                             uploadLabel="#{msg['button.import.temp']}" fileUploadListener="#{generateFlowRunController.handleImportTempFile}"
+                             label="#{msg['label.fileImport']}" oncomplete="PF('importTempDlg').hide()"
+                             invalidFileMessage="#{msg['message.invalid.file.excel']}" invalidSizeMessage="#{msg['message.invalid.file.size']}"
+                             mode="advanced" skinSimple="true" sizeLimit="2097152" dragDropSupport="true">
+               		</p:fileUpload>
+				</div>
+			</h:form>
+		</p:dialog>				
+		<p:dialog modal="true" widgetVar="statusDialog"
+			header="Downloading..." draggable="false" closable="false">
+			<p:graphicImage
+				value="/resources/olympos-layout/images/ajax-loader.gif" />
+		</p:dialog>
+                
+        <ui:include src="../topo/index.xhtml" />
+        <p:dialog modal="true" class="transparent-dialog" showHeader="false" 
+        	widgetVar="loadingDialog" draggable="false" closable="false" resizable="false" >
+        	<span class="fa-stack fa-2x" style="width: 5em; height: 5em; line-height: 5em;" >
+        		<i class="fa fa-fire fa-stack-1x" style="bottom: 40px; color: #FAFAFA; font-size: 0.8em"  ></i>
+			  	<i class="fa fa-spinner fa-pulse fa-3x fa-fw fa-stack-2x" style="color: #00AAFF; font-size: 3em;"></i>
+			  	<i class="fa fa-coffee fa-stack-1x" style="color: #975524; bottom: 20px;font-size: 1.2em"></i>
+			</span>
+        </p:dialog>
+		
+		<script type="text/javascript">
+			$(document).ready(function() {
+				var currentTabID = "tab-1";
+				var currentIconID = "10";
+				ChangeTab(currentTabID);
+			});
+			var offset = 300,
+			//browser window scroll (in pixels) after which the "back to top" link opacity is reduced
+			offset_opacity = 1200,
+			//duration of the top scrolling animation (in ms)
+			scroll_top_duration = 700,
+			//grab the "back to top" link
+			$back_to_top = $('.cd-top');
+			$back_to_top.on('click', function(event){
+				event.preventDefault();
+				$('.FlowRunDlg .ui-dialog-content').animate({
+					scrollTop: 0 ,
+				 	}, scroll_top_duration
+				);
+			});
+			function start() {
+				PF('statusDialog').show();
+			}
+
+			function stop() {
+				PF('statusDialog').hide();
+			}
+			$('.FlowRunDlg .ui-dialog-content').scroll(function(e){ 
+				  var $el = $('.fixedElement'); 
+				  var isPositionFixed = ($el.css('position') == 'fixed');
+				  if($(window).width()&lt;960){
+					  
+				  }else{
+					  var offset2 = $('#actForm\\:tabInputParam .ui-tabs-navscroller').height();
+					  offset2 += $('#p1').height()+$('#p2').height()+20+28+10+10;
+					  console.log(offset2);
+					  if ($(this).scrollTop() &gt; offset2 &amp;&amp; !isPositionFixed){ 
+					    $('.fixedElement').css({
+					    	'position': 'fixed',
+					    	'top':'60px',
+					    	'left': '40px',
+					    	'bottom': '80px',
+					    	'width': 'calc(50% - 80px)',
+					    	'overflow': 'auto',    	
+					    }); 
+					  }
+					  if ($(this).scrollTop() &lt; offset2 &amp;&amp; isPositionFixed)
+					  {
+					    $('.fixedElement').css({'position': 'static', 'top': '0px','width': '100%'}); 
+					  } 
+				  }
+				  ( $(this).scrollTop() > offset ) ? $back_to_top.addClass('cd-is-visible') : $back_to_top.removeClass('cd-is-visible cd-fade-out');
+					if( $(this).scrollTop() > offset_opacity ) { 
+						$back_to_top.addClass('cd-fade-out');
+					}
+			});
+			function beforeOpenDialog(){
+				$('body').css('overflow','hidden');
+			}
+			function afterCloseDialog(){
+				$('body').css('overflow','auto');
+			}
+			function resizeDialogContent(){
+				$('.FlowRunDlg .ui-dialog-content').css('height',$('#dlgInput').height()-28-10-40)
+			}
+		</script>
+		<style type="text/css">
+			.AutoComWid100 {
+				width: 100%;
+				
+			}
+			
+			.AutoComWid100 ul {
+				width: calc(100% - 58px);
+				float: left;
+			}
+			#actForm\:chooseNode_input{
+				width: 130%;
+			}
+			.MyInputSwitch{
+				//width: 150px !important;
+			}
+			
+			.fixedElement {
+			    //background-color: #c0c0c0;
+			    position: static;
+			    z-index:2000;
+			}
+			.timeRunClass::-moz-placeholder { 
+				/* Mozilla Firefox 19+ */
+			   color:    red;
+			   opacity:  1;
+			   content: "Enter your number";
+			}
+			.cd-top {
+			    background: #109BDC url("#{facesContext.externalContext.request.contextPath}/resources/olympos-layout/images/cd-top-arrow.svg") no-repeat scroll center 50%;
+			    bottom: 100px;
+			    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+			    display: inline-block;
+			    height: 30px;
+			    opacity: 0;
+			    overflow: hidden;
+			    position: fixed;
+			    right: 32px;
+			    text-indent: 100%;
+			    transition: opacity 0.3s ease 0s, visibility 0s ease 0.3s;
+			    visibility: hidden;
+			    white-space: nowrap;
+			    width: 30px;
+			    cursor: pointer;
+			    border-radius: 5px; 
+			}
+			.cd-top.cd-is-visible, .cd-top.cd-fade-out, .no-touch .cd-top:hover {
+			    transition: opacity 0.3s ease 0s, visibility 0s ease 0s;
+			}
+			.cd-top.cd-is-visible {
+			    opacity: 1;
+			    visibility: visible;
+			}
+			.cd-top.cd-fade-out {
+			    opacity: 0.5;
+			}
+			.no-touch .cd-top:hover {
+			    background-color: #e86256;
+			    opacity: 1;
+			}
+			.cd-top:hover {
+			    //background-color: #e86256;
+			    opacity: 1;
+			}
+			@media only screen and (min-width: 768px) {
+				.cd-top {
+				    bottom: 100px;
+				    right: 35px;
+				}
+			}
+			@media only screen and (min-width: 1024px) {
+				.cd-top {
+				    bottom: 100px;
+				    height: 35px;
+				    right: 35px;
+				    width: 35px;
+				}
+			}
+			.ui-datatable .ui-column-filter{
+				width: 95% !important;
+				padding-left: 0px!important;
+				padding-right: 0px!important;
+			}
+			.searchNodeDlg .ui-dialog-content{
+				padding: 1px !important;
+			}
+			.ui-filter-column{
+				vertical-align: bottom;
+			}
+			.ui-column-customfilter .ui-selectonemenu{
+				min-width: 20px !important;
+				padding: 0px !important;
+			}
+			.ui-column-customfilter .ui-selectonemenu label{
+				width: 36px !important;
+				padding-left: 0px !important;
+				padding-right: 0px !important;
+			}
+			.SwLabNet1{
+				width: 62px !important;				
+			}
+			.SwLabNet1 .ui-inputswitch-off{
+				width: 57px !important;
+			}
+			.SwLabNet1 .ui-inputswitch-off span{
+				width: 27px !important;
+			}
+			
+			.SwLabNet1 .ui-inputswitch-handle{
+				width: 27px !important;
+			}
+			.OneButtonNode .ui-state-active .ui-button-text{
+				background-color: green !important;
+			}
+			.OneButtonNode .ui-button-text-only .ui-button-text{
+				padding: 5px 10px 5px 10px !important;			
+			}
+	
+		</style>
+	</ui:define>
+</ui:composition>

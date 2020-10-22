@@ -1,0 +1,180 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+
+	<div id="execute:preViewMessages"
+		class="ui-messages ui-messages-noicon ui-widget" aria-live="polite"
+		style="display: none;">
+		<div class="ui-messages-error ui-corner-all" style="margin-top: 0">
+			<ul>
+				<li><span class="ui-messages-error-summary">#{msg['test.functions.are.not.arbitrarily.use']}!</span><span
+					class="ui-messages-error-detail"></span></li>
+			</ul>
+		</div>
+	</div>
+
+	<p:layout
+		style="min-width:400px;min-height:1012px;width: 100%; height: 102%">
+		<p:layoutUnit position="west" resizable="true" size="280"
+			minSize="100" maxSize="280" collapsible="true"
+			header="#{msg['steps']}">
+			<h:panelGroup id="stepby">
+				<p:selectOneListbox id="basic" style="width: 90%; height: 98%"
+					value="#{historyDetailController.selectedRunStep}" var="s"
+					converter="stepConverter">
+					<p:ajax update="detail detailheader "
+						listener="#{historyDetailController.handleChange}" />
+
+					<f:selectItems value="#{historyDetailController.runSteps}"
+						var="step" itemLabel="#{step.label}" itemValue="#{step}" />
+
+					<p:column>
+						<span class="fa #{historyDetailController.statusIcon(s.value)}" />
+					</p:column>
+
+					<p:column>
+						<p:spacer width="12px" rendered="#{s.value.key ge 0}" />
+						<!--<h:panelGroup rendered="#{s.value.key le 0}">
+                                    <span class="fa fa-edit" />
+                                </h:panelGroup>-->
+					</p:column>
+
+					<p:column>
+						<h:outputText value="#{s.label}"
+							styleClass="#{s.value.key le 0 ? 'groupLabel' : ''}" />
+					</p:column>
+
+				</p:selectOneListbox>
+			</h:panelGroup>
+		</p:layoutUnit>
+
+		<p:layoutUnit position="center">
+			<f:facet name="header">
+				<div style="text-align: center">
+					<h:outputText id="detailheader" class="White Heading5"
+						value="#{historyDetailController.selectedRunStep.description}" />
+					<p:spacer width="1" />
+				</div>
+			</f:facet>
+
+			<h:panelGroup id="detail">
+				<h:panelGroup id="crinfo"
+					rendered="#{historyDetailController.selectedRunStep.value.key eq 30}">
+					<ui:include src="detail/crinfo.xhtml" />
+				</h:panelGroup>
+
+				<h:panelGroup id="impactdetail" rendered="#{historyDetailController.checkImpactRender()}">
+						<ui:include src="detail/impact.xhtml"/>
+				</h:panelGroup>
+
+				<!--20181115_hoangnd_save all step_start-->
+				<h:panelGroup id="checklistappbefore"
+							  rendered="#{historyDetailController.checkRender(constantUtils.BEFORE_STEP_CHECKLIST_APP)}">
+					<ui:include src="detail/checklistappbefore.xhtml"/>
+				</h:panelGroup>
+
+				<h:panelGroup id="checklistdbbefore"
+							  rendered="#{historyDetailController.checkRender(constantUtils.BEFORE_STEP_CHECKLIST_DB)}">
+					<ui:include src="detail/checklistdbbefore.xhtml"/>
+				</h:panelGroup>
+
+				<h:panelGroup id="checklistappimpact"
+							  rendered="#{historyDetailController.checkRender(constantUtils.SUB_STEP_CHECKLIST_APP)}">
+					<ui:include src="detail/checklistappimpact.xhtml"/>
+				</h:panelGroup>
+
+				<h:panelGroup id="checklistdbimpact"
+							  rendered="#{historyDetailController.checkRender(constantUtils.SUB_STEP_CHECKLIST_DB)}">
+					<ui:include src="detail/checklistdbimpact.xhtml"/>
+				</h:panelGroup>
+
+				<h:panelGroup id="checklistappafter"
+							  rendered="#{historyDetailController.checkRender(constantUtils.AFTER_STEP_CHECKLIST_APP)}">
+					<ui:include src="detail/checklistappafter.xhtml"/>
+				</h:panelGroup>
+
+				<h:panelGroup id="checklistdbafter"
+							  rendered="#{historyDetailController.checkRender(constantUtils.AFTER_STEP_CHECKLIST_DB)}">
+					<ui:include src="detail/checklistdbafter.xhtml"/>
+				</h:panelGroup>
+
+				<h:panelGroup id="checklistapprollback"
+							  rendered="#{historyDetailController.checkRender(constantUtils.ROLLBACK_STEP_CHECKLIST_APP)}">
+					<ui:include src="detail/checklistapprollback.xhtml"/>
+				</h:panelGroup>
+
+				<h:panelGroup id="checklistdbrollback"
+							  rendered="#{historyDetailController.checkRender(constantUtils.ROLLBACK_STEP_CHECKLIST_DB)}">
+					<ui:include src="detail/checklistdbrollback.xhtml"/>
+				</h:panelGroup>
+				<!--20181115_hoangnd_save all step_end-->
+
+			</h:panelGroup>
+		</p:layoutUnit>
+	</p:layout>
+
+	<script type="text/javascript">
+		/* <![CDATA[ */
+
+		/* ]]> */
+	</script>
+	<style>
+.c1 {
+	width: 84px
+}
+
+.c2 {
+	width: 256px
+}
+
+.ui-layout-unit .ui-layout-unit-header {
+	/*background-color: #05c436;*/
+	background-color: #1abc9c;
+}
+
+.rollbackLayout .ui-layout-unit-header {
+	background-color: red;
+}
+
+.ui-inputfield {
+	border: none;
+}
+
+.ui-selectlistbox-listcontainer {
+	height: 800px !important;
+}
+
+.ui-selectlistbox-list .ui-state-disabled {
+	/*background-color: #05c436 !important;*/
+	color: black !important;
+	opacity: 1 !important;
+	font-size: 14px !important;
+	font-style: italic;
+	font-weight: bold;
+}
+
+.ui-messages-error, .ui-message-error {
+	font-size: 16px;
+	font-weight: normal;
+	padding: 2px !important;
+	font-family: 'latobold';
+	text-align: center;
+}
+
+.preformatted {
+	white-space: pre-wrap;
+}
+
+.unresizable {
+	resize: none;
+}
+
+.ui-columntoggler {
+	display: none;
+}
+</style>
+
+</ui:composition>

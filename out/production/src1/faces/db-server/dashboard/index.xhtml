@@ -1,0 +1,514 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+	xmlns:f="http://java.sun.com/jsf/core" 
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core" 
+	xmlns:ui="http://java.sun.com/jsf/facelets" 
+	xmlns:p="http://primefaces.org/ui" 
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	template="/layout/olympos_db_server/template.xhtml">
+
+	<ui:define name="content">
+		<h:form id="formSearch">
+			
+			<p:fieldset styleClass="legend2" legend="#{msg['view.panel.search.customer']}" toggleable="true" collapsed="true">
+			<div class="Container100 Flex FlexWrap NoPadding" style="overflow: hidden;">
+				<div class="Card">
+					<div class="Container20 Responsive50"  >
+						<p:fieldset legend="#{msg['datatable.header.customer.service']}">
+							<p:selectOneMenu value="#{customerController.searchCustomer.serviceCode}">
+								<f:selectItem itemLabel="#{msg['label.selectItem']}" itemValue="" />
+								<f:selectItem itemLabel="#{msg['view.label.servicecode2']}" itemValue="2" />
+								<f:selectItem itemLabel="#{msg['view.label.servicecode3']}" itemValue="3" />
+							</p:selectOneMenu>
+						</p:fieldset>
+					</div>
+					<div class="Container20 Responsive50"  >
+						<p:fieldset legend="#{msg['datatable.header.customer.vrfName']}">
+							<p:inputText value="#{customerController.searchCustomer.vrfName}" 
+								 >
+							</p:inputText>
+						</p:fieldset>
+					</div>	
+					<div class="Container20 Responsive50" >
+						<p:fieldset legend="#{msg['datatable.header.customer.address.endpoint']}">
+							<p:inputText value="#{customerController.searchCustomer.address}" 
+									 >
+							</p:inputText>
+						</p:fieldset>
+					</div>	
+					
+					<div class="Container20 Responsive50" >
+						<p:fieldset legend="#{msg['datatable.header.customer.name']}">
+							<p:inputText value="#{customerController.searchCustomer.customerNodes.get(0).customerName}" 
+									 >
+							</p:inputText>
+						</p:fieldset>
+					</div>	
+					<div class="Container20 Responsive50" >
+						<p:fieldset legend="#{msg['datatable.header.customer.node']}">
+							<p:inputText value="#{customerController.searchCustomer.customerNodes.get(0).node.nodeCode}" 
+									 >
+							</p:inputText>
+						</p:fieldset>
+					</div>
+				</div>
+				<div class="Card" style="padding-top: 0px">
+					<div class="Container30" >
+					</div>
+					<div class="Container40 TexAlCenter" >
+						<p:commandButton value="#{msg['button.search']}" icon="fa fa-search" styleClass="White TealButton MarRight10"
+							onstart="PF('block').show()" oncomplete="PF('block').hide()"
+							update=":form" actionListener="#{customerController.onSearch()}">
+						</p:commandButton>
+						<p:commandButton value="#{msg['button.clear']}" icon="fa fa-eraser" styleClass="Black GrayButton"
+							actionListener="#{customerController.clearSearch}"	update=":formSearch" process="@this" 
+							>
+							<p:resetInput target=":formSearch" />
+						</p:commandButton>
+					</div>
+					<div class="Container30" >
+					</div>
+				</div>
+			</div>		
+			</p:fieldset>
+		</h:form>
+		<h:form id="form">
+			<p:growl id="growl" showDetail="true" showSummary="false" />
+			<p:dataTable value="#{customerController.lazyCustomer}" id="tableCusId"
+					lazy="true" var="customer" rowKey="#{customer.id}"
+					rowIndexVar="cusIdx"  rowExpandMode="single" 
+					rows="20" paginator="true" paginatorPosition="bottom"
+					paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} "
+					 currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+					rowsPerPageTemplate="5,10,15" widgetVar="tableCusWidget"
+					emptyMessage="#{msg['datatable.empty']}" styleClass="CustomerTable Container100 NoPadding MarTop10">
+					<f:facet name="header">
+						<div class="Card NoPadding" style="background: transparent;">
+							<div class="Container20 Responsive50" style="text-align: left;">
+								<p:tooltip position="right" for="addCusId"></p:tooltip>
+								<p:commandButton id="addCusId" icon="fa fa-plus-circle" styleClass="OrangeButton Fs14 White"  
+									oncomplete="PF('addCustomerDlg').show()" 
+									update=":actForm"
+									disabled="#{!sessionUtil.createCustomer}"
+									 title="#{msg['label.add.customer']}" actionListener="#{customerController.preAddCustomer}" />
+							</div>
+							<div class="Container60 Responsive50">
+								<h:outputText styleClass="Fs20" value="#{msg['datatable.header.customer']}" />
+							</div>
+							<div class="Container20" style="text-align: right;">
+								<p:commandButton id="toggler" type="button"  
+									style="float:right" icon="fa fa-sliders" styleClass="Fs14 White" />
+								<p:columnToggler datasource="tableCusId" trigger="toggler" />
+							</div>
+						</div>
+
+					</f:facet>
+					<p:column headerText="" width="20">
+						<p:rowToggler  />
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.stt']}" width="20">
+						<h:outputText value="#{cusIdx +1 }" />
+					</p:column>
+					
+					<p:column headerText="#{msg['datatable.header.customer.vrfName']}" width="250"  
+						 sortBy="#{customer.vrfName}">
+						<h:outputText value="#{customer.vrfName}"/>
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.customer.address']}"   
+						sortBy="#{customer.address}" >
+						<h:outputText value="#{customer.address}"/>
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.customer.service']}" width="50">
+						<f:facet name="filter">
+							<p:selectOneMenu onchange="PF('tableCusWidget').filter()">
+								<f:selectItem itemLabel="#{msg['label.selectItem']}" itemValue=""/>
+								<f:selectItem itemLabel="#{msg['view.label.servicecode2']}" itemValue="2"/>
+								<f:selectItem itemLabel="#{msg['view.label.servicecode3']}" itemValue="3"/>
+							</p:selectOneMenu>
+						</f:facet>
+						
+						<h:outputText value="#{msg['view.label.servicecode2']}" rendered="#{customer.serviceCode==2}"/>
+						<h:outputText value="#{msg['view.label.servicecode3']}" rendered="#{customer.serviceCode==3}"/>
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.customer.rd']}" width="70"
+						>
+						<h:outputText value="#{customer.rd}"/>
+					</p:column>
+					<p:column headerText="#{msg['datatable.header.customer.mtu']}" width="50">
+						<h:outputText value="#{customer.mtu}"/>
+					</p:column>
+					<p:rowExpansion>
+						<p:dataTable value="#{customer.customerNode2s}" id="subtableCusId"
+							lazy="true" var="customerNode" rowKey="#{customerNode.id}"
+							rowIndexVar="cusNodeIdx"  
+							rows="10" paginator="false" paginatorPosition="bottom"
+							paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							 currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+							rowsPerPageTemplate="5,10,15" widgetVar="subtableCusWidget"
+							emptyMessage="#{msg['datatable.empty']}" styleClass="">
+							<p:column headerText="#{msg['datatable.header.stt']}" width="20">
+								<h:outputText value="#{cusNodeIdx +1 }" />
+							</p:column>
+							<p:column headerText="#{msg['datatable.header.customer.name']}" width="150" >
+								<h:outputText value="#{customerNode.customerName}"/>
+							</p:column>	
+							<p:column headerText="#{msg['datatable.header.customer.address.endpoint']}"  
+								sortBy="#{customer.address}" >
+								<h:outputText value="#{customerNode.address}"/>
+							</p:column>
+							<p:column headerText="#{msg['datatable.header.customer.node']}" width="110">
+								<h:outputText value="#{customerNode.node.nodeCode}"/>
+							</p:column>
+							<p:column headerText="#{msg['datatable.header.customer.connectType']}" width="50">
+								<h:outputText value="Direct" rendered="#{customerNode.connectType == 1}"/>
+								<h:outputText value="L2-SW" rendered="#{customerNode.connectType == 2}"/>
+							</p:column>
+							<p:column headerText="#{msg['datatable.header.customer.interfaceId']}" width="100">
+								<h:outputText value="#{customerNode.interfaceId}"/>
+							</p:column>
+							<p:column headerText="#{msg['datatable.header.customer.interfaceIp']}" width="100">
+								<h:outputText value="#{customerNode.interfaceIp}"/>
+							</p:column>
+							<p:column headerText="#{msg['datatable.header.customer.customerIp']}" width="100">
+								<h:outputText value="#{customerNode.customerIp}"/>
+							</p:column>
+							<p:column headerText="#{msg['datatable.header.customer.subnetMask']}" width="100">
+								<h:outputText value="#{customerNode.subnetMask}"/>
+							</p:column>
+							<p:column headerText="#{msg['datatable.header.customer.customerLan']}" width="100">
+								<h:outputText value="#{customerNode.customerLan}"/>
+							</p:column>
+							<p:column headerText="" styleClass="TexAlCenter" width="100">
+								<p:commandButton icon="fa fa-edit" actionListener="#{customerController.preEditEndPoint(customer,customerNode)}" 
+									 title="#{msg['view.button.redeploy.service']}"
+									 update=":actForm" oncomplete="PF('addCustomerDlg').show()" styleClass="White MarRight5 Fs14" />
+								<p:commandButton icon="fa fa-trash" styleClass="White RedButton Fs14"
+									actionListener="#{customerController.preDeleteCustomerNode(customerNode)}" 
+									oncomplete="PF('comfirmDestroy').show()" update="comfirmDestroyId"
+									title="#{msg['view.button.destroy.service']}" />
+							</p:column>
+						</p:dataTable>
+					</p:rowExpansion>
+					<p:column styleClass="TexAlCenter" width="140">
+						<p:tooltip position="left"/>
+						<p:commandButton icon="fa fa-plus-square" styleClass="White GreenButton MarRight5" 
+							update=":actForm" oncomplete="PF('addCustomerDlg').show()"
+							title="#{msg['view.button.add.customer.node']}"
+							actionListener="#{customerController.preAddEndPoint(customer)}" />
+						<p:commandButton icon="fa fa-edit" styleClass="White MarRight5 Fs14"  
+							title="#{msg['view.button.edit.customer']}"
+							actionListener="#{customerController.preEditCustomer(customer)}" 
+							update=":actForm" oncomplete="PF('addCustomerDlg').show()"  />
+						<p:commandButton icon="fa fa-trash" actionListener="#{customerController.preDeleteCustomer(customer)}" 
+									oncomplete="PF('comfirmDestroyAll').show()" update="comfirmDestroyAllId" 
+							title="#{msg['view.button.destroy.customer']}" styleClass="White RedButton Fs14" />
+					</p:column>
+				</p:dataTable>	
+		</h:form>
+		<p:dialog widgetVar="addCustomerDlg" width="80%" style="top: 20px; bottom: 40px;"
+			height="calc(100% - 80px)"  modal="true" showEffect="size" hideEffect="scale">
+			<f:facet name="header">
+				<h:outputText value="#{msg['view.dlg.update.customer']}"/>
+			</f:facet>
+			<h:form id="actForm">
+				<p:fieldset legend="#{msg['view.group.customer.info']}">
+				<div class="Container100 Flex FlexWrap NoPadding" style="overflow: hidden;">
+					<div class="Card">
+						
+						<div class="Container33 Responsive50" style="padding-top: 5px">
+							<SPAN class="title-top">
+								<p:selectOneMenu id="chooseService" 
+									value="#{customerController.currCustomer.serviceCode}"
+									title="#{msg['datatable.header.customer.service']}" style="width: 43%"
+									disabled="#{!sessionUtil.createCustomer || !customerController.createCustomer }">
+									<f:selectItem itemLabel="#{msg['view.label.servicecode2']}" itemValue="2"/>
+									<f:selectItem itemLabel="#{msg['view.label.servicecode3']}" itemValue="3"/>
+									<p:ajax event="change" update="@parent"/>
+								</p:selectOneMenu>
+								<label class="title-elem" >#{msg['datatable.header.customer.service']} *</label>
+							</SPAN>
+						</div>
+						<div class="Container33 Responsive50" style="padding-top: 5px">
+							<span class="md-inputfield">
+								<p:inputText value="#{customerController.currCustomer.vrfName}" id="vrfName" 
+									title="#{msg['datatable.header.customer.vrfName']}" 
+									disabled="#{!sessionUtil.createCustomer || !customerController.createCustomer}" 
+									required="true" requiredMessage="#{msg['view.require.vrfName']}"
+									 >
+								</p:inputText>
+								
+								<label>#{msg['datatable.header.customer.vrfName']} *</label>
+							</span>
+							<p:message for="vrfName"></p:message>
+						</div>	
+					
+						<div class="Container33 Responsive50" style="padding-top: 5px">
+							<span class="md-inputfield">
+								<p:inputTextarea value="#{customerController.currCustomer.address}" id="address" 
+									required="true" disabled="#{!sessionUtil.createCustomer || !customerController.createCustomer}" rows="1"
+									 >
+								</p:inputTextarea>
+								
+								<label>#{msg['datatable.header.customer.address']} *</label>
+							</span>
+							<p:message for="address"></p:message>				
+						</div>
+					</div>
+					<div class="Card">
+						 
+						<div class="Container33 Responsive50" style="padding-top: 5px">
+							<span class="md-inputfield">
+								<p:inputText value="#{customerController.currCustomer.mtu}" id="mtu" 
+									title="#{msg['datatable.header.customer.mtu']}" 
+									disabled="#{!sessionUtil.createCustomer || !customerController.createCustomer}" 
+									 >
+								</p:inputText>
+								
+								<label>#{msg['datatable.header.customer.mtu']} </label>
+							</span>
+							<p:message for="mtu"></p:message>				
+						</div>
+						<p:outputPanel styleClass="Container33 Responsive50" style="padding-top: 5px" rendered="#{customerController.currCustomer.serviceCode==2}">
+							<span class="md-inputfield">
+								<p:inputText value="#{customerController.currCustomer.vpnId}" id="vpnId" 
+									title="#{msg['datatable.header.customer.vpnId']}" 
+									disabled="#{!sessionUtil.createCustomer || !customerController.createCustomer}" 
+									
+									 >
+								</p:inputText>
+								
+								<label>#{msg['datatable.header.customer.vpnId']} </label>
+							</span>
+							<p:message for="vpnId"></p:message>				
+						</p:outputPanel>
+					</div>	
+				</div>
+				</p:fieldset>
+				<p:fieldset style="margin-top: 10px" legend="#{msg['view.group.customer.node']}" 
+					rendered="#{!customerController.editCustomer}">
+					<div class="Container100 Flex FlexWrap NoPadding" style="overflow: hidden;">
+						<div class="Card">
+							<div class="Container33 Responsive50" style="padding-top: 5px">
+								<span class="md-inputfield">
+									<p:inputText value="#{customerController.currCustomerNode.customerName}" id="customerName" 
+										title="#{msg['datatable.header.customer.name']}" 
+										disabled="#{!sessionUtil.createCustomer || customerController.editEndPoint}" validator="customerValidator"  
+										 >
+									</p:inputText>
+									
+									<label>#{msg['datatable.header.customer.name']} *</label>
+								</span>
+								<p:message for="customerName"></p:message>				
+							</div>
+							<div class="Container33 Responsive50" style="padding-top: 5px">
+								<span class="md-inputfield">
+									<p:inputTextarea value="#{customerController.currCustomerNode.address}" id="addressNode" 
+										required="true" disabled="#{!sessionUtil.createCustomer }" rows="1"
+										 >
+									</p:inputTextarea>
+									
+									<label>#{msg['datatable.header.customer.address']} *</label>
+								</span>
+								<p:message for="addressNode"></p:message>				
+							</div>
+							<div class="Container33 Responsive50" style="padding-top: 5px">
+								<SPAN class="title-top">
+									<p:autoComplete multiple="false" dropdown="true"
+										value="#{customerController.currCustomerNode.node}" id="chooseNode"  
+										var="n" itemValue="#{n}"  required="true"
+										itemLabel="#{n.nodeCode}" scrollHeight="300" dropdownMode="current"
+										completeMethod="#{customerController.completeEndPoint}"
+										converter="nodeConverter" placeholder="#{msg['view.choose.node.run']}"
+										title="#{msg['view.choose.endpoint']}"
+										disabled="#{!sessionUtil.createMop}"
+										>
+									</p:autoComplete>
+									<label class="title-elem" >#{msg['datatable.header.customer.node']}*</label>
+								</SPAN>
+							</div>
+						</div>	
+						<div class="Card">	
+							<div class="Container33 Responsive50" style="padding-top: 5px">
+								<span class="md-inputfield">
+									<p:inputText value="#{customerController.currCustomerNode.interfaceId}" id="interfaceId" 
+										title="#{msg['datatable.header.customer.interfaceId']}" required="true" 
+										disabled="#{!sessionUtil.createCustomer}" 
+										 >
+									</p:inputText>
+									
+									<label>#{msg['datatable.header.customer.interfaceId']}* </label>
+								</span>
+								<p:message for="interfaceId"></p:message>				
+							</div>
+						
+							<div class="Container33 Responsive50" style="padding-top: 5px">
+								<span class="md-inputfield">
+									<p:inputText value="#{customerController.currCustomerNode.interfaceIp}" id="interfaceIp" 
+										title="#{msg['datatable.header.customer.interfaceIp']}" required="true"
+										disabled="#{!sessionUtil.createCustomer}" 
+										 >
+									</p:inputText>
+									
+									<label>#{msg['datatable.header.customer.interfaceIp']}* </label>
+								</span>
+								<p:message for="interfaceIp"></p:message>				
+							</div>
+						
+							<div class="Container33 Responsive50" style="padding-top: 5px">
+								<span class="md-inputfield">
+									<p:inputText value="#{customerController.currCustomerNode.customerIp}" id="customerIp" 
+										title="#{msg['datatable.header.customer.customerIp']}" required="true"
+										disabled="#{!sessionUtil.createCustomer}" 
+										 >
+									</p:inputText>
+									
+									<label>#{msg['datatable.header.customer.customerIp']}* </label>
+								</span>
+								<p:message for="customerIp"/>				
+							</div>		
+						</div>	
+						<div class="Card">							
+							<div class="Container33 Responsive50" style="padding-top: 5px">
+								<span class="md-inputfield">
+									<p:inputText value="#{customerController.currCustomerNode.subnetMask}" id="subnetMask" 
+										title="#{msg['datatable.header.customer.subnetMask']}" 
+										disabled="#{!sessionUtil.createCustomer}" required="true"
+										 >
+									</p:inputText>
+									
+									<label>#{msg['datatable.header.customer.subnetMask']}* </label>
+								</span>
+								<p:message for="subnetMask"/>				
+							</div>
+							<div class="Container33 Responsive50" style="padding-top: 5px">
+								<span class="md-inputfield">
+									<p:inputText value="#{customerController.currCustomerNode.customerLan}" id="customerLan" 
+										title="#{msg['datatable.header.customer.customerLan']}" 
+										disabled="#{!sessionUtil.createCustomer}" required="true"
+										 >
+									</p:inputText>
+									
+									<label>#{msg['datatable.header.customer.customerLan']}* </label>
+								</span>
+								<p:message for="customerLan"/>				
+							</div>
+						</div>
+					</div>		
+				</p:fieldset>
+				<div class="Container100 Flex FlexWrap NoPadding" style="overflow: hidden;">
+					<div class="Card">
+						<div class="Container33 Responsive50" style="padding-top: 5px">
+						</div>
+						<div class="Container33 Responsive50" style="padding-top: 5px; text-align: center;">
+						
+							<p:commandButton value="#{msg[!customerController.editEndPoint?'view.button.declare.customer':'view.button.redeclare.customer']}" icon="fa fa-external-link" 
+								rendered="#{customerController.createCustomer || customerController.createEndPoint}"
+								actionListener="#{customerController.deployService}"
+								onstart="PF('block').show()" oncomplete="PF('block').hide()"
+								styleClass="AmazoniteButton White" update=":form"/>
+							
+							<p:commandButton value="#{msg['button.save']}" icon="fa fa-external-link"
+								rendered="#{customerController.editCustomer}" update=":form"
+								onstart="PF('block').show()" oncomplete="PF('block').hide()"
+								actionListener="#{customerController.saveCustomer}"
+								styleClass="AmazoniteButton White"/>
+						</div>
+						<div class="Container33 Responsive50" style="padding-top: 5px">
+						</div>
+					</div>
+				</div>		
+			</h:form>			
+			
+		</p:dialog>
+		<p:confirmDialog global="true" header="#{msg['view.dialog.header.destroy.service']}"  showEffect="face" hideEffect="scale"
+			widgetVar="comfirmDestroy" id="comfirmDestroyId">
+			<f:facet name="message">
+				<h:outputText value="#{msg['title.confirm.destroy']}" />
+				<p:spacer width="100%" height="1px"></p:spacer>
+				<h:outputText style="color: black; font-weight: bold;" value="#{msg['datatable.header.customer.name']}" />
+				<h:outputText value=": " />
+				<h:outputText style="color: black" value="#{customerController.currCustomerNode.customerName}" />
+			</f:facet>
+
+			<p:commandButton value="Yes" update=":form" process="@this" oncomplete="PF('comfirmDestroy').hide()"
+				 actionListener="#{customerController.destroyService}"
+				styleClass="ui-confirmdialog-yes RedButton" icon="ui-icon-check fa fa-check Fs14 White" />
+			<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no AquaButton" onclick="PF('comfirmDestroy').hide()"
+				 icon="ui-icon-close fa fa-close Fs14 White" />
+		</p:confirmDialog>
+		<p:confirmDialog global="true" header="#{msg['view.dialog.header.destroy.all.service']}"  showEffect="face" hideEffect="scale"
+			widgetVar="comfirmDestroyAll" id="comfirmDestroyAllId">
+			<f:facet name="message">
+				<h:outputText value="#{msg['title.confirm.destroy']}" />
+				<p:spacer width="100%" height="1px"></p:spacer>
+				<h:outputText style="color: black; font-weight: bold;" value="#{msg['datatable.header.customer.vrfName']}" />
+				<h:outputText value=": " />
+				<h:outputText style="color: black" value="#{customerController.currCustomer.vrfName}" />
+			</f:facet>
+
+			<p:commandButton value="Yes" update=":form" process="@this" oncomplete="PF('comfirmDestroyAll').hide()"
+				 actionListener="#{customerController.destroyAllService}"
+				styleClass="ui-confirmdialog-yes RedButton" icon="ui-icon-check fa fa-check Fs14 White" />
+			<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no AquaButton" onclick="PF('comfirmDestroyAll').hide()"
+				 icon="ui-icon-close fa fa-close Fs14 White" />
+		</p:confirmDialog>
+		<!-- 		<ui:include src="test-auto-get-param.xhtml" /> -->
+		<p:dialog modal="true" class="transparent-dialog" showHeader="false" 
+        	widgetVar="block" draggable="false" closable="false" resizable="false" >
+        	<span class="fa-stack fa-2x" style="width: 5em; height: 5em; line-height: 5em;" >
+        		<i class="fa fa-fire fa-stack-1x" style="bottom: 40px; color: #FAFAFA; font-size: 0.8em"  ></i>
+			  	<i class="fa fa-spinner fa-pulse fa-3x fa-fw fa-stack-2x" style="color: #00AAFF; font-size: 3em;"></i>
+			  	<i class="fa fa-coffee fa-stack-1x" style="color: #975524; bottom: 20px;font-size: 1.2em"></i>
+			</span>
+        </p:dialog>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				var currentTabID = "tab-1";
+				var currentIconID = "10";
+				ChangeTab(currentTabID);
+			});
+			 
+		</script>
+		<style type="text/css">
+			.CustomerTable .ui-datatable-header {
+				background: #009688;
+				color: white;
+			} 
+			.CustomerTable table thead tr th{
+				background: white;
+			}
+			.CustomerTable .ui-paginator{
+				background: white;
+			}
+			.CustomerTable .ui-datatable-odd{
+				background: #F4F4F4;
+			}
+			.CustomerTable .ui-paginator .ui-paginator-pages .ui-paginator-page{
+				padding: 1px 6px;
+				margin-right: 2px;
+				border-radius: 50% !important;
+			}
+			.CustomerTable .ui-paginator .ui-paginator-pages .ui-state-active,
+			.CustomerTable .ui-paginator .ui-paginator-pages .ui-state-focus{
+				background: rgb(0, 150, 136) none repeat scroll 0% 0% !important;
+				color: white !important;
+				border: none !important;
+			}
+			.ui-fieldset-legend {
+				background: transparent none repeat scroll 0% 0% !important;
+				color: rgb(82, 82, 82) !important;
+				padding-right: 6px !important;
+				padding-left: 6px !important;
+			}
+			.legend2 .ui-fieldset-legend{
+				background: white !important;
+			}
+			.legend2 .ui-fieldset-legend .ui-icon-plusthick {
+  				background-image: url("#{resource['primefaces-olympos:images/plus-sign-gray.svg']}") !important;
+  			}	
+			.legend2 .ui-fieldset-legend .ui-icon-minusthick {
+				background-image: url("#{resource['primefaces-olympos:images/minus-sign-gray.svg']}");
+			} 
+		</style>
+	</ui:define>
+</ui:composition>

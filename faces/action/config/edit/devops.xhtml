@@ -1,0 +1,240 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html" xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions">
+
+    <pe:blockUI target=":mop:lst:autoupcode" content="blockUIDev" widgetVar="blockUiDev"/>
+    <h:panelGrid id="blockUIDev" columns="2" style="display:none;table-layout:auto;" styleClass="blockUi">
+        <h:graphicImage library="olympos-layout/images" name="loading-bars-blue.svg"
+                        style="margin-right: 12px; vertical-align: middle;"/>
+        <h:outputText value="#{msg['executing']} ......" style="white-space: nowrap;"/>
+    </h:panelGrid>
+
+    <p:panel id="autoupcode" header="#{msg['edit.kb_upcode']}" toggleable="false" rendered="#{actionController.newObj.kbGroup.equals(2)}">
+        <h:panelGrid id="build" columns="2" cellpadding="5" width="100%" columnClasses="class1, class2">
+            <h:outputText value="#{msg['mop.common.service']}:" />
+            <p:autoComplete id="dd" dropdown="true" forceSelection="true" autoHighlight="true" maxResults="10" style="min-width: 256px" value="#{actionController.selectedService}"
+                            completeMethod="#{actionController.completeService}" >
+                <f:converter converterId="serviceAutoConverter" />
+                <f:attribute name="nationCode" value="#{actionController.newObj.impactProcess.nationCode}"/>
+                <f:attribute name="unitId" value="#{actionController.newObj.impactProcess.unitId}"/>
+                <p:ajax event="itemSelect"  onstart="PF('blockUiDev').block()" oncomplete="PF('blockUiDev').unblock()"
+                        listener="#{actionController.changeService}"
+                        update="automodules projectArea stream snapshot" global="false" />
+            </p:autoComplete>
+
+            <h:outputText value="#{msg['ibm.project']}:" />
+            <h:outputText id="projectArea" value="#{actionController.selectedService.projectArea}" class="FontLatoRegular Blue Fleft Fs14 DispBlock"/>
+
+            <h:outputText value="#{msg['ibm.stream']}:" />
+            <h:outputText id="stream" value="#{actionController.selectedService.stream}" class="FontLatoRegular Blue Fleft Fs14 DispBlock"/>
+
+            <h:outputText value="#{msg['ibm.snapshot']}:" />
+            <p:selectOneMenu id="snapshot" style="width: 256px"
+                             value="#{actionController.selectedBaseLine}" converter="impactProcessConverter">
+                <f:selectItems value="#{actionController.baseLines}" itemValue="#{timezone.value}" itemLabel="#{timezone.label}"/>
+            </p:selectOneMenu>
+        </h:panelGrid>
+
+        <p:spacer height="12px"/>
+
+        <p:commandButton update="automodules codeDataTable"  rendered="true" value="#{msg['mop.auto.build']}"
+                         styleClass="ButtonRed" process="mop:lst:autoupcode"
+                         action="#{actionController.buildCode()}" icon="fa fa-yelp White"
+                         onstart="PF('blockUiDev').block()" oncomplete="PF('blockUiDev').unblock()" style="margin-bottom: 12px"/>
+
+        <p:pickList id="automodules" style="width: 100%"
+                    value="#{actionController.dualListModel}"
+                    converter="pickAppConverter" var="dept" itemLabel="#{dept.moduleCode} - #{dept.moduleName}"
+                    itemValue="#{dept}" showCheckbox="true" showSourceFilter="true"
+                    showTargetFilter="true" filterMatchMode="contains">
+            <f:facet name="sourceCaption">#{msg['mop.autoupcode.module_source']}</f:facet>
+            <f:facet name="targetCaption">#{msg['mop.autoupcode.module_target']}</f:facet>
+        </p:pickList>
+
+        <p:spacer height="12px"/>
+
+        <p:dataTable var="data" style="width:100%; height: 320px" rowKey="#{data.moduleId}" rowIndexVar="rowIndex"
+                     value="#{actionController.codeChangeModules}" selection="#{actionController.selectedCodeChangeModules}"
+                     filteredValue="#{actionController.codeChangeModuleFilters}" id="codeDataTable" widgetVar="codeDataTable"
+                     scrollable="true"
+                     scrollWidth="100%" scrollHeight="100%">
+
+            <f:facet name="header">
+                <h:outputText value="#{msg['list.module.codechange']}" styleClass="Fs18 Blue FontItalic"/>
+                <p:commandButton id="toggler" type="button" style="float:right" icon="fa fa-reorder White"
+                                 styleClass="GreenButton"/>
+                <p:columnToggler datasource="codeDataTable" trigger="toggler"/>
+            </f:facet>
+
+            <p:ajax event="page" onstart="PF('blockUiSelectApp').block()"
+                    oncomplete="PF('blockUiSelectApp').unblock()"/>
+
+            <p:ajax event="sort" onstart="PF('blockUiSelectApp').block()"
+                    oncomplete="PF('blockUiSelectApp').unblock()"/>
+
+            <p:ajax event="filter" onstart="PF('blockUiSelectApp').block()"
+                    oncomplete="PF('blockUiSelectApp').unblock()"/>
+
+            <p:column selectionMode="multiple" style="width:24px;text-align:center"/>
+
+            <p:column style="width: 34px; text-align: center;" headerText="#{msg['label.order']}">
+                <h:outputText value="#{rowIndex+ 1}"/>
+            </p:column>
+
+            <p:column id="line" style="width: 120px; text-align: center; white-space: nowrap"
+                      headerText="#{msg['common.action']}" rendered="true">
+                <p:commandButton update="mop:lst:detailDlg" title="#{msg['common.edit']}"
+                                 styleClass="GreenButton" process="@this" disabled="#{actionController.viewOnly}"
+                                 actionListener="#{actionController.excludeChangeCodeFiles(data)}" icon="fa fa-edit White"
+                                 onstart="PF('blockUiApp').block()" oncomplete="PF('blockUiApp').unblock();PF('dlg').show()"/>
+            </p:column>
+
+            <p:column style="width: 40px; text-align: center;" headerText="#{msg['module.kb.group']}" rendered="false">
+                <h:outputText value="#{data.kbGroup}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['type.of.impact']}" rendered="false"
+                      style="width: 110px; text-align: center; white-space: nowrap" visible="true">
+                <h:outputText styleClass="preformatted"
+                              value="#{actionController.actionTypeStr(data.actionType)}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['service.code']}" rendered="false"
+                      style="width: 110px; text-align: center; white-space: nowrap"
+                      filterBy="#{data.serviceCode}" filterMatchMode="contains" visible="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.serviceCode}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['service.name']}" rendered="false"
+                      style="width: 196px; text-align: center; white-space: nowrap"
+                      filterBy="#{data.serviceName}" filterMatchMode="contains">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.serviceName}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['module.code']}"
+                      style="width: 142px; text-align: center; white-space: nowrap" filterBy="#{data.moduleCode}"
+                      filterMatchMode="contains" visible="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.moduleCode}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['module.name']}"
+                      style="width: 256px; text-align: center; white-space: nowrap" filterBy="#{data.moduleName}"
+                      filterMatchMode="contains">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.moduleName}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['module.typename']}"
+                      style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.moduleTypeName}"
+                      filterMatchMode="contains">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.moduleTypeName}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['module.groupname']}"
+                      style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.groupModuleName}"
+                      filterMatchMode="contains" visible="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.groupModuleName}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['path.to.install']}"
+                      style="width: 296px; text-align: center; white-space: nowrap" filterBy="#{data.executePath}"
+                      filterMatchMode="contains">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.executePath}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['ip.of.server']}"
+                      style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.ipServer}"
+                      filterMatchMode="contains">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.ipServer}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['user']}" style="width: 96px; text-align: center; white-space: nowrap"
+                      filterBy="#{data.username}" filterMatchMode="contains" visible="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.username}"/>
+            </p:column>
+        </p:dataTable>
+
+
+        <p:dialog id="detailDlg" modal="true" header="#{msg['file.change']}"
+                  widgetVar="dlg" showEffect="slide" hideEffect="slide"
+                  style="width: 1200px;height: 650px;">
+            <p:pickList id="changeFiles" style="width: 100%;height: 180px"
+                        value="#{actionController.dualListChangeFiles}"
+                        var="dept" itemLabel="#{dept}"
+                        itemValue="#{dept}" showCheckbox="true" showSourceFilter="true"
+                        showTargetFilter="true" filterMatchMode="contains">
+                <f:facet name="sourceCaption">#{msg['mop.autoupcode.file_source']}</f:facet>
+                <f:facet name="targetCaption">#{msg['mop.autoupcode.file_target']}</f:facet>
+            </p:pickList>
+
+            <p:pickList id="removeFiles" style="width: 100%;height: 180px"
+                        value="#{actionController.dualListRemoveFiles}"
+                        var="dept" itemLabel="#{dept}"
+                        itemValue="#{dept}" showCheckbox="true" showSourceFilter="true"
+                        showTargetFilter="true" filterMatchMode="contains">
+                <f:facet name="sourceCaption">#{msg['mop.autoupcode.remove.file_source']}</f:facet>
+                <f:facet name="targetCaption">#{msg['mop.autoupcode.remove.file_target']}</f:facet>
+            </p:pickList>
+
+            <f:facet name="footer">
+                <h:panelGrid columns="2" cellpadding="5" style="text-align: right">
+                    <p:commandButton value="Xác nhận" icon="fa fa-check White" styleClass="GreenButton" actionListener="#{actionController.saveChangeCodeFiles}" process="detailDlg" update="automodules codeDataTable"
+                                     onstart="PF('blockUiDev').block(); PF('dlg').hide()" oncomplete="PF('blockUiDev').unblock()"/>
+
+                    <p:commandButton value="Hủy bỏ" icon="fa fa-remove White" styleClass="ButtonRed"
+                                     onclick="PF('dlg').hide()"/>
+                </h:panelGrid>
+            </f:facet>
+        </p:dialog>
+    </p:panel>
+
+    <style>
+        .ui-picklist-source {
+            width: 97% !important;
+        }
+
+        .ui-picklist-target {
+            width: 97% !important;;
+        }
+
+        #mop\:lst\:dd_input{
+            width: 300px;
+        }
+
+        .class1 {
+            vertical-align: middle;
+            width: 8%
+        }
+
+        .class2 {
+            vertical-align: middle;
+            width: 92%
+        }
+
+        .ui-picklist-list-wrapper {
+            width: 47%;
+        }
+
+        #mop\:lst\:detailDlg {
+            width: 1200px !important;
+            height: 650px !important;
+        }
+
+        #mop\:lst\:detailDlg .ui-dialog-titlebar {
+            background-color: #1abc9c !important;
+            border-bottom: solid 1px #1abc9c !important;
+        }
+
+        #mop\:lst\:changeFiles .ui-picklist-list-wrapper .ui-widget-content, #mop\:lst\:removeFiles .ui-picklist-list-wrapper .ui-widget-content {
+            height: 184px !important;
+        }
+    </style>
+</ui:composition>

@@ -1,0 +1,941 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions"
+                xmlns:botDetect="https://captcha.com/java/jsf" xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/layout/olympos/template.xhtml">
+
+    <ui:define name="content">
+        <h:form id="insertEditForm">
+            <p:growl id="designGrowl" showDetail="false" widgetVar="designGrowl"
+                     autoUpdate="false"/>
+
+            <pe:blockUI target=":execute:exelayout" content="blockUIContent" widgetVar="blockUiSearch"/>
+
+            <h:panelGrid id="blockUIContent" columns="2" style="display:none;table-layout:auto;" styleClass="blockUi">
+                <h:graphicImage library="olympos-layout/images" name="loading-bars-blue.svg"
+                                style="margin-right: 12px; vertical-align: middle;"/>
+                <h:outputText value="#{msg['executing']} ......" style="white-space: nowrap;"/>
+            </h:panelGrid>
+
+            <!--20181126_tudn_start kiem tra module tac dong rollback-->
+            <!--<p:blockUI block="execute"  widgetVar="blockUiAll"/>-->
+            <!--20181126_tudn_end kiem tra module tac dong rollback-->
+        </h:form>
+        <h:form id="execute">
+            <h:panelGrid columns="4" cellpadding="0" width="100%"
+                         columnClasses="c1,c2">
+				<span class="FontLatoRegular Blue Fleft Fs14 DispBlock"
+                      style="width: 84px">#{msg['select.cr']}: </span>
+                <h:panelGroup id="cr">
+                    <p:selectOneMenu id="console"
+                                     value="#{executeController.selectedAction}" style="width:200px;"
+                                     converter="actionConverter" required="true"
+                                     requiredMessage="#{msg['cr.did.not.selected']}"
+                                     disabled="#{!executeController.renderCr()}">
+                        <p:ajax event="change"
+                                update="stepby detail detailheader command confirmMessageCountModule confirmMessageCountModuleChecklist confirmRollback" onstart="PF('blockUiSearch').block()"
+                                oncomplete="PF('blockUiSearch').unblock()"
+                                listener="#{executeController.subjectSelectionChanged}"/>
+                        <f:selectItem itemLabel="#{msg['common.select']}" itemValue=""/>
+                        <f:selectItems value="#{executeController.lstActions}"
+                                       var="action" itemLabel="#{action.label}"
+                                       itemValue="#{action.value}"/>
+                    </p:selectOneMenu>
+                </h:panelGroup>
+
+                <h:panelGroup id="groupcommand">
+                    <!--20181009_hoangnd_continue fail step_start-->
+                    <h:panelGrid id="command" columns="5" cellpadding="10"
+                                 style="text-align: center">
+                        <p:commandButton style="width: 160px" value="#{msg['checklist.before.impaction']}"
+                                         icon="fa White fa-check" styleClass="GreenButton" process="@this console"
+                                         actionListener="#{executeController.prepareChecklist}"
+                                         update="confirmMessageChecklist :insertEditForm:designGrowl"
+                                         disabled="#{!executeController.renderChecklist()}"/>
+                        <p:commandButton style="width: 164px" value="#{msg['common.action']}"
+                                         icon="fa White fa-terminal" styleClass="GreenButton" process="@this console"
+                                         actionListener="#{executeController.prepareExecute(null, true)}"
+                                         update="confirmMessage secureCode :insertEditForm:designGrowl newLine1 newLine2 confirmSelectProcess1 confirmSelectProcess2"
+                                         disabled="#{!executeController.renderExecute() or !executeController.checkExecutable()}"/>
+                        <p:commandButton style="width: 164px" value="#{msg['checklist.after.impaction']}"
+                                         icon="fa White fa-check" styleClass="GreenButton" process="@this console"
+                                         actionListener="#{executeController.prepareChecklistLast}"
+                                         update="confirmMessageChecklistLast :insertEditForm:designGrowl"
+                                         disabled="#{!executeController.renderChecklistAfter()}"/>
+                        <p:commandButton style="width: 164px" value="#{msg['common.stop']}" rendered="false"
+                                         icon="fa White fa-stop" disabled="true" styleClass="ButtonRed"/>
+                        <!--20-11-2018 KienPD confirm step fail start-->
+                        <p:commandButton style="width: 164px" value="#{msg['rollback']}"
+                                         icon="fa White fa-undo" process="@this console"
+                                         actionListener="#{executeController.prepareRollback(null)}"
+                                         styleClass="ButtonRed"
+                                         update="confirmStepFail confirmMessageRollback groupcommand :insertEditForm:designGrowl newLine3 newLine4 confirmSelectRollback1 confirmSelectRollback2"
+                                         disabled="#{!executeController.renderRollback() or !executeController.checkRollbackable()}"/>
+                        <!--20-11-2018 KienPD confirm step fail end-->
+                    </h:panelGrid>
+                    <!--20181009_hoangnd_continue fail step_end-->
+                </h:panelGroup>
+
+                <!--20181009_hoangnd_continue fail step_start-->
+                <p:confirmDialog id="selectProcess" message="" header="#{msg['button.confirm']}"
+                                 severity="alert" widgetVar="selectProcess">
+                    <f:facet name="message">
+                        <h:outputText id="selectMessage"
+                                      value="#{executeController.failStep}" />
+                        <br/>
+                        <p:spacer height="12px"/>
+                        <div class="button-area fr">
+                            <c:forEach items="#{executeController.lstImpactSteps}" var="step">
+                                <p:commandLink actionListener="#{executeController.prepareExecute(step.value, false)}"
+                                               style="text-decoration: unset; font-size: 18px; line-height: 30px;">
+                                    <span class="#{executeController.currStepClass(step.value)}" style="#{executeController.currStepStyle(step.value)}" />
+                                    <h:outputText value="#{executeController.getActionInfo(step)}" title="#{executeController.isFailStep(step.value) ? msg['title.fail.step'] : ''}"
+                                                  style="#{executeController.isFailStep(step.value) ? 'color: #d76666' : ''}"
+                                                  styleClass="#{step.value.key le 0 ? 'groupLabel' : ''}"/>
+                                </p:commandLink>
+                                <br />
+                            </c:forEach>
+                        </div>
+                    </f:facet>
+                </p:confirmDialog>
+                <p:confirmDialog global="true" header="#{msg['view.dialog.header.confirm.run.dt.auto']}"
+                                 id="dlgRunAutoConfirm"
+                                 showEffect="face" hideEffect="scale"
+                                 widgetVar="dlgRunAutoConfirm">
+                    <f:facet name="message">
+                        <h:outputText value="#{msg['confirm.run.dt.auto']}"/>
+                        <p:spacer width="100%" height="1px"></p:spacer>
+                    </f:facet>
+
+                    <p:commandButton value="Yes" update=":insertEditForm:designGrowl" process="@this"
+                                     oncomplete="PF('dlgRunAutoConfirm').hide();PF('loadingDialog').hide()"
+                                     title="#{msg['view.dialog.header.confirm.run.dt.auto']}"
+                                     onstart="PF('loadingDialog').show()"
+                                     actionListener="#{executeController.prepareExecute(null, false)}"
+                                     styleClass="ui-confirmdialog-yes RedButton"
+                                     icon="ui-icon-check fa fa-check Fs14 White"/>
+                    <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no AquaButton"
+                                     onclick="PF('dlgRunAutoConfirm').hide()"
+                                     icon="ui-icon-close fa fa-close Fs14 White"/>
+                </p:confirmDialog>
+
+                <p:confirmDialog id="confirmProcess" message="" header="#{msg['button.confirm']}"
+                                 severity="alert" widgetVar="confirmProcess">
+                    <f:facet name="message">
+                        <h:outputText id="confirmMessage"
+                                      value="#{msg['are.you.sure.you.perform.impact']} #{executeController.selectedAction.crNumber}?"/>
+                        <br/>
+                        <!--<p:inputText id="secureCode" type="password"
+                            value="#{executeController.secureCode}" />-->
+                        <!--<p:watermark value="Mã bí mật" for="secureCode" />-->
+                        <p:spacer height="12px"/>
+                        <botDetect:jsfCaptcha id="captchaConfirm"
+                                              binding="#{executeController.captcha}" soundEnabled="false"
+                                              imageStyle="Graffiti2"/>
+                        <p:spacer height="12px"/>
+                        <p:inputText id="secureCode"
+                                     value="#{executeController.secureCode}"/>
+                        <p:watermark value="#{smg['common.captcha']}" for="secureCode"/>
+                        <h:outputText value="#{executeController.showSelectProcess ? executeController.newLine : ''}" escape="false" id="newLine1"/>
+                        <p:commandLink actionListener="#{executeController.selectProcess}"
+                                       style="text-decoration: unset; font-size: 18px; line-height: 30px;">
+                            <h:outputText value="#{executeController.showSelectProcess ? msg['reselect.step'] : ''}" id="confirmSelectProcess1" />
+                        </p:commandLink>
+                        <h:outputText value="#{executeController.showSelectProcess ? executeController.newLine : ''}" escape="false" id="newLine2"/>
+                        <p:outputLabel value="#{executeController.showSelectProcess ? msg['reselect.note'] : ''}" style="color: #d76666" id="confirmSelectProcess2" />
+                    </f:facet>
+
+                    <div class="button-area fr">
+
+                        <!--20181217_hoangnd_save curr_step sau khi chon_start-->
+                        <p:commandButton id="confirm" value="#{msg['common.execute']}"
+                                         icon="fa fa-check White" styleClass="GreenButton"
+                                         actionListener="#{executeController.runTdStep()}"
+                                         update=":insertEditForm:designGrowl confirmMessageCountModule"
+                                         onclick="PF('confirmProcess').hide()">
+                        </p:commandButton>
+                        <!--20181217_hoangnd_save curr_step sau khi chon_end-->
+                        <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                         styleClass="ButtonRed"
+                                         onclick="PF('confirmProcess').hide()" type="button"/>
+                    </div>
+                </p:confirmDialog>
+
+                <p:confirmDialog id="selectRollback" message="" header="#{msg['button.confirm']}"
+                                 severity="alert" widgetVar="selectRollback">
+                    <f:facet name="message">
+                        <h:outputText id="selectMessage1"
+                                      value="#{executeController.failStep}" />
+                        <br/>
+                        <p:spacer height="12px"/>
+                        <div class="button-area fr">
+                            <c:forEach items="#{executeController.lstRollbackSteps}" var="step">
+                                <p:commandLink actionListener="#{executeController.prepareRollback(step.value)}"
+                                               style="text-decoration: unset; font-size: 18px; line-height: 30px;">
+                                    <span class="#{executeController.currStepClass(step.value)}" style="#{executeController.currStepStyle(step.value)}" />
+                                    <h:outputText value="#{step.label}" title="#{executeController.isFailStep(step.value) ? msg['title.fail.step'] : ''}"
+                                                  style="#{executeController.isFailStep(step.value) ? 'color: #d76666' : ''}" />
+                                </p:commandLink>
+                                <br />
+                            </c:forEach>
+                        </div>
+                    </f:facet>
+                </p:confirmDialog>
+
+                <p:confirmDialog id="confirmRollback" styleClass="removeIcon" header="#{msg['button.confirm']}" widgetVar="confirmRollback">
+                    <f:facet name="message">
+                        <!--05-11-2018 KienPD add failed step to rollback list start-->
+                        <h:outputText id="confirmMessageRollback" value="#{msg['are.you.sure.you.perform.rollback.impact']} #{executeController.selectedAction.crNumber}?"
+                                      rendered="#{executeController.labelStep eq null or empty executeController.labelStep}"/>
+                        <h:outputText id="confirmStepFail" value="#{msg['confirm.rollback.step']} #{executeController.labelStep} #{msg['confirm.rollback.step1']}"
+                                      rendered="#{executeController.labelStep ne null and not empty executeController.labelStep}"/>
+                        <br/>
+                        <h:panelGrid columns="2" cellpadding="5" rendered="#{executeController.labelStep ne null and not empty executeController.labelStep}">
+                            <p:selectOneRadio value="#{executeController.confirm}">
+                                <f:selectItem itemLabel="Yes" itemValue="Yes" />
+                                <f:selectItem itemLabel="No" itemValue="No" />
+                                <p:ajax event="change" listener="#{executeController.confirmRunStep}" update="pnlStep"/>
+                            </p:selectOneRadio>
+                        </h:panelGrid>
+                        <div class="button-area fr">
+                            <h:panelGroup id="pnlStep">
+                                <h:panelGroup rendered="#{executeController.labelStep ne null and not empty executeController.labelStep}">
+                                    <c:forEach items="#{executeController.lstStep}" var="step">
+                                        <ui:remove>
+                                            <span class="#{executeController.currStepClass(step.value)}" style="#{executeController.currStepStyle(step.value)}" />
+                                            <p:selectBooleanCheckbox style="padding-left: 5px;" value="#{step.checkbox}" disabled="true"/>
+                                        </ui:remove>
+                                        <h:outputText value="#{step.label}" title="#{executeController.isFailStep(step.value) ? msg['title.fail.step'] : ''}"
+                                                      style="#{executeController.isFailStep(step.value) ? 'color: #d76666' : 'color: #00aeef'};" />
+                                        <br/>
+                                    </c:forEach>
+                                </h:panelGroup>
+                            </h:panelGroup>
+                        </div>
+                        <!--05-11-2018 KienPD add failed step to rollback list end-->
+                        <p:inputText id="reasonRollback"
+                                     value="#{executeController.reasonRollback}" style="width: 96%"/>
+                        <p:watermark value="#{msg['reason.rollback']}" for="reasonRollback"/>
+                        <h:outputText value="#{executeController.showSelectProcess ? executeController.newLine : ''}" escape="false" id="newLine3"/>
+                        <p:commandLink actionListener="#{executeController.selectRollback}"
+                                       style="text-decoration: unset; font-size: 18px; line-height: 30px;">
+                            <h:outputText value="#{executeController.showSelectProcess ? msg['reselect.step'] : ''}" id="confirmSelectRollback1" />
+                        </p:commandLink>
+                        <h:outputText value="#{executeController.showSelectProcess ? executeController.newLine : ''}" escape="false" id="newLine4"/>
+                        <p:outputLabel value="#{executeController.showSelectProcess ? msg['reselect.note'] : ''}" style="color: #d76666" id="confirmSelectRollback2" />
+                    </f:facet>
+
+                    <div class="button-area fr">
+
+                        <p:commandButton id="confirmRb" value="#{msg['rollback']}"
+                                         styleClass="GreenButton" icon="fa fa-check White"
+                                         actionListener="#{executeController.runRollbackStep}"
+                                         oncomplete="PF('loadingDialog').hide()"
+                                         onclick="PF('loadingDialog').show()"
+                                         update=":insertEditForm:designGrowl confirmMessageCountModule">
+                        </p:commandButton>
+                        <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                         styleClass="ButtonRed"
+                                         onclick="PF('confirmRollback').hide()" type="button">
+				<p:ajax listener="#{executeController.cancel()}" update="exelayout"/>
+			</p:commandButton>
+                    </div>
+                </p:confirmDialog>
+		<!--20181009_hoangnd_continue fail step_end-->
+		
+                <!--20181126_tudn_start kiem tra module tac dong rollback-->
+                <p:confirmDialog id="confirmCountModule" message="" header="#{msg['button.notification']}"
+                                 severity="alert" widgetVar="confirmCountModule" closable="false">
+                    <f:facet name="message">
+                        <h:outputText id="confirmMessageCountModule"
+                                      value="#{executeController.messageModule}"/>
+                        <br/>
+                    </f:facet>
+
+                    <div class="button-area fr">
+
+                        <p:commandButton id="reload" value="Reload"
+                                         styleClass="GreenButton" icon="fa fa-check White"
+                                         actionListener="#{executeController.reloadModule()}"
+                                         onstart="PF('confirmCountModule').hide();PF('loadingDialog').show();"
+                                         update="confirmMessageCountModule :insertEditForm:designGrowl execute:stepby">
+                        </p:commandButton>
+                        <p:commandButton value="#{msg['button.close']}" icon="fa fa-remove White"
+                                         styleClass="ButtonRed"
+                                         actionListener="#{executeController.closeModule()}"/>
+                    </div>
+                </p:confirmDialog>
+                <!--20181126_tudn_end kiem tra module tac dong rollback-->
+
+                <p:confirmDialog id="confirmCountModuleChecklist" message="" header="#{msg['button.notification']}"
+                                 severity="alert" widgetVar="confirmCountModuleChecklist" closable="false">
+                    <f:facet name="message">
+                        <h:outputText id="confirmMessageCountModuleChecklist"
+                                      value="#{executeChecklistController.messageModule}"/>
+                        <br/>
+                    </f:facet>
+
+                    <div class="button-area fr">
+
+                        <p:commandButton id="reloadChecklist" value="Reload"
+                                         styleClass="GreenButton" icon="fa fa-check White"
+                                         actionListener="#{executeController.reloadModule()}"
+                                         onstart="PF('confirmCountModuleChecklist').hide();PF('loadingDialog').show();"
+                                         update="confirmMessageCountModuleChecklist :insertEditForm:designGrowl execute:stepby">
+                        </p:commandButton>
+                        <p:commandButton value="#{msg['button.close']}" icon="fa fa-remove White"
+                                         styleClass="ButtonRed"
+                                         actionListener="#{executeChecklistController.closeModule()}"/>
+                    </div>
+                </p:confirmDialog>
+
+                <p:confirmDialog id="confirmChecklist" message="" header="#{msg['button.confirm']}"
+                                 severity="alert" widgetVar="confirmChecklist">
+                    <f:facet name="message">
+                        <h:outputText id="confirmMessageChecklist"
+                                      value="#{msg['do.you.want.to.perform.impact.checklist']} #{executeController.selectedAction.crNumber}?"/>
+                    </f:facet>
+
+                    <div class="button-area fr">
+                        <p:commandButton value="#{msg['common.execute']}" icon="fa fa-check White"
+                                         styleClass="GreenButton"
+                                         actionListener="#{executeController.execute(1)}"
+                                         update=":insertEditForm:designGrowl"
+                                         onclick="PF('confirmChecklist').hide()">
+                        </p:commandButton>
+                        <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                         styleClass="ButtonRed"
+                                         onclick="PF('confirmChecklist').hide()" type="button"/>
+                    </div>
+                </p:confirmDialog>
+
+                <p:confirmDialog id="dialogChecklistBefore" message="" header="#{msg['dialog.checklist.before.header']}"
+                                 severity="alert" widgetVar="dialogChecklistBefore">
+                    <f:facet name="message">
+                        <h:outputText id="messageChecklistBefore"
+                                      value="#{msg['dialog.checklist.before.message']}" />
+                    </f:facet>
+
+                    <div class="button-area fr">
+                        <p:commandButton value="#{msg['button.close']}" icon="fa fa-remove White"
+                                         styleClass="ButtonRed"
+                                         onclick="PF('dialogChecklistBefore').hide()" type="button"/>
+                    </div>
+                </p:confirmDialog>
+
+                <p:confirmDialog id="confirmChecklistLast" message=""
+                                 header="#{msg['button.confirm']}" severity="alert" widgetVar="confirmChecklistLast">
+                    <f:facet name="message">
+                        <h:outputText id="confirmMessageChecklistLast"
+                                      value="#{msg['do.you.want.to.perform.impact.checklist']} #{executeController.selectedAction.crNumber}?"/>
+                    </f:facet>
+
+                    <div class="button-area fr">
+                        <p:commandButton value="#{msg['common.execute']}" icon="fa fa-check White"
+                                         styleClass="GreenButton"
+                                         actionListener="#{executeController.execute(4)}"
+                                         update=":insertEditForm:designGrowl"
+                                         onclick="PF('confirmChecklistLast').hide()">
+                        </p:commandButton>
+                        <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                         styleClass="ButtonRed"
+                                         onclick="PF('confirmChecklistLast').hide()" type="button"/>
+                    </div>
+                </p:confirmDialog>
+            </h:panelGrid>
+
+            <p:dialog id="waitinguserconfirm" modal="true" header="#{msg['impact.craft']}"
+                      widgetVar="waitinguserconfirm" showEffect="slide" hideEffect="slide" closable="false"
+                      style="width: 1000px;height: 500px;">
+                <!--20181217_hoangnd_them scrollbar_start-->
+                <p:scrollPanel id="scroll" style="width:1000px;height: 100%;max-height: 500px;" mode="native">
+                <!--20181217_hoangnd_them scrollbar_end-->
+                    <p:dataTable var="exeObj" value="#{executeController.waitingActions}"
+                                 widgetVar="waitingActions" id="waitingActions" style="width: 1000px"
+                                 styleClass="waitingActions">
+
+                        <p:column headerText="#{msg['information']}" style="width:50%">
+                            <div style="white-space: pre">
+                                <p:outputLabel rows="8" autoResize="false" style="width:100%"
+                                               styleClass="unresizable" value="#{utils.exeDescription(exeObj)}"
+                                               readonly="true"/>
+                            </div>
+                        </p:column>
+
+                        <p:column headerText="#{msg['common.action']}" style="width:34%; text-align: center">
+                            <p:commandLink rendered="#{exeObj.customAction.type eq 2}" ajax="false" process="@this"
+                                           immediate="true">
+                                <h:outputText value="#{exeObj.actionDtFile.impactFile}"/>
+                                <p:fileDownload value="#{executeController.downloadHdFile(exeObj)}"/>
+                            </p:commandLink>
+
+                            <div class="button-area fr">
+                                <p:fileUpload fileUploadListener="#{executeController.handleFileUploadResult}"
+                                              label="#{msg['common.result']}"
+                                              rendered="#{exeObj.customAction.type eq 2 or exeObj.customAction.type eq 3}"
+                                              mode="advanced" update=""
+                                              auto="true" sizeLimit="100000000">
+                                    <f:attribute name="exeObject" value="#{exeObj}"/>
+                                </p:fileUpload>
+                                <h:outputText value="#{exeObj.waitDescription}"
+                                              rendered="#{empty exeObj.customAction or exeObj.customAction.type eq 4}"/>
+                                <p:inputText id="comment"
+                                             value="#{exeObj.userComment}" style="width: 96%" rendered="#{exeObj.waitAction ne 20}"/>
+                                <p:watermark value="#{msg['common.confirm.reason']}" for="comment"
+                                             rendered="#{exeObj.customAction.type eq 4}"/>
+
+                                <!--<p:inputText id="waitTimeShutdown" rendered="#{((empty exeObj.optionWhenTimeOut or exeObj.optionWhenTimeOut eq 0)  and exeObj.confirmWhenServerUp ne 0) and executeController.renderWaitTimeShutdown}"-->
+                                <!--value="#{exeObj.waitTimeShutdown}" style="width: 96%"/>-->
+                                <!--<p:inputText id="waitTimeShutdown" disabled="#{empty exeObj.waitAction or exeObj.waitAction eq 2 or exeObj.waitAction eq 3 or exeObj.optionWhenTimeOut eq 1}"-->
+                                <!--value="#{exeObj.waitTimeShutdown}" style="width: 96%"/>-->
+                                <p:inputText id="waitTimeShutdown" rendered="#{exeObj.action.actionRbSd != null and exeObj.action.actionRbSd eq 2 and executeController.renderWaitTimeShutdown  and exeObj.runCaseRebootShutdown}"
+                                             value="#{exeObj.waitTimeShutdown}" style="width: 96%"/>
+                                <p:watermark value="#{msg['common.confirm.waitTimeShutdown']} #{msg['common.confirm.waitTimeShutdownAdd0']} #{executeController.DEFAULT_OPTION_TIME_OUT} #{msg['common.confirm.waitTimeShutdownAdd1']}" for="waitTimeShutdown"
+                                             rendered="#{exeObj.customAction.type eq 4}"/>
+                            </div>
+                        </p:column>
+
+                        <p:column headerText="#{msg['common.result']}" style="width:16%; text-align: center">
+                            <p:selectOneMenu id="userconfirm" value="#{exeObj.runStt}" style="width: 86px"
+                                             rendered="#{exeObj.customAction.type eq 2 or exeObj.customAction.type eq 3}"
+                                             styleClass="userconfirm"
+                                             required="true" requiredMessage="#{msg['result.did.not.selected']}">
+                                <f:selectItem itemLabel="#{msg['button.confirm']}"/>
+                                <f:selectItem itemLabel="#{msg['common.message.success']}" itemValue="2"/>
+                                <f:selectItem itemLabel="#{msg['common.fail2']}" itemValue="-2"/>
+                                <!--<p:ajax listener="#{executeController.userConfirm(exeObj)}"/>-->
+                            </p:selectOneMenu>
+
+                            <p:selectOneMenu id="waitingconfirm" value="#{exeObj.waitAction}" style="width: 86px"
+                                             rendered="#{(empty exeObj.customAction or exeObj.customAction.type eq 4) and !exeObj.runCaseRebootShutdown}"
+                                             styleClass="userconfirm"
+                                             required="true" requiredMessage="#{msg['result.did.not.selected']}">
+
+                                <f:selectItem itemLabel="#{msg['button.confirm']}"/>
+                                <f:selectItem itemLabel="#{msg['common.continue']}" itemValue="1"/>
+                                <f:selectItem itemLabel="#{msg['common.cancel']}" itemValue="2"/>
+                                <!--<p:ajax listener="#{executeController.userConfirm(exeObj)}"/>-->
+                            </p:selectOneMenu>
+
+                            <p:selectOneMenu id="waitingconfirmForShutDown" value="#{exeObj.userConfirmForShutdown}" style="width: 86px"
+                                             rendered="#{(empty exeObj.customAction or exeObj.customAction.type eq 4)
+                                             and exeObj.waitAction ne 9 and exeObj.waitAction ne 10 and exeObj.runCaseRebootShutdown and exeObj.waitAction ne 20}"
+                                             styleClass="userconfirm"
+                                             required="true" requiredMessage="#{msg['result.did.not.selected']}">
+
+                                <f:selectItem itemLabel="#{msg['button.confirm']}" itemValue="0"/>
+                                <f:selectItem itemLabel="#{msg['common.continue']}" itemValue="1"/>
+                                <f:selectItem itemLabel="#{msg['common.cancel']}" itemValue="2"/>
+                                <f:selectItem itemLabel="#{msg['common.shutdownDoNotTurnBack']}" itemValue="3"/>
+                                <p:ajax event="change" update="execute:waitingActions"
+                                        listener="#{executeController.handleChangeSelectOneMenu}" />
+                                <!--<p:ajax listener="#{executeController.userConfirm(exeObj)}"/>-->
+                            </p:selectOneMenu>
+
+                            <p:selectOneMenu id="waitingConfirmWhenTimeOut" value="#{exeObj.optionWhenTimeOut}" style="width: 86px"
+                                             rendered="#{exeObj.waitAction eq 9}"
+                                             styleClass="userconfirm"
+                                             required="true" requiredMessage="#{msg['result.did.not.selected']}">
+                                <f:selectItem itemLabel="#{msg['button.confirm']}" itemValue="0"/>
+                                <f:selectItem itemLabel="#{msg['common.crFail']}" itemValue="1"/>
+                                <f:selectItem itemLabel="#{msg['common.retry']}" itemValue="2"/>
+                                <p:ajax event="change" update="execute:waitingActions"
+                                        listener="#{executeController.handleChangeConfirmWhenTimeOut}" />
+                            </p:selectOneMenu>
+
+                            <p:selectOneMenu id="waitingConfirmWhenServerUp" value="#{exeObj.confirmWhenServerUp}" style="width: 86px"
+                                             rendered="#{exeObj.waitAction eq 10}"
+                                             styleClass="userconfirm"
+                                             required="true" requiredMessage="#{msg['result.did.not.selected']}">
+                                <f:selectItem itemLabel="#{msg['button.confirm']}"/>
+                                <f:selectItem itemLabel="#{msg['common.continue']}" itemValue="1"/>
+                                <f:selectItem itemLabel="#{msg['common.shutdownAgain']}" itemValue="2"/>
+                            </p:selectOneMenu>
+
+			    <!-- 22-11-2018 KienPD confirm service dead start-->
+                            <p:selectOneMenu id="waitingConfirmWhenServiceDead" value="#{exeObj.confirmWhenServiceDead}" style="width: 86px"
+                                             rendered="#{exeObj.waitAction eq 20}"
+                                             styleClass="userconfirm"
+                                             required="true" requiredMessage="#{msg['result.did.not.selected']}">
+                                <f:selectItem itemLabel="#{msg['button.confirm']}"/>
+                                <f:selectItem itemLabel="#{msg['option.accept']}" itemValue="23"/>
+                                <f:selectItem itemLabel="#{msg['option.recheck']}" itemValue="22"/>
+                                <f:selectItem itemLabel="#{msg['option.stop']}" itemValue="-2"/>
+                            </p:selectOneMenu>
+			    <!-- 22-11-2018 KienPD confirm service dead end-->
+
+                            <p:commandLink id="waitLog" update=":execute:detailDlg" process="@this"
+                                           rendered="#{empty exeObj.customAction or exeObj.customAction.type eq 4}"
+                                           style="font-style: italic;text-decoration:underline;color: blue;"
+                                           value="#{msg['view.log']}"
+                                           actionListener="#{executeController.exeLogDetail(exeObj)}"
+                                           oncomplete="PF('dlg').show()"/>
+                        </p:column>
+                    </p:dataTable>
+                </p:scrollPanel>
+
+                <p:spacer height="12px"/>
+
+                <div class="button-area fr">
+                    <p:commandButton value="Confirm" styleClass="GreenButton" icon="fa fa-check White"
+                                     actionListener="#{executeController.submitConfirm}"
+                                     update=":insertEditForm:designGrowl">
+                    </p:commandButton>
+                </div>
+            </p:dialog>
+
+            <h:panelGroup id="preViewMessages"
+                          styleClass="ui-messages ui-messages-noicon ui-widget" rendered="false">
+                <div class="ui-messages-error ui-corner-all" style="margin-top: 0">
+                    <ul>
+                        <li>
+                            <h:outputText styleClass="ui-messages-error-summary"
+                                          value="#{msg['test.functions.are.not.arbitrarily.use']}!"/>
+                            <span class="ui-messages-error-detail"></span>
+                        </li>
+                    </ul>
+                </div>
+            </h:panelGroup>
+
+            <p:layout id="exelayout"
+                      style="min-width:400px;min-height:1012px;width: 100%; height: 102%">
+                <p:layoutUnit position="west" resizable="true" size="280"
+                              minSize="100" maxSize="280" collapsible="true"
+                              header="#{msg['steps']}">
+                    <h:panelGroup id="stepby">
+                        <p:selectOneListbox id="basic" style="width: 90%; height: 98%"
+                                            value="#{executeController.selectedRunStep}" var="s"
+                                            converter="stepConverter">
+                            <p:ajax update="detail detailheader "
+                                    onstart="PF('blockUiSearch').block()"
+                                    oncomplete="PF('blockUiSearch').unblock()"
+                                    listener="#{executeController.handleChange}"/>
+
+                            <f:selectItems value="#{executeController.runSteps}" var="step"
+                                           itemLabel="#{step.label}" itemValue="#{step.value}"/>
+
+                            <p:column>
+                                <span class="fa #{executeController.statusIcon(s.value)}"/>
+                            </p:column>
+
+                            <p:column>
+                                <p:spacer width="12px" rendered="#{s.value.key ge 0}"/>
+                                <!--<h:panelGroup rendered="#{s.value.key le 0}">
+                                    <span class="fa fa-edit" />
+                                </h:panelGroup>-->
+                            </p:column>
+
+                            <p:column>
+                                <h:outputText value="#{ executeController.getActionInfo( s )}"
+                                              styleClass="#{s.value.key le 0 ? 'groupLabel' : ''}"/>
+                            </p:column>
+
+                        </p:selectOneListbox>
+                    </h:panelGroup>
+                </p:layoutUnit>
+
+                <p:layoutUnit position="center">
+                    <f:facet name="header">
+                        <div style="text-align: center">
+                            <h:outputText id="detailheader" class="White Heading5"
+                                          value="#{executeController.selectedRunStep.description}"/>
+                            <p:spacer width="1"/>
+                        </div>
+                    </f:facet>
+                    <!--20181005_tudn_start ghi log real-->
+                    <p:poll interval="4" process="@this" onstart="fLt();doFitter()" id="pollListener"
+                            update="detail stepby detailheader :execute:command :execute:cr"
+                            autoStart="false" listener="#{executeController.pollListener}"
+                            widgetVar="pollListener"/>
+                    <!--20181005_tudn_start ghi log real-->
+                    <h:panelGroup id="detail">
+                        <h:panelGroup id="crinfo"
+                                      rendered="#{executeController.checkRender(30)}">
+                            <ui:insert>
+                                <ui:include src="detail/crinfo.xhtml"/>
+                            </ui:insert>
+                        </h:panelGroup>
+
+                        <h:panelGroup id="checklistappbefore"
+                                      rendered="#{executeController.checkRender(1)}">
+                            <ui:insert>
+                                <ui:include src="detail/checklistappbefore.xhtml"/>
+                            </ui:insert>
+                        </h:panelGroup>
+
+                        <h:panelGroup id="checklistdbbefore"
+                                      rendered="#{executeController.checkRender(2)}">
+                            <ui:insert>
+                                <ui:include src="detail/checklistdbbefore.xhtml"/>
+                            </ui:insert>
+                        </h:panelGroup>
+
+                        <h:panelGroup id="impactdetail"
+                                      rendered="#{executeController.checkImpactRender()}">
+                            <ui:insert>
+                                <ui:include src="detail/impact.xhtml"/>
+                            </ui:insert>
+                        </h:panelGroup>
+                        <h:panelGroup id="impactdetailDb"
+                                      rendered="#{executeController.checkImpactDbRender()}">
+                            <ui:insert>
+                                <ui:include src="detail/impactDb.xhtml"/>
+                            </ui:insert>
+                        </h:panelGroup>
+
+                        <!--20190125_hoangnd_fix bug show checklist_start-->
+                        <h:panelGroup id="checklistappafter"
+                                      rendered="#{executeController.selectedRunStep.value.key eq constantUtils.SUB_STEP_CHECKLIST_APP}">
+                            <ui:insert>
+                                <ui:include src="detail/checklistappimpact.xhtml"/>
+                            </ui:insert>
+                        </h:panelGroup>
+
+                        <h:panelGroup id="checklistdbafter"
+                                      rendered="#{executeController.selectedRunStep.value.key eq constantUtils.SUB_STEP_CHECKLIST_DB}">
+                            <ui:insert>
+                                <ui:include src="detail/checklistdbimpact.xhtml"/>
+                            </ui:insert>
+                        </h:panelGroup>
+                        <!--20190125_hoangnd_fix bug show checklist_end-->
+
+                        <h:panelGroup id="checklistapprollback"
+                                      rendered="#{executeController.selectedRunStep.value.key eq constantUtils.ROLLBACK_STEP_CHECKLIST_APP}">
+                            <ui:insert>
+                                <ui:include src="rollback/checklistapp.xhtml"/>
+                            </ui:insert>
+                        </h:panelGroup>
+
+                        <h:panelGroup id="checklistdbrollback"
+                                      rendered="#{executeController.selectedRunStep.value.key eq constantUtils.ROLLBACK_STEP_CHECKLIST_DB}">
+                            <ui:insert>
+                                <ui:include src="rollback/checklistdb.xhtml"/>
+                            </ui:insert>
+                        </h:panelGroup>
+
+                        <h:panelGroup id="checklistapplast"
+                                      rendered="#{executeController.selectedRunStep.value.key eq constantUtils.AFTER_STEP_CHECKLIST_APP}">
+                            <ui:insert>
+                                <ui:include src="after/checklistapplast.xhtml"/>
+                            </ui:insert>
+                        </h:panelGroup>
+
+                        <h:panelGroup id="checklistdblast"
+                                      rendered="#{executeController.selectedRunStep.value.key eq constantUtils.AFTER_STEP_CHECKLIST_DB}">
+                            <ui:insert>
+                                <ui:include src="after/checklistdblast.xhtml"/>
+                            </ui:insert>
+                        </h:panelGroup>
+                    </h:panelGroup>
+                </p:layoutUnit>
+            </p:layout>
+
+            <p:dialog id="detailDlg" modal="true" header="#{msg['log.detail']}"
+                      widgetVar="dlg" showEffect="slide" hideEffect="slide"
+                      style="width: 1000px;height: 500px;">
+                <h:inputTextarea value="#{executeController.logDetail}" id="content"
+                                 readonly="true" style="width: 1000px;height: 500px;"/>
+            </p:dialog>
+
+            <p:dialog id="scriptDlg" modal="true" header="#{msg['script.detail']}"
+                      widgetVar="scriptDlg" showEffect="slide" hideEffect="slide"
+                      style="width: 1000px;height: 500px;">
+                <h:inputTextarea value="#{executeController.scriptDetail}"
+                                 id="contentScript" readonly="true"
+                                 style="width: 1000px;height: 500px;"/>
+            </p:dialog>
+        </h:form>
+
+        <!--20181126_tudn_start kiem tra module tac dong rollback-->
+
+        <p:dialog modal="true" class="transparent-dialog" showHeader="false"
+                  widgetVar="loadingDialog" draggable="false" closable="false"
+                  resizable="false">
+            <h:graphicImage library="olympos-layout/images" name="loading-bars-blue.svg"
+                            style="margin-right: 12px; vertical-align: middle;"/>
+            <h:outputText value="#{msg['reloading.modlue']} ......" style="white-space: nowrap;"/>
+        </p:dialog>
+        <!--20181126_tudn_end kiem tra module tac dong rollback-->
+
+        <h:form id="logOnlineForm">
+            <p:poll autoStart="false" interval="5" widgetVar="onlinePoll"
+                    process="@this" listener="#{logOnlineController.refreshScreen}"
+                    update=":logOnlineForm:logData" oncomplete="setToEnd()"/>
+
+            <p:dialog id="onlineDialog" header="#{msg['log.online']}"
+                      widgetVar="onlineDialog" modal="true" resizable="false"
+                      closeOnEscape="false" draggable="true" closable="false">
+                <h:panelGrid columns="1" id="logOnlinePanel">
+                    <p:inputTextarea value="#{logOnlineController.searchLog}"
+                                     id="logData" scrollHeight="100" readonly="true"
+                                     style="width:600px;max-height:400px;min-height:400px;overflow:scroll;border :solid 1px;">
+                    </p:inputTextarea>
+
+                    <h:panelGroup>
+
+                        <p:commandButton value="#{msg['view.log.online']}"
+                                         actionListener="#{logOnlineController.tailLogOnline}"
+                                         oncomplete="setToEnd()" update=":logOnlineForm:logOnlinePanel">
+                        </p:commandButton>
+
+                        <p:commandButton value="#{msg['label.logout']}"
+                                         actionListener="#{logOnlineController.disconnect}"
+                                         oncomplete="stopPoll()" update=":logOnlineForm:logOnlinePanel">
+                        </p:commandButton>
+                    </h:panelGroup>
+
+                    <h:panelGroup>
+                        <p:inputText value="#{logOnlineController.searchText}"
+                                     id="logOnlineSearchText"
+                                     style="width:150px ; border: 1px solid blue;"/>
+                        <p:commandButton value="#{msg['button.search']}"
+                                         actionListener="#{logOnlineController.searchData}"
+                                         oncomplete="setToEnd()" update=":logOnlineForm:logOnlinePanel">
+                        </p:commandButton>
+                        <p:watermark for="logOnlineSearchText"
+                                     value="#{msg['enter.search.keywords']}"/>
+                    </h:panelGroup>
+                </h:panelGrid>
+            </p:dialog>
+
+            <!--12-11-2018 KienPD warning failed process start-->
+            <p:dialog id="dlgFailProcess" modal="true" header="#{msg['label.notification']}" width="50%"
+                      widgetVar="dlgFailProcess" showEffect="slide" hideEffect="slide" closable="false" >
+                <p:scrollPanel style="height: 100%;max-height: 500px;">
+                    <h:outputText value="#{msg['failed.processing']}"/>
+                </p:scrollPanel>
+                <p:spacer height="12px"/>
+                <div class="button-area fr" style="text-align: center;">
+                    <p:commandButton value="#{msg['button.close']}" icon="fa fa-remove White" styleClass="ButtonRed" onclick="PF('dlgFailProcess').hide()" type="button"/>
+                </div>
+            </p:dialog>
+            <!--12-11-2018 KienPD warning failed process end-->
+            <ui:remove>
+            <p:dialog modal="true" class="transparent-dialog" showHeader="false"
+                      widgetVar="loadingDialog" draggable="false" closable="false" resizable="false" >
+            <span class="fa-stack fa-2x" style="width: 5em; height: 5em; line-height: 5em;" >
+                <i class="fa fa-fire fa-stack-1x" style="bottom: 40px; color: #FAFAFA; font-size: 0.8em"  ></i>
+                <i class="fa fa-spinner fa-pulse fa-3x fa-fw fa-stack-2x" style="color: #00AAFF; font-size: 3em;"></i>
+                <i class="fa fa-coffee fa-stack-1x" style="color: #975524; bottom: 20px;font-size: 1.2em"></i>
+            </span>
+            </p:dialog>
+            </ui:remove>
+
+        </h:form>
+
+
+        <script type="text/javascript">
+            /* <![CDATA[ */
+            $(document).ready(function () {
+                var currentTabID = "tab-0";
+                var currentIconID = "10";
+                ChangeTab(currentTabID);
+            });
+            function SetCaretAtEnd(elem) {
+                elem = document.getElementById(elem);
+                var elemLen = elem.value.length;
+                // For IE Only
+                if (document.selection) {
+                    // Set focus
+                    elem.focus();
+                    // Use IE Ranges
+                    var oSel = document.selection.createRange();
+                    // Reset position to 0 and then set at end
+                    oSel.moveStart('character', -elemLen);
+                    oSel.moveStart('character', elemLen);
+                    oSel.moveEnd('character', 0);
+                    oSel.select();
+                } else if (elem.selectionStart || elem.selectionStart == '0') {
+                    // Firefox/Chrome
+                    elem.selectionStart = elemLen;
+                    elem.selectionEnd = elemLen;
+                    elem.focus();
+                } // if
+            } //
+
+            function setToEnd() {
+                try {
+                    var txt = document.getElementById('logOnlineForm:logData')
+                    if (txt == null || typeof txt == undefined) {
+                        return false;
+                    }
+                    if (txt.createTextRange) {
+                        //IE
+                        var FieldRange = txt.createTextRange();
+                        FieldRange.moveStart('character', txt.value.length);
+                        FieldRange.collapse();
+                        //FieldRange.select();
+                    } else {
+                        //Firefox and Opera
+                        //txt.focus();
+                        var length = txt.value.length;
+                        txt.setSelectionRange(length, length);
+                    }
+                } catch (e) {
+                    console.log(e);
+                    return 0;
+                }
+                return 0;
+            }
+
+            function stopPoll() {
+                if (PF('onlinePoll').isActive()) {
+                    PF('onlinePoll').stop();
+                }
+                PF('onlineDialog').hide();
+                return false;
+            }
+
+            function doFitter() {
+                try {
+                    if (PF('stopObjects') != null && PF('stopObjects') != undefined)
+                        PF('stopObjects').filter();
+
+                    if (PF('backupDbObjects') != null
+                        && PF('backupDbObjects') != undefined)
+                        PF('backupDbObjects').filter();
+
+                    if (PF('checkStatusObjects') != null
+                        && PF('checkStatusObjects') != undefined)
+                        PF('checkStatusObjects').filter();
+
+                    if (PF('clearCacheObjects') != null
+                        && PF('clearCacheObjects') != undefined)
+                        PF('clearCacheObjects').filter();
+
+                    if (PF('restartObjects') != null
+                        && PF('restartObjects') != undefined)
+                        PF('restartObjects').filter();
+
+                    if (PF('startObjects') != null
+                        && PF('startObjects') != undefined)
+                        PF('startObjects').filter();
+
+                    if (PF('backupObjects') != null
+                        && PF('backupObjects') != undefined)
+                        PF('backupObjects').filter();
+
+                    if (PF('executeDbObjects') != null
+                        && PF('executeDbObjects') != undefined)
+                        PF('executeDbObjects').filter();
+
+                    if (PF('upcodeObjects') != null
+                        && PF('upcodeObjects') != undefined)
+                        PF('upcodeObjects').filter()
+                } catch (e) {
+                    console.log(e);
+                    return 0;
+                }
+                return 0;
+            }
+            /* ]]> */
+        </script>
+        <style>
+            .c1 {
+                width: 84px
+            }
+
+            .c2 {
+                width: 256px
+            }
+
+            .ui-layout-unit .ui-layout-unit-header {
+                /*background-color: #05c436;*/
+                background-color: #1abc9c;
+            }
+
+            .rollbackLayout .ui-layout-unit-header {
+                background-color: red;
+            }
+
+            /*#execute\:waitinguserconfirm .ui-dialog-titlebar {
+                background-color: red !important;
+                border-bottom: red !important;
+            }*/
+
+            .ui-inputfield {
+                border: none;
+            }
+
+            .ui-selectlistbox-listcontainer {
+                height: 900px !important;
+            }
+
+            .ui-selectlistbox-list .ui-state-disabled {
+                /*background-color: #05c436 !important;*/
+                color: black !important;
+                opacity: 1 !important;
+                font-size: 14px !important;
+                font-style: italic;
+                font-weight: bold;
+            }
+
+            .ui-messages-error, .ui-message-error {
+                font-size: 16px;
+                font-weight: normal;
+                padding: 2px !important;
+                font-family: 'latobold';
+                text-align: center;
+            }
+
+            .preformatted {
+                white-space: pre-wrap;
+            }
+
+            .unresizable {
+                resize: none;
+            }
+
+            .ui-columntoggler {
+                display: none;
+            }
+
+            .blockUI .ui-widget-content {
+                background-color: white;
+            }
+
+            /*#insertEditForm\:blockUIContent tbody tr td {*/
+            .blockUi tbody tr td {
+                border: none !important;
+            }
+
+            #execute\:console {
+                min-width: 120px !important;
+            }
+
+            #captcha_CaptchaImageDiv a {
+                display: none !important;
+            }
+
+            #execute\:detailDlg .ui-dialog-titlebar {
+                background-color: #1abc9c !important;
+                border-bottom: solid 1px #1abc9c !important;
+            }
+
+            #execute\:waitinguserconfirm .ui-dialog-titlebar {
+                background-color: #FF4136 !important;
+                border-bottom: solid 1px #FF4136 !important;
+            }
+
+            #execute\:scroll .ui-scrollpanel-container .ui-scrollpanel-vbar .ui-scrollpanel-track .ui-scrollpanel-drag {
+                background-color: #f3926b !important;
+            }
+
+            /*12-11-2018 KienPD warning failed process start*/
+            #logOnlineForm\:dlgFailProcess .ui-dialog-titlebar {
+                background-color: #FF4136 !important;
+                border-bottom: solid 1px #FF4136 !important;
+            }
+            .ui-dialog .ui-dialog-content .ui-icon-alert{
+                background-image: none !important;
+            }
+            .removeIcon > .ui-dialog-titlebar > .ui-dialog-titlebar-icon{
+                display: none !important;
+            }
+            /*12-11-2018 KienPD warning failed process end*/
+        </style>
+    </ui:define>
+</ui:composition>

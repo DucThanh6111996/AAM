@@ -1,0 +1,621 @@
+<ui:composition template="/layout/olympos_db_server/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <ui:define name="content">
+        <p:panel header="#{msg['common.search.info']}" style="margin-bottom:10px; margin-left: 3px; margin-right: 3px"
+        	 toggleable="true" >
+            <h:panelGrid columns="1" width="100%">
+                <h:form id="searchForm" enctype="multipart/form-data">
+                    <p:growl id="growlCmd" showDetail="true" showSummary="false" />
+
+                    	<div class="Container100 Flex FlexWrap">
+                        <div class="Card ui-g" style="padding: 0">
+                            <div class="ui-g-12 ui-md-6 ui-lg-4 ui-g-nopad" style="margin-top: 10px">
+                                <h:outputText class="control-label Container27" value="#{msg['label.cmd']}"/>
+                                <p:inputText class="ui-g-7" id="cmdRun" value="#{itCommandController.obj.commandTelnetParser.cmd}" />
+                            </div>
+                            <div class="ui-g-12 ui-md-6 ui-lg-4 ui-g-nopad" style="margin-top: 10px">
+                                <h:outputText class="control-label Container27" value="#{msg['label.cmdName']}"/>
+                                <p:inputText class="ui-g-7" id="cmdName" value="#{itCommandController.obj.commandName}"/>
+                            </div>
+                            <div class="ui-g-12 ui-md-6 ui-lg-4 ui-g-nopad" style="margin-top: 10px">
+                                <h:outputText class="control-label Container27" value="#{msg['label.vendorName']}"/>
+                                <p:selectOneMenu filter="true" filterMatchMode="contains" class="ui-g-7"
+                                                 value="#{itCommandController.obj.vendor}" id="vendorName" converter="vendorConverter">
+                                    <f:selectItem itemLabel="#{msg['common.choose']}" itemValue="null" noSelectionOption="true" />
+                                    <f:selectItems var="vendorObj" itemLabel="#{vendorObj.vendorName}"
+                                                   itemValue="#{vendorObj}" value="#{itCommandController.vendors}" />
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="ui-g-12 ui-md-6 ui-lg-4 ui-g-nopad" style="margin-top: 10px">
+                                <h:outputText class="control-label Container27" value="#{msg['label.operator']}"/>
+                                <p:selectOneMenu filter="true" filterMatchMode="contains" class="ui-g-7" value="#{itCommandController.opeSelected}" id="operator" converter="operatorConverter">
+                                    <f:selectItem itemLabel="#{msg['common.choose']}" itemValue="null" noSelectionOption="true" />
+                                    <f:selectItems var="operObj" itemLabel="#{operObj.label}"
+                                                   itemValue="#{operObj}" value="#{itCommandController.operators}" />
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="ui-g-12 ui-md-6 ui-lg-4 ui-g-nopad" style="margin-top: 10px">
+                                <h:outputText class="control-label Container27" value="#{msg['label.protocol']}"/>
+                                <p:selectOneMenu class="ui-g-7" value="#{itCommandController.protocolSelected}" id="protocol" converter="operatorConverter">
+                                    <f:selectItem itemLabel="#{msg['common.choose']}" itemValue="null" noSelectionOption="true" />
+                                    <f:selectItems var="protocolObj" itemLabel="#{protocolObj.label}"
+                                                   itemValue="#{protocolObj}" value="#{itCommandController.protocols}" />
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="ui-g-12 ui-md-6 ui-lg-4 ui-g-nopad" style="margin-top: 10px">
+                                <h:outputText class="control-label Container27" value="#{msg['label.command.type']}"/>
+                                <p:selectOneMenu rendered="#{!sessionUtil.onlyViewCommand}" class="ui-g-7" value="#{itCommandController.obj.commandType}" id="commandType">
+
+                                    <f:selectItem itemValue="-1" itemLabel="#{msg['common.choose']}" />
+                                    <f:selectItem itemValue="0" itemLabel="#{msg['label.command.type.impact']}" />
+                                    <f:selectItem itemValue="3" itemLabel="#{msg['label.command.type.writelog']}" />
+                                </p:selectOneMenu>
+                                <p:selectOneMenu rendered="#{sessionUtil.onlyViewCommand}" class="ui-g-7" value="#{itCommandController.obj.commandType}" id="commandType1">
+                                    <f:selectItem itemValue="1" itemLabel="#{msg['label.command.type.view']}" />
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
+                    </div>
+                               
+                    <div style="text-align: center;margin-left: auto;margin-right: auto;display: block; padding-top: 5px; clear: both">
+                        <p:commandButton style="color: white;" icon="fa fa-search" 
+                                         actionListener="#{itCommandController.onSearch()}"
+                                         update=":tableCommand" value="#{msg['button.search']}"/>
+                        <p:commandButton rendered="true" style="color: white;" icon="fa fa-plus"
+                                         actionListener="#{itCommandController.prepareInsert()}"
+                                         oncomplete="PF('insertCmdConfigDialog').show()"
+                                         update=":tableCommand :insertCmdConfigDialog" value="#{msg['button.insert']}"/>
+
+                        <ui:remove>
+                            <p:commandButton style="color: white;" icon="fa fa-download" ajax="false"
+                                             value="#{msg['button.export']}">
+                                <p:fileDownload value="#{itCommandController.onExport()}" />
+                            </p:commandButton>
+                        </ui:remove>
+                    </div>
+                </h:form>
+            </h:panelGrid>
+        </p:panel>
+
+        <h:panelGrid columns="1" width="100%">
+            <div class="Container100 Flex FlexWrap">
+                <p:dataTable var="obj" value="#{itCommandController.lazyModel}" widgetVar="tableCommand"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{commandController.lazyModel.rowCount > 1 ? msg['label.records'] : msg['label.record']}"
+                             paginator="true" rows="10" filterEvent="keyup" rowKey="#{obj.commandDetailId}"
+                             rowIndexVar="rowIndex" paginatorPosition="bottom" id="tableCommand" resizableColumns="true"
+                             rowsPerPageTemplate="10,15,20" sortMode="mutiple" sortBy="#{obj.createTime}" sortOrder="descending"
+                             emptyMessage="#{msg['datatable.empty']}" lazy="true" editable="false">
+                    <f:facet name="header">
+                        <h:outputText style="float:left; margin-left: 8px; margin-top: 5px" value="#{msg['common.search.result']}"/>
+                        <p:commandButton id="toggler" type="button" style="color: white; float:right" icon="fa fa-calculator" >
+                            <p:columnToggler datasource="tableCommand" trigger="toggler"/>
+                        </p:commandButton>
+                        <p:commandButton style="visibility: hidden; display: none">
+                            <div style="clear: both"></div>
+                        </p:commandButton>
+                    </f:facet>
+                    <p:column style="width: 50px; text-align: left;" >
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['datatable.header.stt']}"/>
+                        </f:facet>
+                        <h:outputText value="#{rowIndex+1}"/>
+                    </p:column>
+                    <p:column style="text-align: left" sortBy="#{obj.vendor.vendorName}" id="vendorName">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.vendorName']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.vendor.vendorName}"/>
+                    </p:column>
+                    <p:column style="text-align: left" sortBy="#{obj.commandName}">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.cmdName']}"/>
+                        </f:facet>
+                        <h:outputText style="white-space: pre-wrap" title="#{obj.commandName}" value="#{obj.commandName}"/>
+                    </p:column>
+                    <p:column style="text-align: left" sortBy="#{obj.commandTelnetParser.cmd}">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.cmd']}"/>
+                        </f:facet>
+                        <h:outputText id="cmdRun" title="#{obj.commandTelnetParser.cmd}" value="#{obj.commandTelnetParser.cmd}" />
+                    </p:column>
+                    <p:column style="text-align: left" sortBy="#{obj.commandTelnetParser.cmdEnd}" visible="false">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.cmdEnd']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.commandTelnetParser.cmdEnd}"/>
+                    </p:column>
+                    <p:column style="text-align: left">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.cmdDescription']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.description}"/>
+                    </p:column>
+                    <p:column style="text-align: left">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.command.type']}"/>
+                        </f:facet>
+                        <h:outputText rendered="#{obj.commandType == 0}" value="#{msg['label.command.type.impact']}"/>
+                        <h:outputText rendered="#{obj.commandType == 1}" value="#{msg['label.command.type.view']}"/>
+                        <h:outputText rendered="#{obj.commandType == 2}" value="#{msg['label.command.type.checklist']}"/>
+                        <h:outputText rendered="#{obj.commandType == 3}" value="#{msg['label.command.type.writelog']}"/>
+
+                    </p:column>
+                    <p:column style="text-align: left">
+                        <f:facet name="header">
+                            <h:outputText value="#{msg['user']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.userName}"/>
+                    </p:column>
+                    <p:column style="text-align: left">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.protocol']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.protocol}"/>
+                    </p:column>
+                    <p:column style="text-align: center; width:80px; white-space: pre-wrap" sortBy="#{obj.createTime}">
+                        <f:facet name="header">  
+                            <h:outputText style="white-space: pre-wrap" value="#{msg['label.updateTime']}"/>
+                        </f:facet>
+                        <!--20180705_hoangnd_fix_bug_timezone_start-->
+                        <!--<h:outputText value="#{obj.createTimeStr}"/>-->
+                        <h:outputText value="#{sessionUtil.toTimeZoneDate(obj.createTime)}">
+                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+                        </h:outputText>
+                        <!--20180705_hoangnd_fix_bug_timezone_end-->
+                    </p:column>
+
+                    <p:column style="text-align: left" visible="false">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.rowStart']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.commandTelnetParser.rowStart}"/>
+                    </p:column>
+                    <p:column style="text-align: left" visible="false">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.rowEnd']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.commandTelnetParser.rowEnd}"/>
+                    </p:column>
+                    <p:column style="text-align: left" visible="false">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.rowOutput']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.commandTelnetParser.rowOutput}"/>
+                    </p:column>
+                    <p:column style="text-align: left" visible="false">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.columnOutput']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.commandTelnetParser.columnOutput}"/>
+                    </p:column>
+                    <p:column style="text-align: left" visible="false">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.countRow']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.commandTelnetParser.countRow}"/>
+                    </p:column>
+                    <p:column style="text-align: left" visible="false">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.splitColumnRegex']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.commandTelnetParser.splitColumnRegex}"/>
+                    </p:column>
+                    <p:column style="text-align: left" visible="false">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.regexOutput']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.commandTelnetParser.regexOutput}"/>
+                    </p:column>
+                    <p:column style="text-align: left" visible="false">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.pagingCmd']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.commandTelnetParser.pagingCmd}"/>
+                    </p:column>
+                    <p:column style="text-align: left" visible="false">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.pagingRegex']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.commandTelnetParser.pagingRegex}"/>
+                    </p:column>
+                    <p:column style="text-align: left" visible="false">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.confirmCmd']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.commandTelnetParser.confirmCmd}"/>
+                    </p:column>
+                    <p:column style="text-align: left" visible="false">
+                        <f:facet name="header">  
+                            <h:outputText value="#{msg['label.confirmRegex']}"/>
+                        </f:facet>
+                        <h:outputText value="#{obj.commandTelnetParser.confirmRegex}"/>
+                    </p:column>
+                    <p:column style="width:132px;text-align: center; " exportable="false" headerText="#{msg['datatable.header.action']}" >
+                        <p:commandButton rendered="true" class="cd-btn-table" style="color: #00aeef" actionListener="#{itCommandController.prepareEdit(obj)}" title="#{msg['button.update']}"
+                                         oncomplete="PF('insertCmdConfigDialog').show()" icon="fa fa-pencil" update=":tableCommand :insertCmdConfigDialog"/>
+                        <p:commandButton rendered="true" class="cd-btn-table" style="color: #00aeef" actionListener="#{itCommandController.prepareClone(obj)}" title="#{msg['button.clone']}"
+                                         oncomplete="PF('insertCmdConfigDialog').show()" icon="fa fa-copy" update=":tableCommand :insertCmdConfigDialog"/>
+                        <p:commandButton rendered="true" class="cd-btn-table" style="color: red" actionListener="#{itCommandController.prepareDelete(obj)}" title="#{msg['button.delete']}"
+                                         oncomplete="PF('confirmDialogCmd').show()" icon="fa fa-remove" update=":tableCommand :cmdConfigForm"/>
+                    </p:column>
+                </p:dataTable>
+            </div>
+        </h:panelGrid>
+
+        <p:dialog resizable="false" header="#{msg['title.check.command']}" id="checkDialog" 
+                  widgetVar="checkDialog" height="500px" modal="true" width="90%">
+            <h:form id="cmdCheckForm" enctype="multipart/form-data">
+                <div class="Container100 Flex FlexWrap">
+                    <p:fieldset toggleable="true" legend="Input" style="margin-bottom: 10px; width: 100%">
+
+                        <p:growl id="growlCmdCheck" showDetail="true" showSummary="false" />
+
+                        <div style="width: 100%; float: left;">
+                            <h:outputText class="cd-text-required responsive125" value="#{msg['label.node.run']}"/>
+                            <p:autoComplete style="float: left; width: 87.5%;" size="20" dropdown="true" scrollHeight="200"
+                                            value="#{itCommandController.commandSend.nodeRun}" id="nodeRun"
+                                            completeMethod="#{itCommandController.autoCompleNode}"
+                                            var="nodeObj" converter="nodeConverter" itemLabel="#{nodeObj.nodeCode}"
+                                            itemValue="#{nodeObj}">
+                                <p:column headerText="#{msg['key.nodeCode']}">
+                                    <h:outputText value="#{nodeObj.nodeCode}" />
+                                </p:column>
+                                <p:column headerText="IP">
+                                    <h:outputText value="#{nodeObj.nodeIp}" />
+                                </p:column>
+                                <p:column headerText="#{msg['label.effectip']}">
+                                    <h:outputText value="#{nodeObj.effectIp}" />
+                                </p:column>
+                                <!--20181023_tudn_start load pass-->
+                                <p:ajax event="itemSelect"
+                                        listener="#{commandController.onSelectNode}"
+                                        update="nodeRun" />
+                                <!--20181023_tudn_end load pass-->
+                            </p:autoComplete>
+                        </div>
+
+                        <div class="ui-g" style="width: 100%; float: left;">
+                            <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                                <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.account']}"/>
+                                <p:inputText placeholder="#{msg['prompt.account']}" class="ui-g-8" value="#{itCommandController.commandSend.account}" >
+                                    <!--20181023_tudn_start load pass-->
+                                    <p:ajax event="blur" listener="#{itCommandController.onChangeNodeCheckCmd}"
+                                            update="AcountPass"/>
+                                    <!--20181023_tudn_end load pass-->
+                                </p:inputText>
+                            </div>
+                            <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                                <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.pass']}"/>
+                                <p:password placeholder="#{msg['prompt.pass']}" class="ui-g-8" value="#{itCommandController.commandSend.password}" id="AcountPass"/>
+                            </div>
+                        </div>
+
+
+                        <div class="ui-g" style="width: 100%; float: left;">
+                            <c:forEach
+                                items="#{itCommandController.params}"
+                                var="param">
+                                <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                                    <h:outputText class="cd-text-required ui-g-3" value="#{param.paramCode}"/>
+                                    <p:inputText class="ui-g-8" value="#{param.paramValue}"
+                                                 disabled="#{param.readOnly}">
+                                        <p:ajax update="cmdSend" />
+                                    </p:inputText>
+                                </div>
+                            </c:forEach>
+                        </div>
+
+
+                        <div style="margin-top: 10px; width: 100%; float: left;">
+                            <h:outputText class="responsive125" value="#{msg['label.cmd']}"/>
+                            <p:outputPanel class="responsive875" id="cmdSend" style="padding: 0">
+                                <div style="white-space: pre-line; display: block; border: 1px solid #d1d1d1; min-height: 20px; border-radius: 3px; padding: 0.5em">
+                                    <h:outputText escape="false" value="#{itCommandController.buildCommand()}"/>
+                                </div>
+                            </p:outputPanel>
+                        </div>
+                    </p:fieldset>
+
+                    <div class="row" style="clear: both; text-align: center;margin-left: auto;margin-right: auto;display: block">
+                        <p:commandButton style="color: white;" icon="fa fa-check"
+                                         actionListener="#{itCommandController.checkCommand()}"
+                                         onstart="PF('statusDialog').show()" oncomplete="PF('statusDialog').hide()"
+                                         update="cmdResult cmdResultDetail growlCmdCheck" value="#{msg['button.check']}"/>
+                        <p:commandButton style="color: white;" icon="fa fa-close" 
+                                         onclick="PF('checkDialog').hide()" value="#{msg['button.close']}"/>
+                    </div>
+
+                    <p:fieldset toggleable="true" legend="Output" style="margin-bottom: 10px; margin-top: 10px; width: 100%">
+                        <div style="float: left; width: 100%">
+                            <h:outputText class="responsive125" value="#{msg['label.check.command.result']}"/>
+                            <p:inputTextarea class="responsive875" autoResize="false" 
+                                             style="height: 100px; border: 1px solid #d1d1d1; opacity: 1; background-color: white; overflow: auto; resize: none" readonly="true" 
+                                             rows="3" id="cmdResult" value="#{itCommandController.commandSend.result}"/>
+                        </div>
+                        <div style="margin-top: 10px; float: left; width: 100%">
+                            <h:outputText class="responsive125" value="#{msg['label.check.command.resultDetail']}"/>
+                            <p:inputTextarea style="border: 1px solid #d1d1d1; opacity: 1; background-color: white; overflow: auto; height: 250px; resize: none" readonly="true" 
+                                             rows="10" autoResize="false" class="responsive875" id="cmdResultDetail" value="#{itCommandController.commandSend.resultDetail}"/>
+                        </div>
+                    </p:fieldset>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <p:dialog resizable="false" header="#{itCommandController.dialogHeader}" id="insertCmdConfigDialog" widgetVar="insertCmdConfigDialog" height="500px" modal="true" width="90%">
+            <h:form id="cmdConfigForm" enctype="multipart/form-data">
+                <div class="Container100 Flex FlexWrap">
+                    <p:fieldset style="margin-bottom: 10px; width: 100%" toggleable="true" legend="#{msg['title.fieldset.cmd']}">
+                        <div class="ui-g">
+                            <p:growl id="growlCmdConfig" showDetail="true" showSummary="false" />
+                            <h:inputHidden value="#{itCommandController.obj.commandDetailId}"/>
+                            <h:inputHidden value="#{itCommandController.obj.commandTelnetParser.telnetParserId}"/>
+
+
+                            <!--<p:outputPanel rendered="#{sessionUtil.showNodeType}" style="margin-top: 10px; /*visibility: hidden*/" class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad">
+                                <h:outputText rendered="#{sessionUtil.showNodeType}" class="cd-text-required ui-g-3" value="#{msg['label.nodeTypeName']}"/>
+                                <p:selectOneMenu filter="true" filterMatchMode="contains" rendered="#{itCommandController.isEdit and sessionUtil.showNodeType}" class="ui-g-8" value="#{itCommandController.nodeTypeSelected}"
+                                                 id="nodeTypeName" converter="nodeTypeConverter">
+
+                                    <f:selectItems var="typeObj" itemLabel="#{typeObj.typeName}"
+                                                   itemValue="#{typeObj}" value="#{itCommandController.nodeTypes}" />
+
+                                </p:selectOneMenu>
+                                <p:selectManyMenu filter="true" filterMatchMode="contains" showCheckbox="true" scrollHeight="100"
+                                                  converter="nodeTypeConverter" value="#{itCommandController.nodeTypeSelecteds}"
+                                                  rendered="#{!itCommandController.isEdit and sessionUtil.showNodeType}" class="ui-g-8" id="nodeTypeName1" required="false">
+                                    <f:selectItems var="typeObj" itemLabel="#{typeObj.typeName}"
+                                                   itemValue="#{typeObj}" value="#{itCommandController.nodeTypes}" />
+                                </p:selectManyMenu>
+                            </p:outputPanel>-->
+
+                            <!--<div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                                <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.versionName']}"/>
+                                <p:selectOneMenu filter="true" filterMatchMode="contains" rendered="#{itCommandController.isEdit}" class="ui-g-8" value="#{itCommandController.versionSelected}" 
+                                                 id="versionName" converter="versionConverter">
+
+                                    <f:selectItem itemValue="" itemLabel="#{msg['common.choose']}" />
+                                    <f:selectItems var="verObj" itemLabel="#{verObj.versionName}"
+                                                   itemValue="#{verObj}" value="#{itCommandController.versions}" />
+
+                                </p:selectOneMenu>
+                                <p:selectManyMenu filter="true" filterMatchMode="contains" showCheckbox="true" scrollHeight="100"
+                                                  converter="versionConverter" value="#{itCommandController.versionSelecteds}"
+                                                  rendered="#{!itCommandController.isEdit}" class="ui-g-8" id="versionName1" required="false">
+                                    <f:selectItems var="versionObj" itemLabel="#{versionObj.versionName}"
+                                                   itemValue="#{versionObj}" value="#{itCommandController.versions}" />
+                                </p:selectManyMenu>
+                            </div>-->
+
+                            <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                                <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.command.type']}"/>
+                                <p:selectOneMenu class="ui-g-8" value="#{itCommandController.obj.commandType}" id="commandType">
+
+                                    <f:selectItem itemValue="0" itemLabel="#{msg['label.command.type.impact']}" />
+                                    <f:selectItem itemValue="3" itemLabel="#{msg['label.command.type.writelog']}" />
+                                </p:selectOneMenu>
+                            </div>
+
+                            <div class="ui-g-12 ui-md-6 ui-lg-12 ui-g-nopad" style="margin-top: 10px;">
+                                <h:outputText class="cd-text-required responsive125" value="#{msg['label.cmdName']}"/>
+                                <p:inputText class="responsive875" maxlength="500" id="cmdName" value="#{itCommandController.obj.commandName}" />
+                            </div>
+
+                            <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad " style="margin-top: 10px; visibility: hidden  ">
+                                <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.operator']}"/>
+                                <p:selectOneMenu filter="true" filterMatchMode="contains" class="ui-g-8" value="#{itCommandController.opeSelected}"
+                                                 id="operator" converter="operatorConverter">
+
+                                    <f:selectItems var="operObj" itemLabel="#{operObj.label}"
+                                                   itemValue="#{operObj}" value="#{itCommandController.noCheckCbb}" />
+                                    <p:ajax event="change" listener="#{itCommandController.onChangeOperator}" update="cmdStandardValue standardValueLabel"/>
+                                </p:selectOneMenu>
+                            </div>
+
+                            <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px; visibility: hidden">
+                                <h:outputText id="standardValueLabel" class="#{itCommandController.standardValueRequired ? 'cd-text-required' : ''} ui-g-3" value="#{msg['label.standardValue']}"/>
+                                <p:inputText class="ui-g-8" maxlength="500" id="cmdStandardValue"
+                                             readonly="#{itCommandController.standardValueReadonly}"
+                                             placeholder="#{itCommandController.standardValuePrompt}"
+                                             value="#{itCommandController.obj.standardValue}"/>
+                            </div>
+
+                        </div>
+                    </p:fieldset>
+
+                    <p:fieldset id="parseInfo" style="margin-bottom: 10px; width: 100%" toggleable="true" legend="#{msg['title.fieldset.cmd.parse']}">
+                        <div class="ui-g">
+                            <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                                <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.protocol']}"/>
+                                <p:selectOneMenu class="ui-g-8" value="#{itCommandController.protocolSelected}" 
+                                                 id="protocol" converter="operatorConverter">
+                                    <!--<f:selectItem itemLabel="#{msg['label.protocol']}" itemValue="" noSelectionOption="true"/>-->
+                                    <f:selectItem itemLabel="#{msg['common.choose']}" itemValue="" noSelectionOption="true" />
+                                    <f:selectItems var="protocolObj" itemLabel="#{protocolObj.label}" 
+                                                   itemValue="#{protocolObj}" value="#{itCommandController.protocols}" />
+                                    <p:ajax event="change" update="parseInfo"/>
+                                </p:selectOneMenu>
+                            </div>
+
+                            <div class="ui-g-12 ui-md-6 ui-lg-12 ui-g-nopad" style="margin-top: 10px;">
+                                <h:outputText class="cd-text-required responsive125" value="#{msg['label.cmd']}"/>
+                                <p:inputTextarea rendered="#{itCommandController.protocolSelected.value == 'EXCHANGE'
+                                                       or itCommandController.protocolSelected.value == 'SSH'
+                                                       or itCommandController.protocolSelected.value == 'WEB_SERVICE'}"
+                                             class="responsive875" maxlength="2000" id="cmdRun" value="#{itCommandController.obj.commandTelnetParser.cmd}">
+                                    <p:ajax event="blur" listener="#{itCommandController.reloadParam()}" update=":cmdConfigForm:tableParam"/>
+                                </p:inputTextarea>
+                                <p:inputTextarea rows="10" autoResize="false" rendered="#{itCommandController.protocolSelected.value == 'SQL'}"
+                                                 class="responsive875" maxlength="2000" id="cmdRun1" value="#{itCommandController.obj.commandTelnetParser.cmd}">
+                                    <p:ajax event="blur" listener="#{itCommandController.reloadParam()}" update=":cmdConfigForm:tableParam"/>
+                                </p:inputTextarea>
+                            </div>
+
+                            <div class="ui-g-12 ui-md-6 ui-lg-12 ui-g-nopad" style="margin-top: 10px;">
+                                <h:outputText rendered="#{itCommandController.protocolSelected.value == 'WEB_SERVICE'}" class="responsive125" value="#{msg['label.url']}"/>
+                                <p:inputTextarea rendered="#{itCommandController.protocolSelected.value == 'WEB_SERVICE'}"
+                                                 class="responsive875" maxlength="2000" id="cmdRun2" value="#{itCommandController.obj.wsUrl}">
+                                    <p:ajax event="blur" listener="#{itCommandController.reloadParam()}" update=":cmdConfigForm:tableParam"/>
+                                </p:inputTextarea>
+                            </div>
+                            <div class="ui-g-12 ui-md-6 ui-lg-12 ui-g-nopad" style="margin-top: 10px;">
+                                <h:outputText rendered="#{itCommandController.protocolSelected.value == 'WEB_SERVICE'}" class="responsive125" value="#{msg['label.targetname']}"/>
+                                <p:inputTextarea rendered="#{itCommandController.protocolSelected.value == 'WEB_SERVICE'}"
+                                                 class="responsive875" maxlength="2000" id="cmdRun3" value="#{itCommandController.obj.wsTargetname}">
+                                    <p:ajax event="blur" listener="#{itCommandController.reloadParam()}" update=":cmdConfigForm:tableParam"/>
+                                </p:inputTextarea>
+                            </div>
+
+
+                            <div class="ui-g" style="margin-top: 10px;margin-bottom: 10px; margin-left: 12.5%">
+                                <p:dataTable var="obj" value="#{itCommandController.params}"
+                                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                             currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+                                             paginator="true" rows="10" filterEvent="keyup" rowKey="#{obj.paramInputId}"
+                                             rowIndexVar="rowIndex" paginatorPosition="bottom" id="tableParam"
+                                             rowsPerPageTemplate="10,15,20"
+                                             emptyMessage="#{msg['datatable.empty']}" editable="true">
+                                    <p:column style="width: 5%; text-align: left;" headerText="#{msg['datatable.header.stt']}">
+                                        <h:outputText value="#{rowIndex+1}"/>
+                                    </p:column>
+                                    <p:column headerText="#{msg['label.paramCode']}" style="text-align: left">
+                                        <h:outputText value="#{obj.paramCode}"/>
+                                    </p:column>
+                                    <p:column headerText="#{msg['label.paramDefault']}" style="text-align: left">
+                                        <p:inputText maxlength="500" value="#{obj.paramDefault}">
+                                            <p:ajax event="blur" listener="#{itCommandController.noAction(obj.paramDefault, obj.paramCode)}"/>
+                                        </p:inputText>
+                                    </p:column>
+                                    <ui:remove>
+                                    <p:column headerText="#{msg['label.paramReadOnly']}" style="text-align: center">
+                                        <p:selectBooleanCheckbox value="#{obj.readOnly}" >
+                                            <p:ajax event="change" listener="#{itCommandController.noAction()}"/>
+                                        </p:selectBooleanCheckbox>
+                                    </p:column>
+                                    </ui:remove>
+                                </p:dataTable>
+                            </div>
+
+                            <p:outputPanel rendered="#{itCommandController.protocolSelected.value == 'TELNET'
+                                                       or itCommandController.protocolSelected.value == 'SSH'}" 
+                                           class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad">
+                                <h:outputText class="ui-g-3" value="#{msg['label.cmdEnd']}"/>
+                                <p:inputText class="ui-g-8" maxlength="100" id="cmdEnd" placeholder="#{msg['prompt.cmdEnd']}"
+                                             value="#{itCommandController.obj.commandTelnetParser.cmdEnd}"/>
+                            </p:outputPanel>
+
+                            <p:outputPanel rendered="#{itCommandController.protocolSelected.value == 'TELNET'
+                                                       or itCommandController.protocolSelected.value == 'SSH'}"
+                                           class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad">
+                                <h:outputText class="ui-g-3" value="#{msg['label.cmdTimeout']}"/>
+                                <p:inputNumber class="ui-g-8 input-number-fix" symbol="s" symbolPosition="s"
+                                               maxlength="5" minValue="0" maxValue="36000" id="cmdTimeout" placeholder="#{msg['prompt.cmdTimeout']}"
+                                               value="#{itCommandController.obj.commandTelnetParser.cmdTimeout}"/>
+                            </p:outputPanel>
+
+                            <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-12 ui-g-nopad" style="margin-top: 10px">
+                                <h:outputText class="responsive125" value="#{msg['label.cmdDescription']}"/>
+                                <p:inputTextarea autoResize="false" class="responsive875" maxlength="1000" id="cmdDes" value="#{itCommandController.obj.description}"/>
+                            </p:outputPanel>
+
+
+
+
+
+
+                        </div>
+                    </p:fieldset>
+                    <div class="row" style="margin-bottom: 10px; text-align: center;margin-left: auto;margin-right: auto;display: block">
+                        <p:commandButton style="color: white;" icon="fa fa-save" process=":cmdConfigForm" onstart="PF('statusDialog').show()"
+                                         actionListener="#{itCommandController.onSaveOrUpdate()}" oncomplete="PF('statusDialog').hide()"
+                                         update=":cmdConfigForm:growlCmdConfig :tableCommand" value="#{msg['button.save']}"/>
+                        <p:commandButton style="color: white;" icon="fa fa-close" 
+                                         onclick="PF('insertCmdConfigDialog').hide()" value="#{msg['button.close']}"/>
+                    </div>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <p:confirmDialog id="confirmDialogCmd" message="#{msg['title.confirm.delete']}"
+                         header="#{msg['label.del']}" severity="alert" widgetVar="confirmDialogCmd">
+            <p:commandButton id="confirmCmd" value="#{msg['button.confirm']}"
+                             actionListener="#{itCommandController.onDelete()}"
+                             update=":tableCommand :searchForm:growlCmd" oncomplete="PF('confirmDialogCmd').hide()" />
+            <p:commandButton id="cancelCmd" value="#{msg['button.cancel']}"
+                             onclick="PF('confirmDialogCmd').hide()"/>
+        </p:confirmDialog>
+
+        <p:dialog modal="true" class="transparent-dialog" showHeader="false" widgetVar="statusDialog" draggable="false" closable="false" resizable="false">
+            <p:graphicImage name="/other/images/loading.gif" style="background: transparent; margin: -20px;" width="50" height="50"/>
+        </p:dialog>
+
+        <p:dialog modal="true" widgetVar="importDialog" header="#{msg['title.importCommand']}" 
+                  width="600" draggable="false" closable="false" resizable="false">
+            <h:form id="importForm" enctype="multipart/form-data">
+                <p:growl id="importMsg" showDetail="true" />
+
+                <p:fileUpload value="#{itCommandController.uploadFile}" allowTypes="/(\.|\/)(xls|xlsx)$/"
+                              uploadLabel="#{msg['button.import']}" fileUploadListener="#{itCommandController.onImport}"
+                              label="#{msg['label.fileImport']}" update=":importForm :tableCommand :resultImportForm"
+                              invalidFileMessage="#{msg['message.invalid.file.excel']}" invalidSizeMessage="#{msg['message.invalid.file.size']}"
+                              mode="advanced" skinSimple="true" sizeLimit="2097152">
+                </p:fileUpload>
+
+                <div class="row" style="margin-top: 20px;text-align: center;margin-left: auto;margin-right: auto;display: block">
+                    <p:commandButton style="color: white;" icon="fa fa-download" ajax="false"
+                                     value="#{msg['button.download.template']}">
+                        <p:fileDownload value="#{itCommandController.onDownloadTemplate()}" />
+                    </p:commandButton>
+                    <p:commandButton style="color: white;" icon="fa fa-close" 
+                                     onclick="PF('importDialog').hide()" value="#{msg['button.close']}"/>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <p:dialog modal="true" widgetVar="resultImportDialog" header="#{msg['title.result.import']}" 
+                  width="600" draggable="false" closable="true" resizable="false">
+            <h:form id="resultImportForm" enctype="multipart/form-data">
+
+                <h:outputText rendered="#{!itCommandController.hasError}" value="#{msg['meassage.import.success']}"/>
+                <h:outputText rendered="#{itCommandController.hasError}" value="#{msg['meassage.import.fail']}"/>
+                <br/>
+                <br/>
+                <p:commandLink id="nonAjax" style="margin-top: 10px" value="#{msg['title.commandImportResult']}" ajax="false">
+                    <p:fileDownload value="#{itCommandController.getImportResult()}"/>
+                </p:commandLink>
+
+                <div class="row" style="margin-top: 20px;text-align: center;margin-left: auto;margin-right: auto;display: block">
+                    <p:commandButton style="color: white;" icon="fa fa-close" 
+                                     onclick="PF('resultImportDialog').hide()" value="#{msg['button.close']}"/>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <script type="text/javascript">
+            $(document).ready(function () {
+                var currentTabID = "tab-2";
+                ChangeTab(currentTabID);
+            });
+
+            function start() {
+                PF('statusDialog').show();
+            }
+
+            function stop() {
+                PF('statusDialog').hide();
+            }
+        </script>
+        <style type="text/css">
+            #cmdCheckForm\:nodeRun_input {
+                width: 97%;
+            }
+        </style>
+    </ui:define>
+</ui:composition>

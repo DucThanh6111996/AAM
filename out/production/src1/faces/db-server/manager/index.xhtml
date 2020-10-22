@@ -1,0 +1,65 @@
+<ui:composition 
+	xmlns="http://www.w3.org/1999/xhtml" 
+	xmlns:f="http://java.sun.com/jsf/core" 
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:ui="http://java.sun.com/jsf/facelets" 
+	xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions"
+	template="/layout/olympos_db_server/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl id="growl" showDetail="true" showSummary="false" />
+
+		<h:form>
+			<p:dataTable var="car" value="#{dtSummaryRowView.cars}" draggableRows="true"
+				sortBy="#{car.brand}">
+				<p:summaryRow>
+					<p:column colspan="3" style="text-align:right">
+						<h:outputText value="Total:" />
+					</p:column>
+					<p:column>
+						<h:outputText value="#{dtSummaryRowView.randomPrice}">
+							<f:convertNumber type="currency" currencySymbol="$" />
+						</h:outputText>
+					</p:column>
+				</p:summaryRow>
+				<p:column headerText="Id" sortBy="#{car.id}">
+					<h:outputText value="#{car.id}" />
+				</p:column>
+				<p:column headerText="Year" sortBy="#{car.year}">
+					<h:outputText value="#{car.year}" />
+				</p:column>
+				<p:column headerText="Brand" sortBy="#{car.brand}">
+					<h:outputText value="#{car.brand}" />
+				</p:column>
+				<p:column headerText="Color" sortBy="#{car.color}">
+					<h:outputText value="#{car.color}" />
+				</p:column>
+				
+			</p:dataTable>
+		</h:form>
+		<h:form id="insertEditForm" enctype="multipart/form-data"> 
+			<div class="Container100 Flex FlexWrap">
+				<div class="Card">
+					<div class="Container80 Responsive50" style="padding-top: 2px">
+						 
+					</div>
+				
+					<div class="Container20 Responsive50" style="text-align: right;">
+						
+					</div>
+				</div>
+			</div>
+			
+		</h:form>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				var currentTabID = "tab-1";
+				var currentIconID = "10";
+				ChangeTab(currentTabID);
+			});
+		</script>
+		<style type="text/css">
+			 
+		</style>
+	</ui:define>
+</ui:composition>

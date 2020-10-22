@@ -1,0 +1,608 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html" xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions">
+
+    <p:importConstants type="com.viettel.util.Constant" var="VTConstants" />
+    <p:growl showDetail="false" widgetVar="advanceGrowl" id="advanceGrowl"/>
+
+    <p:panel header="#{msg['group.special.actions']}" toggleable="false">
+        <div class="button-area fa" align="right" style="padding-top: 8px; padding-bottom: 8px">
+            <p:commandButton value="#{msg['create.a.group']}" disabled="#{actionController.viewOnly}"
+                             update=":mop:lst:editDialogCustom" styleClass="GreenButton" icon="fa fa-plus White"
+                             oncomplete="PF('editDialogCustom').show()"
+                             process="@this" actionListener="#{actionCustomGroupController.clear()}"/>
+        </div>
+        <div class="cl h6"></div>
+        <p:dataTable var="obj" value="#{actionCustomGroupController.customGroups}"
+                     paginator="true" rows="25" filterEvent="keyup" rowKey="#{obj.id}"
+                     rowIndexVar="rowIndex" paginatorPosition="bottom" id="objectTableCustom"
+                     widgetVar="objectTableCustom" rowsPerPageTemplate="25, 50, 100"
+                     lazy="false" editable="false" emptyMessage="#{msg['common.data.not.found']}">
+
+            <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                    oncomplete="PF('blockUiSearch').unblock()"/>
+
+            <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                    oncomplete="PF('blockUiSearch').unblock()"/>
+
+            <p:column style="width:2%">
+                <p:rowToggler/>
+            </p:column>
+
+            <p:column style="width: 3%; text-align: center;" headerText="#{msg['label.order']}">
+                <h:outputText value="#{rowIndex+ 1}"/>
+            </p:column>
+
+            <p:column id="line" style="width: 10%; text-align: center;"
+                      headerText="#{msg['common.action']}">
+                <p:splitButton value="#{msg['common.edit']}" process="@this"
+                               actionListener="#{actionCustomGroupController.prepareEdit(obj)}"
+                               onclick="PF('blockUiSearch').block()"
+                               oncomplete="PF('blockUiSearch').unblock();PF('editDialogCustom').show()"
+                               update=":mop:lst:panelCustom" icon="fa fa-edit White">
+
+                    <p:menuitem value="#{msg['common.duplicate']}" process="@this" rendered="false"
+                                actionListener="#{actionCustomGroupController.duplicate(obj)}"
+                                onclick="PF('blockUiSearch').block()"
+                                oncomplete="PF('blockUiSearch').unblock();PF('editDialogCustom').show()"
+                                update=":mop:lst:panelCustom" icon="fa fa-copy">
+                    </p:menuitem>
+
+                    <p:menuitem value="#{msg['add.actions']}" process="@this"
+                                actionListener="#{actionCustomGroupController.clearAction()}"
+                                onclick="PF('blockUiSearch').block()"
+                                oncomplete="PF('blockUiSearch').unblock();PF('editDialogAction').show()"
+                                update=":mop:lst:panelAction" icon="fa fa-plus">
+                        <f:setPropertyActionListener
+                                target="#{actionCustomGroupController.selectedObj}" value="#{obj}"/>
+                    </p:menuitem>
+
+                    <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                onclick="PF('blockUiSearch').block()"
+                                update=":mop:lst:confirmDeleteCustom"
+                                oncomplete="PF('blockUiSearch').unblock();PF('confirmDeleteCustom').show()"
+                                icon="fa fa-remove">
+                        <f:setPropertyActionListener
+                                target="#{actionCustomGroupController.selectedObj}" value="#{obj}"/>
+                    </p:menuitem>
+                </p:splitButton>
+            </p:column>
+
+            <p:column id="name" style="width: 10%; text-align: center;"
+                      sortBy="#{obj.name}" headerText="#{msg['action.group']}">
+                <h:outputText value="#{obj.name}"/>
+            </p:column>
+
+            <p:column id="afterGroup" style="width: 10%; text-align: center;"
+                      sortBy="#{obj.afterGroup}" headerText="#{msg['perform.the.following.actions']}">
+                <h:outputText value="#{constantUtils.getRunStep(obj.afterGroup).label}"/>
+            </p:column>
+
+            <p:column id="rollbackAfter" style="width: 10%; text-align: center;"
+                      sortBy="#{obj.afterGroup}" headerText="#{msg['rollback.after.action']}">
+                <h:outputText value="#{constantUtils.getRunStep(obj.rollbackAfter).label}"/>
+            </p:column>
+
+            <p:rowExpansion>
+                <p:dataTable var="cmd" value="#{obj.actionCustomActions}"
+                             paginator="true" rows="25" filterEvent="keyup" rowKey="#{cmd.id}"
+                             rowIndexVar="rowIndex" paginatorPosition="bottom" id="objectTableCustomCmd"
+                             widgetVar="objectTableCustomCmd" rowsPerPageTemplate="25, 50, 100"
+                             lazy="false" editable="false" emptyMessage="#{msg['common.data.not.found']}">
+
+                    <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:column style="width: 5%; text-align: center;" headerText="#{msg['label.order']}">
+                        <h:outputText value="#{rowIndex+ 1}"/>
+                    </p:column>
+
+                    <p:column id="line" style="width: 20%; text-align: center;" rendered="true"
+                              headerText="#{msg['common.action']}">
+                        <p:splitButton value="#{msg['common.edit']}" process="@this"
+                                       actionListener="#{actionCustomGroupController.prepareEditAction(cmd)}"
+                                       onclick="PF('blockUiSearch').block()"
+                                       oncomplete="PF('blockUiSearch').unblock();PF('editDialogAction').show()"
+                                       update=":mop:lst:panelAction mop:lst:advanceGrowl" icon="fa fa-edit White">
+
+                            <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                        onclick="PF('blockUiSearch').block()"
+                                        update=":mop:lst:confirmDeleteAction"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('confirmDeleteAction').show()"
+                                        icon="fa fa-remove">
+                                <f:setPropertyActionListener
+                                        target="#{actionCustomGroupController.selectedActionObj}" value="#{cmd}"/>
+                                <f:setPropertyActionListener
+                                        target="#{actionCustomGroupController.selectedObj}" value="#{obj}"/>
+                            </p:menuitem>
+                        </p:splitButton>
+                    </p:column>
+
+                    <p:column id="action" style="width: 25%; text-align: center;" headerText="#{msg['common.action']}">
+                        <h:outputText value="#{actionCustomGroupController.actionType(cmd)}"/>
+                    </p:column>
+
+                    <p:column id="desc" style="width: 40%; text-align: center;" headerText="#{msg['description']}">
+                        <h:outputText value="#{actionCustomGroupController.getCustomActionInfo(cmd)}"/>
+                    </p:column>
+
+                    <p:column id="priority" style="width: 10%; text-align: center;"
+                              headerText="#{msg['ordinal']}">
+                        <h:outputText value="#{cmd.priority}"/>
+                    </p:column>
+                </p:dataTable>
+            </p:rowExpansion>
+        </p:dataTable>
+
+        <p:dialog id="editDialogCustom" widgetVar="editDialogCustom" width="70%"
+                  resizable="false" showEffect="drop" hideEffect="drop" modal="true"
+                  header="#{msg['the.full.impact']}" draggable="true">
+            <p:panel id="panelCustom" header="#{msg['edit.info']}" toggleable="false">
+                <h:panelGrid columns="4" cellpadding="5" width="100%">
+
+                    <h:outputText value="#{msg['action.group']}"/>
+                    <p:inputText id="name" value="#{actionCustomGroupController.newObj.name}" maxlength="32"
+                                 required="false" requiredMessage="#{msg['you.have.not.entered.an.action.group']}"/>
+
+                    <h:outputText value="#{msg['perform.the.following.actions']}"/>
+                    <p:selectOneMenu value="#{actionCustomGroupController.newObj.afterGroup}" style="width: 128px">
+                        <f:selectItems value="#{actionCustomGroupController.actionsSteps}"/>
+                    </p:selectOneMenu>
+
+                    <h:outputText value="#{msg['rollback.after.action']}"/>
+                    <p:selectOneMenu value="#{actionCustomGroupController.newObj.rollbackAfter}" style="width: 128px">
+                        <f:selectItems value="#{actionCustomGroupController.actionsRollbackSteps}"/>
+                    </p:selectOneMenu>
+                </h:panelGrid>
+                <h:panelGrid columns="2" cellpadding="5">
+                    <p:commandButton process="panelCustom" icon="fa fa-check White" styleClass="GreenButton"
+                                     value="#{actionCustomGroupController.isEdit ? msg['button.update'] : msg['button.insert']}"
+                                     update=":mop:lst:objectTableCustom panelCustom :insertEditForm:designGrowl :mop:lst:actionflow :mop:lst:rollbackflow"
+                                     actionListener="#{actionCustomGroupController.saveOrUpdate}"/>
+
+                    <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White" styleClass="ButtonRed"
+                                     onclick="PF('editDialogCustom').hide()"/>
+                </h:panelGrid>
+            </p:panel>
+        </p:dialog>
+
+        <p:dialog id="editDialogAction" widgetVar="editDialogAction" width="70%"
+                  resizable="false" showEffect="drop" hideEffect="drop" modal="true"
+                  header="#{msg['the.full.impact']}" draggable="true">
+            <p:panel id="panelAction" header="#{msg['edit.info']}" toggleable="false">
+                <h:panelGrid columns="4" cellpadding="5" width="100%">
+                    <h:outputText value="#{msg['type.of.impact']}"/>
+                    <p:selectOneMenu id="customType" value="#{actionCustomGroupController.newActionObj.type}" disabled="#{actionCustomGroupController.newActionObj.type eq 4}"
+                                     style="width: 154px" required="false"
+                                     requiredMessage="#{msg['impact.type.did.not.selected']}">
+                        <f:selectItem itemLabel="#{msg['common.select']}"/>
+                        <f:selectItem itemLabel="#{msg['impact.module']}" itemValue="0"/>
+                        <f:selectItem itemLabel="#{msg['impact.database']}" itemValue="1"/>
+                        <f:selectItem itemLabel="#{msg['impact.according.to.the.file']}" itemValue="2"/>
+                        <f:selectItem itemLabel="#{msg['wait.confirm']}" itemValue="3"/>
+                        <f:selectItem itemLabel="#{msg['bd.reboot']}" itemValue="4" itemDisabled="true"/>
+                        <p:ajax update="panelAction mop:lst:advanceGrowl" onstart="PF('blockUiAppDialog').block()"
+                                oncomplete="PF('blockUiAppDialog').unblock()"
+                                listener="#{actionCustomGroupController.loadCustomAction(actionCustomGroupController.newActionObj)}"/>
+                    </p:selectOneMenu>
+
+                    <h:outputText value="#{msg['module']}"
+                                  rendered="#{actionCustomGroupController.newActionObj.type eq 0}"/>
+                    <p:selectOneMenu value="#{actionCustomGroupController.newActionObj.moduleId}" style="width: 154px"
+                                     rendered="#{actionCustomGroupController.newActionObj.type eq 0}">
+                        <f:selectItem itemLabel="#{msg['common.select']}"/>
+                        <f:selectItems value="#{actionController.listModuleSelected}" var="obj"
+                                       itemLabel="#{obj.getLabel()}" itemValue="#{obj.getValue()}"/>
+                        <p:ajax update="panelAction mop:lst:advanceGrowl" onstart="PF('blockUiAppDialog').block()"
+                                oncomplete="PF('blockUiAppDialog').unblock()"
+                                listener="#{actionCustomGroupController.loadCustomAction(actionCustomGroupController.newActionObj)}"/>
+                    </p:selectOneMenu>
+
+                    <h:outputText value="#{msg['database']}"
+                                  rendered="#{actionCustomGroupController.newActionObj.type eq 1}"/>
+                    <p:selectOneMenu value="#{actionCustomGroupController.newActionObj.dbId}" style="width:154px"
+                                     required="false" requiredMessage="#{msg['database.not.selected']}"
+                                     rendered="#{actionCustomGroupController.newActionObj.type eq 1}">
+                        <f:selectItem itemLabel="#{msg['common.select']}"/>
+                        <f:selectItems value="#{actionDetailDatabaseController.listDatabases}" var="obj"
+                                       itemLabel="#{obj.label()}" itemValue="#{obj.value()}"/>
+                        <p:ajax update="panelAction" onstart="PF('blockUiAppDialog').block()"
+                                oncomplete="PF('blockUiAppDialog').unblock()"/>
+                    </p:selectOneMenu>
+
+                    <h:outputText value="#{msg['common.action']}"
+                                  rendered="#{actionCustomGroupController.newActionObj.type eq 0}"/>
+                    <p:selectOneMenu id="moduleAction" value="#{actionCustomGroupController.newActionObj.moduleAction}"
+                                     style="width: 154px"
+                                     rendered="#{actionCustomGroupController.newActionObj.type eq 0}">
+                        <!--<f:selectItem itemLabel="Stop" itemValue="1" />-->
+                        <!--<f:selectItem itemLabel="Upcode" itemValue="2" />-->
+                        <!--<f:selectItem itemLabel="Upcode test" itemValue="11" />-->
+                        <!--<f:selectItem itemLabel="Restart" itemValue="6" />-->
+                        <!--<f:selectItem itemLabel="Start" itemValue="5" />-->
+                        <f:selectItem itemLabel="#{msg['common.select']}"/>
+                        <f:selectItem itemLabel="Upcode test + restart(stop/start)" itemValue="100"/>
+                        <f:selectItem itemLabel="Upcode test + restart" itemValue="101"/>
+                        <f:selectItem itemLabel="Upcode test + start" itemValue="102"/>
+                        <f:selectItem itemLabel="Upcode test + stop/start" itemValue="103"/>
+
+                        <f:selectItem itemLabel="Restart(stop/start)" itemValue="110"/>
+                        <f:selectItem itemLabel="Restart" itemValue="111"/>
+                        <f:selectItem itemLabel="Start" itemValue="112"/>
+                        <!--<f:selectItem itemLabel="Stop/start" itemValue="113" />-->
+                        <p:ajax update="panelAction mop:lst:advanceGrowl" onstart="PF('blockUiAppDialog').block()"
+                                oncomplete="PF('blockUiAppDialog').unblock()"
+                                listener="#{actionCustomGroupController.loadCustomAction(actionCustomGroupController.newActionObj)}"/>
+                    </p:selectOneMenu>
+
+                    <h:outputText value="#{msg['common.action']}"
+                                  rendered="#{actionCustomGroupController.newActionObj.type eq 1}"/>
+                    <p:selectOneMenu id="dbAction" value="#{actionCustomGroupController.newActionObj.dbAction}"
+                                     style="width: 154px"
+                                     rendered="#{actionCustomGroupController.newActionObj.type eq 1}" required="false"
+                                     requiredMessage="#{msg['action.database.not.selected']}">
+                        <!--<f:selectItem itemLabel="Run script" itemValue="0" />-->
+                        <!--<f:selectItem itemLabel="Import" itemValue="1" />-->
+                        <f:selectItem itemLabel="Export" itemValue="2"/>
+                        <p:ajax update="panelAction" onstart="PF('blockUiAppDialog').block()"
+                                oncomplete="PF('blockUiAppDialog').unblock()"/>
+                    </p:selectOneMenu>
+
+                    <h:outputText value="#{msg['service']}"
+                                  rendered="#{actionCustomGroupController.newActionObj.type eq 2}"/>
+                    <p:selectOneMenu value="#{actionCustomGroupController.selectedAppGroupId}" style="width:154px"
+                                     required="false" requiredMessage="#{msg['service.did.not.selected']}"
+                                     rendered="#{actionCustomGroupController.newActionObj.type eq 2}">
+                        <f:selectItem itemLabel="#{msg['common.select']}" itemValue=""/>
+                        <f:selectItems value="#{actionCustomGroupController.appGroups}" var="obj"
+                                       itemLabel="#{obj.label()}" itemValue="#{obj.value()}"/>
+                        <p:ajax update="panelAction" onstart="PF('blockUiAppDialog').block()"
+                                oncomplete="PF('blockUiAppDialog').unblock()"
+                                listener="#{actionCustomGroupController.loadDtFile()}"/>
+                    </p:selectOneMenu>
+
+                    <h:outputText value="#{msg['guide']}"
+                                  rendered="#{actionCustomGroupController.newActionObj.type eq 2}"/>
+                    <p:selectOneMenu value="#{actionCustomGroupController.newActionObj.fileId}" style="width:154px"
+                                     required="false" requiredMessage="#{msg['guide.did.not.selected']}"
+                                     rendered="#{actionCustomGroupController.newActionObj.type eq 2}">
+                        <f:selectItem itemLabel="#{msg['common.select']}"/>
+                        <f:selectItems value="#{actionCustomGroupController.actionDtFiles}" var="obj"
+                                       itemLabel="#{obj.name}" itemValue="#{obj.id}"/>
+                        <p:ajax update="panelAction" onstart="PF('blockUiAppDialog').block()"
+                                oncomplete="PF('blockUiAppDialog').unblock()"/>
+                    </p:selectOneMenu>
+
+                    <h:outputText value="#{msg['reason.to.stop']}"
+                                  rendered="#{actionCustomGroupController.newActionObj.type eq 3}"/>
+                    <p:inputText id="reason" value="#{actionCustomGroupController.newActionObj.waitReason}"
+                                 style="width: 154px" maxlength="3000"
+                                 required="false" requiredMessage="#{msg['you.have.not.entered.reason.stop.impact']}"
+                                 rendered="#{actionCustomGroupController.newActionObj.type eq 3}"/>
+
+                    <h:outputText value="#{msg['up.code.directory']}"
+                                  rendered="#{actionCustomGroupController.newActionObj.type eq 0 and (actionCustomGroupController.newActionObj.moduleAction ge 100 and actionCustomGroupController.newActionObj.moduleAction le 109)}"/>
+                    <h:panelGroup
+                            rendered="#{actionCustomGroupController.newActionObj.type eq 0  and (actionCustomGroupController.newActionObj.moduleAction ge 100 and actionCustomGroupController.newActionObj.moduleAction le 109)}">
+                        <p:inputText id="customUpcodePath"
+                                     value="#{actionCustomGroupController.newActionObj.upcodePath}" readonly="true">
+                            <p:ajax listener="#{actionCustomGroupController.loadTree(actionCustomGroupController.newActionObj.moduleId)}"/>
+                        </p:inputText>
+                        <p:overlayPanel id="customUpcodePathPanel" for="customUpcodePath" showEffect="fade"
+                                        hideEffect="fade">
+                            <p:commandLink process="@this" ajax="true"
+                                           actionListener="#{actionCustomGroupController.upLevelTree}" update="dir">
+                                <span class="fa fa-level-up"/>
+                            </p:commandLink>
+                            <p:outputPanel
+                                    style="width: 107%;min-height: 100px; height: 320px;overflow: auto;display: block">
+                                <p:tree id="dirCustom" dynamic="true" cache="false"
+                                        value="#{actionCustomGroupController.upcodeRoot}" var="dir"
+                                        selectionMode="single"
+                                        selection="#{actionCustomGroupController.selectedUpcodeDir}" animate="true">
+                                    <p:ajax event="select" listener="#{actionCustomGroupController.selectDir(dir)}"
+                                            process="dirCustom"
+                                            update=":mop:lst:customUpcodePath :mop:lst:customUpcodePathPanel :mop:lst:cus_source_code :mop:lst:customRemoveUpcodePath :mop:lst:customRemoveUpcodePathPanel :mop:lst:customLstFileRemove"/>
+                                    <p:ajax event="expand" process="@this"
+                                            listener="#{actionCustomGroupController.onNodeExpand}"/>
+
+                                    <p:treeNode expandedIcon="ui-icon-folder-open"
+                                                collapsedIcon="#{dir.isDir ? 'ui-icon-folder-collapsed' : 'ui-icon-document'}">
+                                        <h:outputText value="#{dir.name}"/>
+                                    </p:treeNode>
+                                </p:tree>
+                            </p:outputPanel>
+                        </p:overlayPanel>
+                    </h:panelGroup>
+
+                    <h:outputText value="#{msg['code.files.to.be.deleted']}"
+                                  rendered="#{actionCustomGroupController.newActionObj.type eq 0  and (actionCustomGroupController.newActionObj.moduleAction ge 100 and actionCustomGroupController.newActionObj.moduleAction le 109)}"/>
+                    <h:panelGroup
+                            rendered="#{actionCustomGroupController.newActionObj.type eq 0  and (actionCustomGroupController.newActionObj.moduleAction ge 100 and actionCustomGroupController.newActionObj.moduleAction le 109)}">
+                        <p:inputText id="customRemoveUpcodePath" value="#{msg['choose.file.need.delete']}" readonly="true"
+                                     disabled="#{empty actionCustomGroupController.newActionObj.upcodePath}">
+                            <p:ajax event="click" listener="#{actionCustomGroupController.checkUpcodeFolderChosen}"
+                                    update=":insertEditForm:designGrowl"/>
+                        </p:inputText>
+                        <p:overlayPanel id="customRemoveUpcodePathPanel" for="customRemoveUpcodePath" showEffect="fade"
+                                        hideEffect="fade">
+                            <p:commandLink process="@this" ajax="true"
+                                           actionListener="#{actionCustomGroupController.upLevelTreeRemove}"
+                                           update="customFileRemove">
+                                <span class="fa fa-level-up"/>
+                            </p:commandLink>
+                            <p:commandLink process="@this" value="#{msg['clear.list']}" ajax="true"
+                                           actionListener="#{actionCustomGroupController.clearRemove}"
+                                           update="customLstFileRemove">
+                            </p:commandLink>
+                            <p:outputPanel
+                                    style="width: 107%;min-height: 100px; height: 320px;overflow: auto;display: block">
+                                <p:tree id="customFileRemove" dynamic="true" cache="false"
+                                        value="#{actionCustomGroupController.removeUpcodeRoot}" var="file"
+                                        selectionMode="single" animate="true">
+                                    <p:ajax event="select" listener="#{actionCustomGroupController.onNodeSelect}"
+                                            process="customFileRemove"
+                                            update="mop:lst:customRemoveUpcodePath mop:lst:customRemoveUpcodePathPanel"/>
+                                    <p:ajax event="contextMenu" listener="#{actionCustomGroupController.onNodeSelect}"/>
+                                    <p:ajax event="expand" process="@this"
+                                            listener="#{actionCustomGroupController.onNodeExpandRemove}"/>
+
+                                    <p:treeNode expandedIcon="ui-icon-folder-open"
+                                                collapsedIcon="#{file.isDir ? 'ui-icon-folder-collapsed' : 'ui-icon-document'}">
+                                        <h:outputText value="#{file.name}"/>
+                                    </p:treeNode>
+                                </p:tree>
+
+                                <p:contextMenu for="customFileRemove">
+                                    <p:menuitem value="#{msg['button.delete']}"
+                                                update="customLstFileRemove :mop:lst:advanceGrowl"
+                                                actionListener="#{actionCustomGroupController.removeFile}"
+                                                icon="fa fa-minus"/>
+                                </p:contextMenu>
+                            </p:outputPanel>
+                        </p:overlayPanel>
+                    </h:panelGroup>
+
+                    <h:outputText value="#{msg['separator']}"
+                                  rendered="#{actionCustomGroupController.newActionObj.type eq 1 and actionCustomGroupController.newActionObj.dbAction eq 1}"/>
+                    <p:inputText
+                            rendered="#{actionCustomGroupController.newActionObj.type eq 1 and actionCustomGroupController.newActionObj.dbAction eq 1}"
+                            required="false" requiredMessage="#{msg['you.have.not.entered.character.separator']}"
+                            value="#{actionCustomGroupController.newActionObj.separator}"/>
+
+
+                    <h:outputText value="#{msg['ordinal']}"/>
+                    <h:panelGrid columns="1" id="actionPriority">
+                        <p:inputText id="actionPriorityInput"
+                                     value="#{actionCustomGroupController.newActionObj.priority}"/>
+                        <p:slider for="actionPriorityInput" minValue="1">
+                            <p:ajax update="actionPriorityInput"/>
+                        </p:slider>
+                    </h:panelGrid>
+
+                    <h:outputText value="#{msg['ordering.rollback.test']}"
+                                  rendered="#{actionCustomGroupController.newActionObj.type eq 0 and (actionCustomGroupController.newActionObj.moduleAction eq 11)}"/>
+                    <p:inputText id="actionRollbackPriority"
+                                 value="#{actionCustomGroupController.newActionObj.rollbackTestPriority}"
+                                 style="width: 154px"
+                                 rendered="#{actionCustomGroupController.newActionObj.type eq 0 and (actionCustomGroupController.newActionObj.moduleAction eq 11)}"
+                                 required="false"
+                                 requiredMessage="#{msg['you.have.not.entered.ordering.rollback.test']}"/>
+                </h:panelGrid>
+
+                <p:panel header="#{msg['upload.source.code']}"
+                         rendered="#{actionCustomGroupController.newActionObj.type eq 0  and (actionCustomGroupController.newActionObj.moduleAction ge 100 and actionCustomGroupController.newActionObj.moduleAction le 109)}">
+                    <h:panelGrid columns="3" cellpadding="10">
+                        <h:outputText value="#{msg['source.code']}"/>
+                        <p:fileUpload id="cus_source_code"
+                                      fileUploadListener="#{actionCustomGroupController.handleUploadCode}"
+                                      disabled="#{empty actionCustomGroupController.newActionObj.upcodePath}"
+                                      mode="advanced" auto="true" sizeLimit="1000000000" update="customSourceCode"
+                                      allowTypes="/(\.|\/)(zip)$/"/>
+
+                        <p:commandLink id="customSourceCode" ajax="false" process=":mop:lst:upcodePath">
+                            <h:outputText value="#{actionCustomGroupController.newActionObj.uploadCodePath}"/>
+                            <p:fileDownload
+                                    value="#{actionCustomGroupController.downloadCode(actionCustomGroupController.newActionObj)}"/>
+                        </p:commandLink>
+                    </h:panelGrid>
+
+                    <h:panelGrid columns="2" cellpadding="10">
+                        <h:outputText value="#{msg['file.need.delete']}: "/>
+                        <h:outputText id="customLstFileRemove" style="color: red"
+                                      value="#{actionCustomGroupController.newActionObj.lstFileRemove}"/>
+                    </h:panelGrid>
+                </p:panel>
+
+                <h:panelGrid columns="3" cellpadding="5" width="100%" columnClasses="cl1, cl2, cl3"
+                             rendered="#{actionCustomGroupController.newActionObj.type eq 1 and actionCustomGroupController.newActionObj.dbAction eq 2}">
+                    <h:outputText value="#{msg['command.query']}"/>
+                    <p:inputTextarea cols="90" rows="4" autoResize="false"
+                                     value="#{actionCustomGroupController.newActionObj.exportStatement}"/>
+                    <p:watermark for="logpath" value=""/>
+
+                    <h:outputText value="#{msg['command.count']}"/>
+                    <p:inputTextarea id="logpath" cols="90" rows="4" autoResize="false"
+                                     value="#{actionCustomGroupController.newActionObj.exportCount}"/>
+                    <p:watermark for="logpath" value=""/>
+                </h:panelGrid>
+
+                <h:panelGrid columns="4" cellpadding="5" width="100%"
+                             rendered="#{actionCustomGroupController.newActionObj.type eq 1 and actionCustomGroupController.newActionObj.dbAction eq 0}">
+
+                    <h:panelGroup id="backupLabelFile">
+                        <h:outputText value="#{msg['script.backup']}"/>
+                    </h:panelGroup>
+                    <h:panelGroup id="backup">
+                        <p:fileUpload id="backupPath123"
+                                      fileUploadListener="#{actionCustomGroupController.handleFileUploadBackup}"
+                                      mode="advanced" update="scriptBackupFile"
+                                      auto="true" sizeLimit="100000000" allowTypes="/(\.|\/)(sql)$/"/>
+                    </h:panelGroup>
+
+                    <h:outputText value=""/>
+                    <h:panelGroup id="scriptBackupFile">
+                        <h:outputText value="#{actionCustomGroupController.newActionObj.dbScriptBackup}"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup id="scriptLabelFile">
+                        <h:outputText value="#{msg['script.impaction']}"/>
+                    </h:panelGroup>
+                    <h:panelGroup id="script">
+                        <p:fileUpload id="templatePath123"
+                                      fileUploadListener="#{actionCustomGroupController.handleFileUpload}"
+                                      mode="advanced" update="scriptExecuteFile"
+                                      auto="true" sizeLimit="100000000" allowTypes="/(\.|\/)(sql)$/"/>
+                    </h:panelGroup>
+
+                    <h:panelGroup id="labelScriptExecuteFile">
+                        <h:outputText value=""/>
+                    </h:panelGroup>
+                    <h:panelGroup id="scriptExecuteFile">
+                        <h:outputText value="#{actionCustomGroupController.newActionObj.dbScriptFile}"/>
+                    </h:panelGroup>
+
+                    <h:outputText value="#{msg['script.rollback']}"/>
+                    <p:fileUpload fileUploadListener="#{actionCustomGroupController.handleFileUploadRollback}"
+                                  mode="advanced" update="scriptRollbackFile"
+                                  auto="true" sizeLimit="100000000" allowTypes="/(\.|\/)(sql)$/"/>
+
+                    <h:outputText value=""/>
+                    <h:outputText id="scriptRollbackFile"
+                                  value="#{actionCustomGroupController.newActionObj.dbScriptRb}"/>
+
+                </h:panelGrid>
+
+                <h:panelGrid columns="2" cellpadding="5" width="100%" columnClasses="cl1, cl2"
+                             rendered="#{actionCustomGroupController.newActionObj.type eq 1 and actionCustomGroupController.newActionObj.dbAction eq 1}">
+                    <h:outputText value="#{msg['command.import']}"/>
+                    <p:inputTextarea cols="90" rows="4" autoResize="false"
+                                     value="#{actionCustomGroupController.newActionObj.sqlImport}"/>
+                </h:panelGrid>
+
+                <h:panelGrid columns="4" cellpadding="5" width="100%" columnClasses="cl1, cl2"
+                             rendered="#{actionCustomGroupController.newActionObj.type eq 1 and actionCustomGroupController.newActionObj.dbAction eq 1}">
+                    <h:outputText value="#{msg['data.file']}"/>
+                    <p:fileUpload fileUploadListener="#{actionCustomGroupController.handleFileUploadImportFile}"
+                                  mode="advanced" update="dataFile" allowTypes="/(\.|\/)(txt)$/"
+                                  auto="true" sizeLimit="1000000000"/>
+
+                    <h:outputText value=""/>
+                    <h:outputText id="dataFile" value="#{actionCustomGroupController.newActionObj.importDataFile}"/>
+
+                </h:panelGrid>
+
+                <h:panelGrid columns="2" width="100%" columnClasses="c1, c2, c3"
+                             rendered="#{actionCustomGroupController.newActionObj.type eq 2}" id="filePanel">
+                    <h:outputText value="#{msg['impaction.file']}"/>
+                    <p:commandLink id="impactFile" ajax="false" process="@this">
+                        <h:outputText
+                                value="#{actionCustomGroupController.findDtFile(actionCustomGroupController.newActionObj.fileId, true)}"/>
+                        <p:fileDownload
+                                value="#{actionCustomGroupController.downloadFile(actionCustomGroupController.newActionObj.fileId)}"/>
+                    </p:commandLink>
+
+                    <p:spacer height="6px"/>
+                    <p:spacer height="6px"/>
+
+                    <h:outputText value="#{msg['file.rollback']}"/>
+                    <p:commandLink id="rollbackFile" ajax="false" process="@this">
+                        <h:outputText
+                                value="#{actionCustomGroupController.findDtFile(actionCustomGroupController.newActionObj.fileId, false)}}"/>
+                        <p:fileDownload
+                                value="#{actionCustomGroupController.downloadRollbackFile(actionCustomGroupController.newActionObj.fileId)}"/>
+                    </p:commandLink>
+                </h:panelGrid>
+
+                <h:panelGrid columns="2" cellpadding="5">
+                    <p:commandButton process="panelAction" styleClass="GreenButton" icon="fa fa-check White"
+                                     value="#{actionCustomGroupController.isEdit ? msg['button.update'] : msg['button.insert']}"
+                                     actionListener="#{actionCustomGroupController.saveOrUpdateAction}"/>
+
+                    <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White" styleClass="ButtonRed"
+                                     onclick="PF('editDialogAction').hide()"/>
+                </h:panelGrid>
+            </p:panel>
+        </p:dialog>
+
+        <p:confirmDialog id="confirmDeleteCustom"
+                         message="#{msg['confirm.sure.delete']}?"
+                         header="#{msg['common.confirm']}" severity="alert" widgetVar="confirmDeleteCustom">
+            <p:commandButton value="#{msg['common.confirm']}" icon="fa fa-check White" styleClass="GreenButton"
+                             actionListener="#{actionCustomGroupController.delete()}"
+                             update=":mop:lst:objectTableCustom :mop:lst:actionflow :mop:lst:rollbackflow"
+                             process="@this" oncomplete="PF('confirmDeleteCustom').hide()"/>
+            <p:commandButton value="#{msg['button.cancel']}?" icon="fa fa-remove White" styleClass="ButtonRed"
+                             onclick="PF('confirmDeleteCustom').hide()"/>
+        </p:confirmDialog>
+
+        <p:confirmDialog id="confirmDeleteAction"
+                         message="#{msg['confirm.sure.delete']} #{actionCustomGroupController.selectedActionObj.id}?"
+                         header="#{msg['common.confirm']}" severity="alert" widgetVar="confirmDeleteAction">
+            <p:commandButton value="#{msg['common.confirm']}" icon="fa fa-check White" styleClass="GreenButton"
+                             actionListener="#{actionCustomGroupController.deleteAction()}"
+                             update=":mop:lst:objectTableCustom :insertEditForm:designGrowl"
+                             process="@this" oncomplete="PF('confirmDeleteAction').hide()"/>
+            <p:commandButton value="#{msg['button.cancel']}?" icon="fa fa-remove White" styleClass="ButtonRed"
+                             onclick="PF('confirmDeleteAction').hide()"/>
+        </p:confirmDialog>
+    </p:panel>
+
+    <p:spacer height="12px"/>
+
+    <p:panel header="#{msg['stream.impaction']}" toggleable="true" id="actionflow">
+        <p:diagram value="#{actionCustomGroupController.model}" style="height:600px" styleClass="ui-widget-content"/>
+    </p:panel>
+
+    <p:spacer height="12px"/>
+
+    <p:panel header="#{msg['stream.rollback']}" toggleable="true" id="rollbackflow" rendered="true">
+        <p:diagram value="#{actionCustomGroupController.rollbackModel}" style="height:600px"
+                   styleClass="ui-widget-content"/>
+    </p:panel>
+
+    <style type="text/css">
+        .ui-diagram-element {
+            width: 14em;
+            height: 4em;
+            line-height: 4em;
+            text-align: center;
+            /*box-shadow: 0 5px 10px rgba(0, 0, 0, 0.8);*/
+            border-radius: 4px;
+            border: 1px solid transparent;
+            background-color: #DDDDDD;
+            color: #ffffff;
+        }
+
+        .ui-diagram-success {
+            /*background-color: #20b346;*/
+            background-color: #1abc9c;
+            color: #ffffff;
+            /*border-color: #7ab02c;*/
+            border-color: #1abc9c;
+        }
+
+        .ui-diagram-fail {
+            /*background-color: #FF4136;*/
+            background-color: #F64747;
+            color: #ffffff;
+        }
+
+        .flow-label {
+            font-size: 24px;
+            font-weight: bold;
+            color: #816A51;
+        }
+
+        .cl1 {
+            width: 16% !important;
+        }
+
+        .ui-diagram-element {
+            border-radius: 0px;
+        }
+    </style>
+</ui:composition>

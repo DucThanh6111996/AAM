@@ -1,0 +1,50 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions">
+
+
+    <p:dataTable var="data" style="width:100%" paginator="true" rows="200"
+                 paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
+                 paginatorPosition="bottom" rowsPerPageTemplate="200" lazy="true"
+                 value="#{executeController.lazyExcecuteInfo}" id="dataTable">
+
+        <p:column headerText="#{msg['application.code']}" width="15%" filterBy="appGroupCode">
+            <h:outputText styleClass="preformatted" value="#{data.appGroupCode}"/>
+        </p:column>
+
+        <p:column headerText="#{msg['application.name']}"
+                  style="text-align: center;width:15%" filterBy="appGroupName">
+            <h:outputText styleClass="preformatted" value="#{data.appGroupName}"/>
+        </p:column>
+
+        <p:column headerText="#{msg['module.code']}" style="text-align: center;width:15%"
+                  filterBy="appCode">
+            <h:outputText styleClass="preformatted" value="#{data.appCode}"/>
+        </p:column>
+
+        <p:column headerText="#{msg['module.name']}" style="text-align: center;width:15%"
+                  filterBy="appName">
+            <h:outputText styleClass="preformatted" value="#{data.appName}"/>
+        </p:column>
+
+        <p:column headerText="#{msg['historical.impact']}"
+                  style="text-align: center;width:30%">
+            <p:inputTextarea rows="6" autoResize="false" style="width:100%"
+                             styleClass="unresizable" value="#{data.fullLog}" readonly="true"/>
+        </p:column>
+
+        <p:column headerText="#{msg['log.online']}" style="text-align: center;width:10%">
+            <p:commandLink oncomplete="PF('onlineDialog').show()"
+                           actionListener="#{logOnlineController.setup(data)}"
+                           update=":logOnlineForm:logOnlinePanel" styleClass="GreenButton"
+                           process="@this" icon="fa fa-plus White">
+                <p:graphicImage value="/resources/olympos-layout/images/search.png"
+                                width="30" height="30" title="Download Log"/>
+            </p:commandLink>
+        </p:column>
+    </p:dataTable>
+
+</ui:composition>

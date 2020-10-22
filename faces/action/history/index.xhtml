@@ -1,0 +1,292 @@
+<ui:composition template="/layout/olympos/template.xhtml"
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<ui:define name="content">
+		<h:form id="insertEditForm">
+
+			<f:event listener="#{actionHistoryController.loadHistory}"
+					 type="preRenderView" />
+			<p:growl id="designGrowl" autoUpdate="true"  showDetail="true" />
+
+			<pe:blockUI target=":form:lst:objectTable" content="blockUIContent" widgetVar="blockUiSearch" />
+
+			<h:panelGrid id="blockUIContent" columns="2" style="display:none;table-layout:auto;" styleClass="blockUi" >
+				<h:graphicImage library="olympos-layout/images" name="loading-bars-blue.svg"
+								style="margin-right: 12px; vertical-align: middle;"/>
+				<h:outputText value="#{msg['executing']} ......" style="white-space: nowrap;"/>
+			</h:panelGrid>
+		</h:form>
+
+		<div class="cl h6"></div>
+		<h:form id="form">
+			<p:tabView id="lst">
+
+				<p:tab title="#{msg['history']}" id="mainTab">
+
+					<p:dataTable var="obj"
+						value="#{actionHistoryController.lazyDataModel}" paginator="true"
+						rows="15" filterEvent="keyup" rowKey="#{obj.id}"
+						rowIndexVar="rowIndex" paginatorPosition="bottom" id="objectTable"
+						widgetVar="objectTable" rowsPerPageTemplate="15, 20, 30"
+						lazy="true" editable="false" emptyMessage="#{msg['common.data.not.found']}">
+
+						<f:facet name="header">
+							<h:outputText value="#{msg['the.impact.made']}" styleClass="White Fs22"/>
+							<p:commandButton id="toggler" type="button"
+								style="float:center; " icon="fa fa-reorder White"
+								styleClass="ButtonRed" />
+							<p:columnToggler datasource="objectTable" trigger="toggler">
+								<p:ajax event="toggle" listener="#{actionHistoryController.onToggler}" />
+							</p:columnToggler>
+						</f:facet>
+
+						<p:ajax event="page" onstart="PF('blockUiSearch').block()"
+							oncomplete="PF('blockUiSearch').unblock()" />
+
+						<p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+							oncomplete="PF('blockUiSearch').unblock()" />
+
+						<p:column style="width: 32px; text-align: center;"
+							headerText="#{msg['label.order']}"
+							visible="#{actionHistoryController.columnVisibale[0]}">
+							<h:outputText value="#{rowIndex+ 1}" />
+						</p:column>
+
+						<p:column id="line"
+							style="width: 76px; text-align: center; white-space: nowrap"
+							headerText="#{msg['common.action']}"
+							visible="#{actionHistoryController.columnVisibale[1]}">
+
+							<p:commandButton update=":form:lst" title="Chi tiết"
+											  process="@this"
+											 actionListener="#{actionHistoryController.setHistory(obj)}" icon="fa fa-search White"
+											 onclick="PF('blockUiSearch').block()" oncomplete="PF('blockUiSearch').unblock()"/>
+
+							<p:commandButton title="#{msg['log.impaction']}" rendered="true"
+											 styleClass="GreenButton" process="@this" ajax="false"
+											 icon="fa fa-download White">
+								<p:fileDownload
+										value="#{actionHistoryController.download(obj.action)}" />
+							</p:commandButton>
+
+							<p:splitButton style="width: 112px;" value="Chi tiết" actionListener="#{actionHistoryController.setHistory(obj)}" rendered="false"
+								process="@this" icon="fa fa-search White" update=":form:lst" onclick="PF('blockUiSearch').block()" oncomplete="PF('blockUiSearch').unblock()">
+
+								<p:menuitem value="#{msg['log.impaction']}" process="@this"
+									icon="fa fa-download" ajax="false">
+									<p:fileDownload
+										value="#{actionHistoryController.download(obj.action)}" />
+								</p:menuitem>
+
+								<p:menuitem value="#{msg['details.impact']}" process="@this" rendered="false"
+									icon="fa fa-download"
+									actionListener="#{actionHistoryController.setHistory(obj)}"
+									update=":form:lst">
+								</p:menuitem>
+							</p:splitButton>
+						</p:column>
+
+						<p:column style="width: 154px; text-align: center;"
+							sortBy="#{obj.action.tdCode}" headerText="#{msg['impaction.code']}"
+							filterBy="#{obj.action.tdCode}" filterMatchMode="contains"
+							visible="#{actionHistoryController.columnVisibale[2]}">
+							<h:outputText value="#{obj.action.tdCode}" />
+						</p:column>
+
+						<p:column style="width: 216px; text-align: center;"
+							sortBy="#{obj.action.crNumber}" headerText="#{msg['cr.number']}"
+							filterBy="#{obj.action.crNumber}" filterMatchMode="contains"
+							visible="#{actionHistoryController.columnVisibale[3]}">
+							<h:outputText value="#{obj.action.crNumber}" />
+						</p:column>
+
+						<p:column style="width: 200px; text-align: center;"
+							sortBy="#{obj.action.crName}" headerText="#{msg['cr.name']}"
+							filterBy="#{obj.action.crName}" filterMatchMode="contains"
+							visible="#{actionHistoryController.columnVisibale[4]}">
+							<h:outputText id="crName" value="#{utils.subContent(obj.action.crName, 64)}" />
+							<pe:tooltip for="crName" mouseTracking="true" adjustX="10" adjustY="10">
+								<h:outputText value="#{obj.action.crName}" styleClass="Fs14" style="width: 100%"/>
+							</pe:tooltip>
+						</p:column>
+
+						<p:column
+							style="width: 100px; text-align: center; white-space: nowrap"
+							sortBy="#{obj.action.createdBy}" headerText="#{msg['creator']}"
+							filterBy="#{obj.action.createdBy}" filterMatchMode="contains"
+							visible="#{actionHistoryController.columnVisibale[5]}">
+							<h:outputText value="#{obj.action.createdBy}" />
+						</p:column>
+
+						<p:column
+							style="width: 140px; text-align: center; white-space: nowrap"
+							sortBy="#{obj.action.createdTime}" headerText="#{msg['create.time']}"
+							visible="#{actionHistoryController.columnVisibale[6]}">
+							<h:outputText value="#{sessionUtil.toTimeZoneDate(obj.action.createdTime)}" />
+						</p:column>
+
+						<p:column style="width: 200px; text-align: center;"
+							sortBy="#{obj.action.reason}" headerText="#{msg['reasons.for.implementation']}"
+							visible="#{actionHistoryController.columnVisibale[7]}">
+							<h:outputText id="reason" value="#{utils.subContent(obj.action.reason, 64)}" />
+							<pe:tooltip for="reason" mouseTracking="true" adjustX="10" adjustY="10">
+								<h:outputText value="#{obj.action.reason}" styleClass="Fs14" style="width: 100%"/>
+							</pe:tooltip>
+						</p:column>
+
+						<p:column
+							style="width: 140px; text-align: center; white-space: nowrap"
+							headerText="#{msg['time.began.to.impact']}"
+							visible="#{actionHistoryController.columnVisibale[8]}">
+							<h:outputText value="#{sessionUtil.toTimeZoneDate(obj.action.beginTime)}" >
+								<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+							</h:outputText>
+						</p:column>
+
+						<p:column
+							style="width: 140px; text-align: center; white-space: nowrap"
+							headerText="#{msg['end.time.impact']}"
+							visible="#{actionHistoryController.columnVisibale[9]}">
+							<h:outputText value="#{sessionUtil.toTimeZoneDate(obj.action.endTime)}" >
+								<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+							</h:outputText>
+						</p:column>
+
+
+						<p:column id="startTime" style="width: 136px; text-align: center;"
+							sortBy="#{obj.startTime}" headerText="#{msg['common.start.time']}"
+							visible="#{actionHistoryController.columnVisibale[10]}">
+							<h:outputText value="#{sessionUtil.toTimeZoneDate(obj.startTime)}" >
+								<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />	
+							</h:outputText>
+						</p:column>
+
+						<p:column id="endTime" style="width: 136px; text-align: center;"
+							sortBy="#{obj.endTime}" headerText="#{msg['common.end.time']}"
+							visible="#{actionHistoryController.columnVisibale[11]}">
+							<h:outputText value="#{sessionUtil.toTimeZoneDate(obj.endTime)}" >
+								<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+							</h:outputText>
+						</p:column>
+
+						<p:column id="status" style="width: 112px; text-align: left;"
+							sortBy="#{obj.status}" headerText="#{msg['common.impact']}"
+							visible="#{actionHistoryController.columnVisibale[12]}">
+							<span class="fa #{iconUtils.statusIconSmall(obj.status)} Fs18" />
+							<p:spacer width="12px"/>
+							<h:outputText value="#{actionHistoryController.statusDetail(obj.status)}" />
+						</p:column>
+
+						<p:column id="rollbackStatus"
+								  style="width: 112px; text-align: left;"
+								  sortBy="#{obj.rollbackStatus}" headerText="Rollback"
+								  visible="#{actionHistoryController.columnVisibale[17]}">
+							<span class="fa #{iconUtils.statusIconSmall(obj.rollbackStatus)} Fs18" />
+							<p:spacer width="12px"/>
+							<h:outputText value="#{actionHistoryController.statusDetail(obj.rollbackStatus)}" />
+						</p:column>
+
+						<p:column id="runUser" style="width: 164px; text-align: center;"
+							sortBy="#{obj.runUser}" headerText="#{msg['user.impact']}"
+							visible="#{actionHistoryController.columnVisibale[13]}">
+							<h:outputText value="#{obj.runUser}" />
+						</p:column>
+
+						<p:column id="rollbackUser"
+							style="width: 164px; text-align: center;"
+							sortBy="#{obj.rollbackUser}" headerText="#{msg['user.rollback']}"
+							visible="#{actionHistoryController.columnVisibale[14]}">
+							<h:outputText value="#{obj.rollbackUser}" />
+						</p:column>
+
+						<p:column id="startRollbackTime"
+							style="width: 164px; text-align: center;"
+							sortBy="#{obj.startRollbackTime}" headerText="#{msg['time.rollback']}"
+							visible="#{actionHistoryController.columnVisibale[15]}">
+							<h:outputText value="#{sessionUtil.toTimeZoneDate(obj.startRollbackTime)}" >
+								<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+							</h:outputText>
+						</p:column>
+
+						<p:column id="endRollbackTime"
+							style="width: 164px; text-align: center;"
+							sortBy="#{obj.endRollbackTime}"
+							headerText="#{msg['end.time.rollback']}"
+							visible="#{actionHistoryController.columnVisibale[16]}">
+							<h:outputText value="#{sessionUtil.toTimeZoneDate(obj.endRollbackTime)}" >
+								<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+							</h:outputText>
+						</p:column>
+
+					</p:dataTable>
+
+					<p:confirmDialog id="confirmDelete"
+						message="#{msg['confirm.sure.delete']} #{actionHistoryController.selectedObj.id}?"
+						header="#{msg['button.confirm']}" severity="alert" widgetVar="confirmDelete">
+						<p:commandButton value="#{msg['button.confirm']}" icon="fa fa-check White"
+							actionListener="#{actionHistoryController.delete()}"
+							update=":form:lst:objectTable :insertEditForm:designGrowl"
+							process="@this" oncomplete="PF('confirmDelete').hide()" />
+						<p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+										 onclick="PF('confirmDelete').hide()" />
+					</p:confirmDialog>
+
+
+
+				</p:tab>
+
+				<p:tab title="#{msg['common.detail']}" closable="true" id="edittab"
+					rendered="false">
+					<ui:insert name="detail-dialog">
+						<ui:decorate template="view/index.xhtml" />
+					</ui:insert>
+				</p:tab>
+			</p:tabView>
+
+			<p:dialog id="detailDlg" modal="true" header="#{msg['log.detail']}"
+					  widgetVar="dlg" showEffect="slide" hideEffect="slide"
+					  style="width: 1000px;height: 500px;">
+				<h:inputTextarea value="#{historyDetailController.logDetail}" id="content"
+								 readonly="true" style="width: 1000px;height: 500px;" />
+			</p:dialog>
+		</h:form>
+		<script type="text/javascript">
+            $(document).ready(function() {
+                var currentTabID = "tab-0";
+                var currentIconID = "10";
+                ChangeTab(currentTabID);
+            });
+		</script>
+		<style>
+			.blockUI .ui-widget-content {
+				background-color: white;
+			}
+
+			/*#insertEditForm\:blockUIContent tbody tr td {*/
+			.blockUi tbody tr td {
+				border: none !important;
+			}
+
+			#form\:lst\:objectTable\:toggler {
+				float: right;
+			}
+
+			#form\:lst\:objectTable .ui-datatable-header {
+				/*background-color: #f1d086 !important;*/
+				background-color: #67BCDB !important;
+				/*border: solid 1px #f1d086 !important;*/
+				border: solid 1px #67BCDB !important;
+			}
+
+			#form\:detailDlg .ui-dialog-titlebar {
+				background-color: #1abc9c !important;
+				border-bottom: solid 1px #1abc9c !important;
+			}
+</style>
+	</ui:define>
+</ui:composition>

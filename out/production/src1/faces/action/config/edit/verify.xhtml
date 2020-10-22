@@ -1,0 +1,486 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <p:growl showDetail="false" widgetVar="verifyGrowl" id="verifyGrowl"/>
+    <p:tabView id="tabVerify">
+        <p:tab title="#{msg['verify.app']}">
+
+            <p:poll interval="4" process="@this" autoStart="false" widgetVar="pollapp"
+                    listener="#{verifyController.pollListener}"
+                    update=":mop:lst:tabVerify:verifyAppTable"/>
+
+            <div style="text-align: center; width: 100%; max-height: 300px; margin-left: 10px; margin-right: 10px; margin-bottom: 5px; margin-top: 5px">
+                <p:commandButton id="confirm" value="#{msg['verify.app']}" process="@this" icon="fa fa-check White"
+                                 styleClass="buttonEffect"
+                                 actionListener="#{verifyController.checkModule()}"
+                                 update="verifyAppTable verifyAppMsg :mop:lst:verifyGrowl">
+                </p:commandButton>
+            </div>
+
+            <h:panelGroup id="verifyAppMsg">
+                <h:panelGroup rendered="#{verifyController.renderCheckApp(0)}">
+                    <div class="ui-messages ui-messages-noicon ui-widget" aria-live="polite">
+                        <div class="ui-messages-error ui-corner-all" style="margin-top: 0">
+                            <ul>
+                                <li><span class="ui-messages-error-summary">#{msg['is.checking.module']}!</span><span
+                                        class="ui-messages-error-detail"></span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <p:dataTable var="data" style="width:100%"
+                         value="#{verifyController.checkApps}" filteredValue="#{verifyController.dataTableFilter}"
+                         id="verifyAppTable" widgetVar="verifyAppTable">
+
+                <p:column headerText="#{msg['service.code']}" width="20%" rendered="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.module.serviceCode}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['service.name']}" width="20%" rendered="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.module.serviceName}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['module.code']}" width="20%" rendered="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.module.moduleCode}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['module.name']}" width="20%">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.module.moduleName}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['information']}" width="30%">
+                    <div style="white-space: pre-wrap">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{verifyController.getInfoApp(data.module)}"/></div>
+                </p:column>
+
+                <p:column headerText="#{msg['common.result']}" width="45%">
+                    <p:inputTextarea rows="8" autoResize="false" style="width:96%"
+                                     styleClass="unresizable"
+                                     value="#{data.log}" readonly="true"/>
+                </p:column>
+
+                <p:column headerText="#{msg['common.status']}"
+                          style="text-align: center;width:15%" filterBy="#{data.runStt}">
+                    <f:facet name="filter">
+                        <p:selectOneMenu onchange="PF('verifyAppTable').filter()">
+                            <f:selectItem itemLabel="#{msg['common.select']}" noSelectionOption="false"/>
+                            <f:selectItem itemLabel="#{msg['waiting']}" itemValue="0" noSelectionOption="true"/>
+                            <f:selectItem itemLabel="#{msg['common.execute']}" itemValue="1" noSelectionOption="true"/>
+                            <f:selectItem itemLabel="#{msg['common.message.success']}" itemValue="2"
+                                          noSelectionOption="true"/>
+                            <f:selectItem itemLabel="#{msg['common.fail2']}" itemValue="-2" noSelectionOption="true"/>
+                        </p:selectOneMenu>
+                    </f:facet>
+
+                    <i class="#{iconUtils.statusIcon(data.runStt)}"></i>
+                </p:column>
+            </p:dataTable>
+
+        </p:tab>
+
+        <p:spacer height="24px"/>
+        <p:tab title="#{msg['verify.database']}" id="verifydbTab">
+            <p:poll interval="4" process="@this" autoStart="false" widgetVar="polldb"
+                    listener="#{verifyController.pollDbListener}"
+                    update=":mop:lst:tabVerify:verifyDbTable"/>
+
+            <div style="text-align: center; width: 100%; max-height: 300px; margin-left: 10px; margin-right: 10px; margin-bottom: 5px; margin-top: 5px">
+                <p:commandButton id="verifydb" value="#{msg['verify.database']}" process="@this"
+                                 icon="fa fa-check White"
+                                 styleClass="buttonEffect"
+                                 update="verifyDbTable verifyDbMsg :mop:lst:verifyGrowl"
+                                 actionListener="#{verifyController.checkDb()}">
+                </p:commandButton>
+            </div>
+
+            <h:panelGroup id="verifyDbMsg">
+                <h:panelGroup rendered="#{verifyController.renderCheckApp(1)}">
+                    <div class="ui-messages ui-messages-noicon ui-widget" aria-live="polite">
+                        <div class="ui-messages-error ui-corner-all" style="margin-top: 0">
+                            <ul>
+                                <li><span class="ui-messages-error-summary">#{msg['is.checking.database']}!</span><span
+                                        class="ui-messages-error-detail"></span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <p:dataTable var="obj" style="width:100%"
+                         value="#{verifyController.dataTableDb}" id="verifyDbTable" widgetVar="verifyDbTable">
+
+                <p:column headerText="#{msg['information']}" width="20%" rendered="true">
+                    <div style="white-space: pre">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{verifyController.getInfoDb(obj.actionDatabase.serviceDatabase)}"/>
+                    </div>
+                </p:column>
+                <p:column headerText="#{msg['table.impaction']}" width="25%" rendered="true">
+                    <p:inputTextarea rows="8" autoResize="false" style="width:96%"
+                                     styleClass="unresizable"
+                                     value="#{verifyController.getTableDetail(obj)}" readonly="true"/>
+                </p:column>
+                <p:column headerText="#{msg['common.result']}">
+                    <p:inputTextarea rows="8" autoResize="false" style="width:96%"
+                                     styleClass="unresizable"
+                                     value="#{obj.log}" readonly="true"/>
+                </p:column>
+
+                <p:column headerText="#{msg['common.status']}"
+                          style="text-align: center;width:10%" filterBy="#{obj.runStt}">
+                    <f:facet name="filter">
+                        <p:selectOneMenu onchange="PF('verifyDbTable').filter()">
+                            <f:selectItem itemLabel="#{msg['common.select']}" noSelectionOption="false"/>
+                            <f:selectItem itemLabel="#{msg['waiting']}" itemValue="0" noSelectionOption="true"/>
+                            <f:selectItem itemLabel="#{msg['common.execute']}" itemValue="1" noSelectionOption="true"/>
+                            <f:selectItem itemLabel="#{msg['common.message.success']}" itemValue="2"
+                                          noSelectionOption="true"/>
+                            <f:selectItem itemLabel="#{msg['common.fail2']}" itemValue="-2" noSelectionOption="true"/>
+                        </p:selectOneMenu>
+                    </f:facet>
+
+                    <i class="#{iconUtils.statusIcon(obj.runStt)}"></i>
+                </p:column>
+            </p:dataTable>
+        </p:tab>
+
+        <p:tab title="#{msg['checklist.app']}" id="verifyCklAppTab">
+            <p:poll interval="4" process="@this" autoStart="false" widgetVar="pollcklapp"
+                    listener="#{verifyController.pollCklAppListener}"
+                    update=":mop:lst:tabVerify:checklistAppBeforeDataTable"/>
+
+            <div style="text-align: center; width: 100%; max-height: 300px; margin-left: 10px; margin-right: 10px; margin-bottom: 5px; margin-top: 5px">
+                <p:commandButton id="verifycklapp" value="#{msg['checklist.app']}" process="@this"
+                                 icon="fa fa-check White"
+                                 styleClass="buttonEffect"
+                                 update="checklistAppBeforeDataTable verifyCklAppMsg :mop:lst:verifyGrowl"
+                                 actionListener="#{verifyController.checkCklApp()}">
+                </p:commandButton>
+            </div>
+
+            <h:panelGroup id="verifyCklAppMsg">
+                <h:panelGroup rendered="#{verifyController.renderCheckApp(2)}">
+                    <div class="ui-messages ui-messages-noicon ui-widget" aria-live="polite">
+                        <div class="ui-messages-error ui-corner-all" style="margin-top: 0">
+                            <ul>
+                                <li><span
+                                        class="ui-messages-error-summary">#{msg['is.executing.check.list.app']}!</span><span
+                                        class="ui-messages-error-detail"></span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <p:dataTable var="data" style="width:100%; height: 100%; min-height: 196px" rowKey="#{data.moduleId}"
+                         rowIndexVar="rowIndex"
+                         value="#{verifyController.cklApps}" id="checklistAppBeforeDataTable"
+                         widgetVar="checklistAppBeforeDataTable" scrollable="true"
+                         scrollWidth="100%" scrollHeight="100%"
+                         filteredValue="#{verifyController.filteredChecklistApp}">
+
+                <f:facet name="header">
+                    <h:outputText value="#{msg['list.application.checklist']}" styleClass="Fs18"/> <h:outputText
+                        styleClass="Fs28"/>
+                    <p:commandButton id="checklistAppBeforeToggler" type="button"
+                                     style="float:right; margin-right: 36px;"
+                                     icon="fa fa-reorder White" styleClass="GreenButton "/>
+                    <p:columnToggler datasource="checklistAppBeforeDataTable" trigger="checklistAppBeforeToggler"/>
+                </f:facet>
+
+                <p:column selectionMode="multiple" style="width:24px;text-align:center" rendered="false"/>
+
+                <p:column style="width: 20px; text-align: center;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          headerText="#{msg['label.order']}">
+                    <h:outputText value="#{rowIndex+ 1}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['module.code']}"
+                          style="width: 142px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.module.moduleCode}" filterMatchMode="contains" visible="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.module.moduleCode}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['module.name']}"
+                          style="width: 128px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.module.moduleName}" filterMatchMode="contains">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.module.moduleName}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['service.code']}"
+                          style="width: 110px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.module.serviceCode}" filterMatchMode="contains" visible="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.module.serviceCode}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['service.name']}"
+                          style="width: 196px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.module.serviceName}" filterMatchMode="contains" visible="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.module.serviceName}"/>
+                </p:column>
+
+                <!--<p:column headerText="Đường dẫn cài đặt" style="width: 296px; text-align: left; white-space: nowrap"
+                          filterBy="#{data.path}" filterMatchMode="contains" visible="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.path}"/>
+                </p:column>
+
+                <p:column headerText="Ip server" style="width: 96px; text-align: center; white-space: nowrap"
+                          filterBy="#{data.ipServer}" filterMatchMode="contains" visible="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.ipServer}"/>
+                </p:column>-->
+
+                <p:column headerText="#{msg['kpi']}"
+                          style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.name}" filterMatchMode="contains">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.name}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['log']}"
+                          style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.result.log}" filterMatchMode="contains" visible="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.result.log}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['operation.feel']}"
+                          style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.result.mathOption}" filterMatchMode="contains" visible="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{msg['checklist.operation.'.concat(data.result.mathOption)]}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['result.analysis']}"
+                          style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.result.operationData}" filterMatchMode="contains">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.result.operationData}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['limited.value']}"
+                          style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.result.threholdValue}" filterMatchMode="contains" visible="true">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.result.threholdValue}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['undervest']}"
+                          style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.result.status}">
+                    <f:facet name="filter">
+                        <p:selectOneMenu onchange="PF('checklistAppBeforeDataTable').filter()">
+                            <f:selectItem itemLabel="#{msg['common.select']}" noSelectionOption="true"/>
+                            <f:selectItem itemLabel="#{msg['common.ok']}" itemValue="1" noSelectionOption="true"/>
+                            <f:selectItem itemLabel="#{msg['common.not.ok']}" itemValue="0" noSelectionOption="true"/>
+                        </p:selectOneMenu>
+                    </f:facet>
+                    <h:outputText styleClass="preformatted" rendered="#{data.result.status eq 1}" value="#{msg['common.ok']}"/>
+                    <h:outputText styleClass="preformatted" rendered="#{data.result.status eq 0}"
+                                  value="#{msg['common.not.ok']}"/>
+                </p:column>
+            </p:dataTable>
+        </p:tab>
+        <p:tab title="#{msg['checklist.database']}" id="verifyCklDbTab">
+            <p:poll interval="4" process="@this" autoStart="false" widgetVar="pollckldb"
+                    listener="#{verifyController.pollCklDbListener}"
+                    update=":mop:lst:tabVerify:checklistDbBeforeDataTable"/>
+
+            <div style="text-align: center; width: 100%; max-height: 300px; margin-left: 10px; margin-right: 10px; margin-bottom: 5px; margin-top: 5px">
+                <p:commandButton id="verifyckldb" value="#{msg['checklist.database']}" process="@this" icon="fa fa-check White"
+                                 styleClass="buttonEffect"
+                                 update="checklistDbBeforeDataTable verifyCklDbMsg :mop:lst:verifyGrowl"
+                                 actionListener="#{verifyController.checkCklDb()}">
+                </p:commandButton>
+            </div>
+
+            <h:panelGroup id="verifyCklDbMsg">
+                <h:panelGroup rendered="#{verifyController.renderCheckApp(3)}">
+                    <div class="ui-messages ui-messages-noicon ui-widget" aria-live="polite">
+                        <div class="ui-messages-error ui-corner-all" style="margin-top: 0">
+                            <ul>
+                                <li><span class="ui-messages-error-summary">#{msg['is.checking.database']}</span><span
+                                        class="ui-messages-error-detail"></span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </h:panelGroup>
+            </h:panelGroup>
+
+            <p:dataTable var="data" style="width:100%; height: 100%; min-height: 196px" rowKey="#{data.appId}"
+                         rowIndexVar="rowIndex"
+                         value="#{verifyController.cklDbs}" id="checklistDbBeforeDataTable"
+                         widgetVar="checklistDbBeforeDataTable" scrollable="true"
+                         scrollWidth="100%" scrollHeight="100%"
+                         filteredValue="#{verifyController.filteredChecklistDb}">
+
+                <f:facet name="header">
+                    <h:outputText value="#{msg['list.checklist.database']}" styleClass="Fs18"/> <h:outputText
+                        styleClass="Fs28"/>
+                    <p:commandButton id="checklistDbBeforeToggler" type="button" style="float:right; margin-right: 36px"
+                                     icon="fa fa-reorder White" styleClass="GreenButton"/>
+                    <p:columnToggler datasource="checklistDbBeforeDataTable" trigger="checklistDbBeforeToggler"/>
+                </f:facet>
+
+                <p:column selectionMode="multiple" style="width:24px;text-align:center" rendered="false"/>
+
+                <p:column style="width: 20px; text-align: center;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          headerText="#{msg['label.order']}">
+                    <h:outputText value="#{rowIndex+ 1}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['service.code']}"
+                          style="width: 142px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.serviceDatabase.serviceCode}" filterMatchMode="contains" visible="false" rendered="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.serviceDatabase.serviceCode}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['service.name']}"
+                          style="width: 128px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.serviceDatabase.serviceName}" filterMatchMode="contains" rendered="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.serviceDatabase.serviceName}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['db.code']}"
+                          style="width: 110px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.monitorDatabase.dbName}" filterMatchMode="contains" visible="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.monitorDatabase.dbName}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['db.name']}"
+                          style="width: 64px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.monitorDatabase.dbName}" filterMatchMode="contains" visible="true">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.monitorDatabase.dbName}"/>
+                </p:column>
+
+                <!--<p:column headerText="Đường dẫn cài đặt" style="width: 296px; text-align: left; white-space: nowrap"
+                          filterBy="#{data.path}" filterMatchMode="contains" visible="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.path}"/>
+                </p:column>
+
+                <p:column headerText="Ip server" style="width: 96px; text-align: center; white-space: nowrap"
+                          filterBy="#{data.ipServer}" filterMatchMode="contains" visible="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.ipServer}"/>
+                </p:column>-->
+
+                <p:column headerText="#{msg['kpi']}"
+                          style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.queueCode}" filterMatchMode="contains">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.queueCode}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['log']}"
+                          style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.result.log}" filterMatchMode="contains" visible="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.result.log}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['operation.feel']}"
+                          style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.mathOption}" filterMatchMode="contains" visible="false">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{msg['checklist.operation.'.concat(data.result.mathOption)]}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['result.analysis']}"
+                          style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.result.operationData}" filterMatchMode="contains">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.result.operationData}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['limited.value']}"
+                          style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.result.threholdValue}" filterMatchMode="contains" visible="true">
+                    <h:outputText styleClass="preformatted"
+                                  value="#{data.result.threholdValue}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['undervest']}"
+                          style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white' : ''}"
+                          filterBy="#{data.result.status}">
+                    <f:facet name="filter">
+                        <p:selectOneMenu onchange="PF('checklistDbBeforeDataTable').filter()">
+                            <f:selectItem itemLabel="#{msg['common.select']}" noSelectionOption="true"/>
+                            <f:selectItem itemLabel="#{msg['common.ok']}" itemValue="1" noSelectionOption="true"/>
+                            <f:selectItem itemLabel="#{msg['common.not.ok']}" itemValue="0" noSelectionOption="true"/>
+                        </p:selectOneMenu>
+                    </f:facet>
+                    <h:outputText styleClass="preformatted" rendered="#{data.result.status eq 1}" value="#{msg['common.ok']}"/>
+                    <h:outputText styleClass="preformatted" rendered="#{data.result.status eq 0}"
+                                  value="#{msg['common.not.ok']}"/>
+                </p:column>
+
+            </p:dataTable>
+        </p:tab>
+    </p:tabView>
+    <style>
+        .ui-messages-error, .ui-message-error {
+            font-size: 16px;
+            font-weight: normal;
+            padding: 2px !important;
+            font-family: 'latobold';
+            text-align: center;
+        }
+
+        .buttonEffect {
+            position: relative;
+            /*background-color: #4CAF50;*/
+            border: none;
+            /*font-size: 28px;*/
+            /*color: #FFFFFF;*/
+            /*padding: 20px;*/
+            /*width: 200px;*/
+            text-align: center;
+            -webkit-transition-duration: 0.4s; /* Safari */
+            transition-duration: 0.4s;
+            text-decoration: none;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .buttonEffect:after {
+            content: "";
+            background: #90EE90;
+            /*background: #67BCDB;*/
+            display: block;
+            position: absolute;
+            padding-top: 300%;
+            padding-left: 350%;
+            margin-left: -20px !important;
+            margin-top: -120%;
+            opacity: 0;
+            transition: all 0.8s
+        }
+
+        .buttonEffect:active:after {
+            padding: 0;
+            margin: 0;
+            opacity: 1;
+            transition: 0s
+        }
+    </style>
+</ui:composition>

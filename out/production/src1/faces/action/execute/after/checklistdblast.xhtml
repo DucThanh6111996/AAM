@@ -1,0 +1,129 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <h:form>
+        <p:dataTable var="data" style="width:100%; height: 100%; min-height: 196px" rowKey="#{data.appId}"
+                     rowIndexVar="rowIndex"
+                     value="#{executeChecklistController.cklDbAfterValues}" id="checklistDbLastDataTable"
+                     widgetVar="checklistDbLastDataTable" scrollable="true"
+                     scrollWidth="100%" scrollHeight="100%"
+                     filteredValue="#{executeChecklistController.filteredChecklistDbLast}">
+
+            <f:facet name="header">
+                <h:outputText value="#{msg['list.checklist.database']}"/> <h:outputText styleClass="Fs18"/>
+                <p:commandButton id="checklistDbLastToggler" type="button" style="float:right"
+                                 icon="fa fa-reorder White" styleClass="GreenButton"/>
+                <p:columnToggler datasource="checklistDbLastDataTable" trigger="checklistDbLastToggler"/>
+            </f:facet>
+
+            <p:column selectionMode="multiple"
+                      style="width:24px;text-align:center" rendered="false"/>
+
+            <p:column
+                    style="width: 20px; text-align: center;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                    headerText="#{msg['label.order']}"
+                    visible="#{executeChecklistController.clDbBfVisibale[0]}">
+                <h:outputText value="#{rowIndex+ 1}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['service.code']}"
+                      style="width: 142px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.serviceDatabase.serviceCode}" filterMatchMode="contains" visible="false" rendered="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.serviceDatabase.serviceCode}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['service.name']}"
+                      style="width: 128px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.serviceDatabase.serviceName}" filterMatchMode="contains" rendered="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.serviceDatabase.serviceName}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['db.code']}"
+                      style="width: 110px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.monitorDatabase.dbName}" filterMatchMode="contains" visible="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.monitorDatabase.dbName}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['db.name']}"
+                      style="width: 196px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.serviceDatabase.dbName}" filterMatchMode="contains" visible="false" rendered="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.serviceDatabase.dbName}"/>
+            </p:column>
+
+            <!--<p:column headerText="Đường dẫn cài đặt" style="width: 296px; text-align: left; white-space: nowrap"
+                      filterBy="#{data.path}" filterMatchMode="contains" visible="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.path}"/>
+            </p:column>
+
+            <p:column headerText="Ip server" style="width: 96px; text-align: center; white-space: nowrap"
+                      filterBy="#{data.ipServer}" filterMatchMode="contains" visible="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.ipServer}"/>
+            </p:column>-->
+
+            <p:column headerText="#{msg['kpi']}"
+                      style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.kpi.name}" filterMatchMode="contains">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.queueCode}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['log']}"
+                      style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.result.log}" filterMatchMode="contains" visible="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.result.log}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['operation.feel']}"
+                      style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.mathOption}" filterMatchMode="contains" visible="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{msg['checklist.operation.'.concat(data.result.mathOption)]}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['result.analysis']}"
+                      style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.resultAfter != null ? data.resultBefore : data.result.operationData}" filterMatchMode="contains">
+                <!--20190125_hoangnd_fix bug show checklist_start-->
+                <h:outputText styleClass="preformatted"
+                              value="#{data.resultAfter != null ? data.resultBefore : data.result.operationData}"/>
+                <!--20190125_hoangnd_fix bug show checklist_end-->
+            </p:column>
+
+            <p:column headerText="#{msg['limited.value']}"
+                      style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.limitedAfter != null ? data.limitedBefore : data.result.threholdValue}" filterMatchMode="contains" visible="true">
+                <!--20190125_hoangnd_fix bug show checklist_start-->
+                <h:outputText styleClass="preformatted"
+                              value="#{data.limitedAfter != null ? data.limitedBefore : data.result.threholdValue}"/>
+                <!--20190125_hoangnd_fix bug show checklist_end-->
+            </p:column>
+
+            <p:column headerText="#{msg['undervest']}"
+                      style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.statusAfter != null ? data.statusImpact : data.result.status}">
+                <f:facet name="filter">
+                    <p:selectOneMenu onchange="PF('checklistDbBeforeDataTable').filter()">
+                        <f:selectItem itemLabel="#{msg['common.select']}" noSelectionOption="true"/>
+                        <f:selectItem itemLabel="#{msg['common.ok']}" itemValue="1" noSelectionOption="true"/>
+                        <f:selectItem itemLabel="#{msg['common.not.ok']}" itemValue="0" noSelectionOption="true"/>
+                    </p:selectOneMenu>
+                </f:facet>
+                <!--20190125_hoangnd_fix bug show checklist_start-->
+                <h:outputText styleClass="preformatted" rendered="#{(data.statusAfter != null ? data.statusImpact : data.result.status) eq 1}" value="#{msg['common.ok']}"/>
+                <h:outputText styleClass="preformatted" rendered="#{(data.statusAfter != null ? data.statusImpact : data.result.status) eq 0}" value="#{msg['common.not.ok']}"/>
+                <!--20190125_hoangnd_fix bug show checklist_end-->
+            </p:column>
+
+        </p:dataTable>
+    </h:form>
+</ui:composition>

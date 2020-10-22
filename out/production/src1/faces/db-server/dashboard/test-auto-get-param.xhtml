@@ -1,0 +1,96 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions"
+	>
+	<h:form id="f-test">
+		<p:growl id="growl" showDetail="true" showSummary="false" />
+		<p:panelGrid columns="2">
+			<h:outputText value="Service"/>
+			<p:selectOneMenu value="#{generateFlowRunController.serviceTest}" >
+				<f:selectItem itemLabel="#{msg['view.label.servicecode3']}" itemValue="3"/>
+				<f:selectItem itemLabel="L2VPN" itemValue="2"/>
+			</p:selectOneMenu>
+			
+			<h:outputText value="@{VRF name}"/>
+			<p:inputText value="#{generateFlowRunController.clientInfo.vrfName}"/>
+			
+			<h:outputText value="@{Interface ID}"/>
+			<p:inputText value="#{generateFlowRunController.clientInfo.interfacePort}"/>
+			
+			<h:outputText value="@{Route distinguisher}"/>
+			<p:inputText value="#{generateFlowRunController.clientInfo.routeDist}"/>
+			
+			<h:outputText value="SRT"/>
+			<p:autoComplete multiple="false" dropdown="true"
+				value="#{generateFlowRunController.nodeTest}" id="chooseNodeTest"  
+				var="n" itemValue="#{n}"  
+				itemLabel="#{n.nodeCode}" scrollHeight="300" dropdownMode="current"
+				completeMethod="#{generateFlowRunController.completeNodeRunTest}"
+				converter="nodeConverter" 
+				title="#{msg['view.choose.node.run']}"
+				disabled="#{!sessionUtil.createMop}"
+				>
+			</p:autoComplete>
+			<f:facet name="footer">
+				<p:commandButton value="Load Param" actionListener="#{generateFlowRunController.autoLoadNodeAndParams}"
+					update="@form" onclick="PF('loadingDialog').show()" oncomplete="PF('loadingDialog').hide()"/>
+			</f:facet>
+		</p:panelGrid>
+		
+		<p:dataTable value="#{generateFlowRunController.nodeinRings}" var="node" rows="10" paginator="true" paginatorPosition="bottom" rowKey="#{node.nodeId}"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}" 
+			rowsPerPageTemplate="5,10,15" rowIndexVar="nodeIdx" style="padding: 0px ! important;"
+			>
+			<f:facet name="header">
+				<h:outputText value="Nodes in ring"/>
+			</f:facet>
+
+			<p:column headerText="#{msg['datatable.header.stt']}" width="20">
+				<h:outputText value="#{nodeIdx +1 }" />
+			</p:column>
+			<p:column headerText="Node Code" filterBy="#{node.nodeCode}" width="20%">
+				<h:outputText value="#{node.nodeCode}" />
+			</p:column>
+			<p:column headerText="IP" filterBy="#{node.nodeIp}">
+				<h:outputText value="#{node.nodeIp}" />
+			</p:column>
+			<p:column headerText="Vendor" filterBy="#{node.vendor.vendorName}">
+				<h:outputText value="#{node.vendor.vendorName}" />
+			</p:column>
+			<p:column headerText="Node Type" filterBy="#{node.nodeType.typeName}">
+				<h:outputText value="#{node.nodeType.typeName}" />
+			</p:column>
+			<p:column headerText="Version" filterBy="#{node.version.versionName}">
+				<h:outputText value="#{node.version.versionName}" />
+			</p:column>
+
+		</p:dataTable>
+		
+		<p:panelGrid columns="2" rendered="#{generateFlowRunController.mapParamValues!=null}">
+			<c:forEach items="#{generateFlowRunController.mapParamValues}" var="param" varStatus="p" >
+				<h:outputText value="#{param.key}"/>
+				<h:outputText value="#{param.value}"/>
+			</c:forEach>
+		</p:panelGrid>
+	</h:form>
+		
+	 <p:dialog modal="true" class="transparent-dialog" showHeader="false" 
+        	widgetVar="loadingDialog" draggable="false" closable="false" resizable="false" >
+        	<span class="fa-stack fa-2x" style="width: 5em; height: 5em; line-height: 5em;" >
+        		<i class="fa fa-fire fa-stack-1x" style="bottom: 40px; color: #FAFAFA; font-size: 0.8em"  ></i>
+			  	<i class="fa fa-spinner fa-pulse fa-3x fa-fw fa-stack-2x" style="color: #00AAFF; font-size: 3em;"></i>
+			  	<i class="fa fa-coffee fa-stack-1x" style="color: #975524; bottom: 20px;font-size: 1.2em"></i>
+			</span>
+        </p:dialog>
+	<script type="text/javascript">
+		
+	</script>
+	<style type="text/css">
+		
+	</style>
+</ui:composition>	

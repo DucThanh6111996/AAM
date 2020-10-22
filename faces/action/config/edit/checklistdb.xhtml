@@ -1,0 +1,65 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <p:growl showDetail="false" widgetVar="checklistDbGrowl"/>
+
+    <p:panel header="#{msg['checklist.database']}" toggleable="false">
+        <h:panelGrid style="width:100%;margin-left:0px" columns="2" columnClasses="c1,c2">
+            <p:treeTable value="#{actionController.cklDbDefaultRoot}" var="obj"
+                         widgetVar="cklDbTreeTable" id="cklDbTreeTable" selectionMode="checkbox"
+                         emptyMessage="" style="width:70%"
+                         selection="#{actionController.cklDbListSelectedNodes}">
+                <p:column>
+                    <h:outputText value="#{obj.name}">
+                    </h:outputText>
+                </p:column>
+                <p:column style="width:128px; text-align: center;">
+                    <p:commandButton update=":mop:lst:cklDetail" icon="fa fa-info-circle White"
+                                     actionListener="#{actionController.clickNode(obj)}"
+                                     rendered="#{actionController.isRender(obj)}"/>
+                </p:column>
+            </p:treeTable>
+
+            <p:panelGrid id="cklDetail" style="width:100%;margin-left:0px" columns="2" columnClasses="class1,class2">
+                <h:outputText value="#{msg['criteria']}:"/>
+                <h:outputText value="#{actionController.selectedKpiDbSetting.queueCode}"/>
+                <h:outputText value="#{msg['sql']}:"/>
+                <h:outputText value="#{actionController.selectedKpiDbSetting.query}"/>
+                <h:outputText value="#{msg['operation1']}:"/>
+                <h:outputText value="#{msg['checklist.operation.'.concat(actionController.convertOperator(actionController.selectedKpiDbSetting.advance))]}"/>
+                <h:outputText value="#{msg['threshold']}:"/>
+                <h:outputText value="#{actionController.criticalAlarm(actionController.selectedKpiDbSetting.timeMonitor)}"/>
+            </p:panelGrid>
+        </h:panelGrid>
+
+        <p:contextMenu for="cklDbTreeTable">
+            <p:menuitem value="#{msg['detail']}" actionListener="#{actionController.showKpi}" icon="ui-icon-search"
+                        update="cklDetail"/>
+        </p:contextMenu>
+    </p:panel>
+
+    <style>
+        .c1 {
+            vertical-align: top;
+            width: 65%
+        }
+
+        .c2 {
+            vertical-align: top;
+            width: 35%
+        }
+
+        .class1 {
+            vertical-align: top;
+            width: 30%
+        }
+
+        .class2 {
+            vertical-align: top;
+            width: 70%
+        }
+    </style>
+</ui:composition>

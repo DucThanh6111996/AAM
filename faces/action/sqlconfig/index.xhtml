@@ -1,0 +1,202 @@
+<ui:composition
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:f="http://java.sun.com/jsf/core"
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:p="http://primefaces.org/ui"
+        xmlns:pe="http://primefaces.org/ui/extensions"
+        template="/layout/olympos/template.xhtml">
+
+    <ui:define name="content">
+        <h:form id="insertEditForm">
+            <p:growl id="designGrowl" showDetail="false"/>
+
+            <div class="messagebox tc">
+                <p:growl id="mainMessage" life="5000" showDetail="true"
+                         autoUpdate="true" globalOnly="true" for="mainMessage"
+                         widgetVar="aGrowl"/>
+            </div>
+
+            <pe:blockUI target=":form:objectTable" content="blockUIContent"
+                        widgetVar="blockUiSearch"/>
+
+            <h:panelGrid id="blockUIContent" columns="2" style="display:none;"
+                         styleClass="blockUi">
+                <h:graphicImage library="olympos-layout/images" name="ajax-loader.gif"
+                                style="margin-right: 12px; vertical-align: middle;"/>
+                <h:outputText value="#{msg['executing']} ......" style="white-space: nowrap;"/>
+            </h:panelGrid>
+        </h:form>
+
+        <h:form id="search">
+            <p:panel id="panel" header="#{msg['button.search']}" toggleable="true">
+                <h:panelGrid columns="2" cellpadding="5" width="100%">
+                    <h:panelGrid columns="15" style="height: 20px;margin-bottom:10px"
+                                 cellpadding="5">
+                        <h:outputText value="#{msg['command']}"/>
+                        <p:inputText id="searchCommand"
+                                     value="#{tableSqlController.searchCommand}" style="with:30%"/>
+                        <p:watermark for="searchCommand" value="#{msg['sql.command']}"/>
+
+                        <h:outputText value="#{msg['type.of.impact']}"/>
+                        <p:inputText id="searchType"
+                                     value="#{tableSqlController.searchType}" style="with:30%"/>
+                        <p:watermark for="searchType" value="#{msg['type.of.impact']}"/>
+
+                        <h:outputText value="#{msg['db.type']}"/>
+                        <p:inputText id="searchDbType"
+                                     value="#{tableSqlController.searchDbType}" style="with:30%"/>
+                        <p:watermark for="searchDbType" value="#{msg['db.type']}"/>
+
+
+                        <p:commandButton id="search" type="submit"
+                                         update=":form:objectTable" process="panel"
+                                         actionListener="#{tableSqlController.search}" value="#{msg['button.search']}"
+                                         style="width: 120px; height: 25px;font-size: 12px"
+                                         onstart="PF('blockUiSearch').block()"
+                                         oncomplete="PF('blockUiSearch').unblock()"/>
+                    </h:panelGrid>
+
+                    <h:panelGrid columns="1" cellpadding="5"
+                                 style="width: 50%; float: right;">
+                        <p:commandButton value="#{msg['common.add']}" update=":form:panel" process="@this"
+                                         actionListener="#{tableSqlController.clear()}"
+                                         oncomplete="PF('editDialog').show()"/>
+                    </h:panelGrid>
+
+                </h:panelGrid>
+            </p:panel>
+
+        </h:form>
+
+        <div class="cl h6"></div>
+        <h:form id="form">
+            <p:dataTable var="obj" value="#{tableSqlController.lazyDataModel}"
+                         paginator="true" rows="25" filterEvent="keyup" rowKey="#{obj.id}"
+                         rowIndexVar="rowIndex" paginatorPosition="bottom" id="objectTable"
+                         widgetVar="objectTable" rowsPerPageTemplate="25, 50, 100"
+                         lazy="true" editable="false" emptyMessage="#{msg['common.data.not.found']}">
+
+                <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                        oncomplete="PF('blockUiSearch').unblock()"/>
+
+                <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                        oncomplete="PF('blockUiSearch').unblock()"/>
+
+                <p:column style="width: 3%; text-align: center;" headerText="#{msg['label.order']}">
+                    <h:outputText value="#{rowIndex+ 1}"/>
+                </p:column>
+
+                <p:column id="command" style="width: 10%; text-align: center;"
+                          sortBy="#{obj.command}" headerText="#{msg['sql.command']}">
+                    <h:outputText value="#{obj.command}"/>
+                </p:column>
+
+                <p:column id="template" style="width: 10%; text-align: center;"
+                          sortBy="#{obj.template}" headerText="#{msg['template']}">
+                    <h:outputText value="#{obj.template}"/>
+                </p:column>
+
+                <p:column id="type" style="width: 10%; text-align: center;"
+                          sortBy="#{obj.type}" headerText="#{msg['type.of.impact']}">
+                    <h:outputText value="#{obj.type}"/>
+                </p:column>
+
+                <p:column id="dbType" style="width: 10%; text-align: center;"
+                          sortBy="#{obj.dbType}" headerText="#{msg['db.type']}">
+                    <h:outputText value="#{obj.dbType}"/>
+                </p:column>
+
+                <p:column id="line" style="width: 10%; text-align: center;"
+                          headerText="#{msg['common.action']}">
+                    <p:splitButton value="Chỉnh sửa" process="@this"
+                                   actionListener="#{tableSqlController.prepareEdit(obj)}"
+                                   onclick="PF('blockUiSearch').block()"
+                                   oncomplete="PF('blockUiSearch').unblock();PF('editDialog').show()"
+                                   update=":form:panel" icon="fa fa-edit White">
+
+                        <p:menuitem value="#{msg['common.duplicate']}" process="@this"
+                                    actionListener="#{tableSqlController.duplicate(obj)}"
+                                    onclick="PF('blockUiSearch').block()"
+                                    oncomplete="PF('blockUiSearch').unblock();PF('editDialog').show()"
+                                    update=":form:panel" icon="fa fa-copy">
+                        </p:menuitem>
+
+                        <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                    onclick="PF('blockUiSearch').block()"
+                                    update=":form:confirmDelete"
+                                    oncomplete="PF('blockUiSearch').unblock();PF('confirmDelete').show()"
+                                    icon="fa fa-remove">
+                            <f:setPropertyActionListener
+                                    target="#{tableSqlController.selectedObj}" value="#{obj}"/>
+                        </p:menuitem>
+                    </p:splitButton>
+                </p:column>
+            </p:dataTable>
+
+            <p:confirmDialog id="confirmDelete"
+                             message="#{msg['confirm.sure.delete']} #{tableSqlController.selectedObj.command}?"
+                             header="#{msg['button.confirm']}" severity="alert" widgetVar="confirmDelete">
+                <p:commandButton value="#{msg['button.confirm']}" icon="fa fa-check White"
+                                 actionListener="#{tableSqlController.delete()}"
+                                 update=":form:objectTable :insertEditForm:designGrowl"
+                                 process="@this" oncomplete="PF('confirmDelete').hide()"/>
+                <p:commandButton value="#{msg['button.cancel']}?" icon="fa fa-remove White"
+                                 onclick="PF('confirmDelete').hide()"/>
+            </p:confirmDialog>
+
+            <p:dialog id="editDialog" widgetVar="editDialog" width="70%"
+                      resizable="false" showEffect="fade" hideEffect="fade" modal="true"
+                      header="#{msg['tool.impaction.all.process']}" draggable="true">
+                <p:panel id="panel" header="#{msg['edit.info']}" toggleable="false">
+                    <h:panelGrid columns="6" cellpadding="5" width="100%">
+                        <h:outputText value="#{msg['sql.command']}"/>
+                        <p:inputText id="command" value="#{tableSqlController.newObj.command}"
+                                     required="true" requiredMessage="#{msg['command.have.not.entered']}"/>
+                        <p:watermark for="command" value="#{msg['sql.command']}"/>
+
+                        <h:outputText value="#{msg['template']}"/>
+                        <p:inputText id="template" value="#{tableSqlController.newObj.template}"
+                                     required="true" requiredMessage="#{msg['template.have.not.entered']}"/>
+                        <p:watermark for="template" value="#{msg['template']}"/>
+
+                        <h:outputText value="#{msg['type.of.impact']}"/>
+                        <p:inputText id="type" value="#{tableSqlController.newObj.type}"
+                                     required="true" requiredMessage="#{msg['type.of.impact.have.not.entered']}"/>
+                        <p:watermark for="type" value="#{msg['type.of.impact']}"/>
+
+                        <h:outputText value="#{msg['db.type']}"/>
+                        <p:inputText id="dbType" value="#{tableSqlController.newObj.dbType}"
+                                     required="true" requiredMessage="#{msg['type.of.DB.have.not.entered']}"/>
+                        <p:watermark for="dbType" value="#{msg['db.type']}"/>
+
+                    </h:panelGrid>
+                    <h:panelGrid columns="2" cellpadding="5">
+                        <p:commandButton process="panel"
+                                         value="#{tableSqlController.isEdit ? msg['button.update'] : msg['button.insert']}"
+                                         update=":form:objectTable :insertEditForm:designGrowl panel"
+                                         actionListener="#{tableSqlController.saveOrUpdate}"/>
+
+                        <p:commandButton value="#{msg['button.cancel']}" onclick="PF('editDialog').hide()"/>
+                    </h:panelGrid>
+                </p:panel>
+            </p:dialog>
+        </h:form>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                var currentTabID = "tab-0";
+                var currentIconID = "10";
+                ChangeTab(currentTabID);
+            });
+        </script>
+        <style>
+            .blockUi tbody td {
+                border-color: white !important;
+            }
+
+            .ui-widget-content .pe-blockui-content {
+                border-color: white !important;
+            }
+        </style>
+    </ui:define>
+</ui:composition>

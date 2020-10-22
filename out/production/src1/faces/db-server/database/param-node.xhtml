@@ -1,0 +1,189 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:f="http://java.sun.com/jsf/core" 
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:c="http://java.sun.com/jsp/jstl/core" 
+                xmlns:ui="http://java.sun.com/jsf/facelets" 
+                xmlns:p="http://primefaces.org/ui" 
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <h:form id="form-param">
+        <p:dataTable var="obj"
+                     value="#{paramNodeValController.lazyParamVal}" id="tableParamValue"
+                     widgetVar="tableParamValue" style="width: 99%"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+                     paginator="true" rows="10" filterEvent="keyup"
+                     rowIndexVar="rowIndex" paginatorPosition="bottom"
+                     resizableColumns="true" rowsPerPageTemplate="10,15,20"
+                     sortMode="mutiple" rowKey="#{obj.id}" selectionMode="single"
+                     sortOrder="descending" emptyMessage="#{msg['datatable.empty']}"
+                     lazy="true" editable="true">
+
+            <f:facet name="header">
+                <div class="Card NoPadding" style="background: transparent;">
+                    <div class="Container20">
+                    </div>
+                    <div class="Container60 TexAlCenter">
+                        <h:outputText value="#{msg['label.param.val.header']}" />
+                    </div>
+                    <div class="Container20">
+                        <p:commandButton style="float: right;" icon="fa fa-upload"
+                                         styleClass="White"
+                                         oncomplete="PF('dlgUploadParamVal').show()"
+                                         title="#{msg['button.import']}" />
+                        <p:commandButton style="float: right;" icon="fa fa-download"
+                                         styleClass="White" ajax="false"
+                                         title="#{msg['button.download.template']}">
+                            <p:fileDownload value="#{paramNodeValController.file}" />
+                        </p:commandButton>
+                        <p:commandButton style="float: right;" icon="fa fa-plus-square"
+                                         actionListener="#{paramNodeValController.clear}"
+                                         oncomplete="PF('dlgParamNodeInfo').show()"
+                                         update="paramValInfoForm" title="#{msg['button.insert']}"
+                                         styleClass="White" />
+                        <p:commandButton style="float: right;" icon="fa fa-share-square"
+                                         title="#{msg['button.export']}" ajax="false" styleClass="White">
+                            <p:dataExporter type="xls" target="tableParamValue"
+                                            pageOnly="false"
+                                            fileName="#{msg['label.clientinfo.filename']}" />
+                        </p:commandButton>
+                    </div>
+
+                    <div class="Container10"></div>
+                </div>
+            </f:facet>
+            <p:column headerText="#{msg['label.order']}" style="width : 5%;">
+                <h:outputText value="#{rowIndex + 1}" />
+            </p:column>
+
+            <p:column headerText="#{msg['label.nodecode']}"
+                      sortBy="#{obj.nodeCode}" filterBy="#{obj.nodeCode}"
+                      style="width : 15%;">
+                <h:outputText value="#{obj.nodeCode}" />
+            </p:column>
+
+            <p:column headerText="#{msg['label.interface']}"
+                      sortBy="#{obj.interfacePort}" filterBy="#{obj.interfacePort}"
+                      style="width : 15%;">
+                <h:outputText value="#{obj.interfacePort}" />
+            </p:column>
+
+            <p:column headerText="#{msg['label.paramCode']}"
+                      sortBy="#{obj.paramKey}" filterBy="#{obj.paramKey}"
+                      style="width : 15%;">
+                <h:outputText value="#{obj.paramKey}" />
+            </p:column>
+
+            <p:column headerText="#{msg['label.standardValue']}"
+                      sortBy="#{obj.paramValue}" filterBy="#{obj.paramValue}"
+                      style="width : 15%;">
+                <h:outputText value="#{obj.paramValue}" />
+            </p:column>
+
+            <p:column style="width: 10%;" exportable="false"
+                      headerText="#{msg['datatable.header.action']}">
+
+                <p:tooltip position="left" />
+                <p:commandButton title="#{msg['title.update']}"
+                                 styleClass="Fs14 White" icon="fa fa-edit" 
+                                 actionListener="#{paramNodeValController.prepareEdit(obj)}" update="paramValInfoForm"
+                                 oncomplete="PF('dlgParamNodeInfo').show()"
+                                 style="color:green; font-weight: bold;font-size: 13px ">
+                </p:commandButton>
+                <p:spacer width="2px;" />
+
+                <p:commandButton id="btnDel" title="#{msg['label.del']}"
+                                 icon="fa fa-trash" styleClass="RedButton Fs14 White"
+                                 update="dlgDelParamNodeVal"
+                                 oncomplete="PF('dlgDelParamNodeVal').show()"
+                                 actionListener="#{paramNodeValController.prepareDelParamVal(obj)}"
+                                 style="color:green; font-weight: bold;font-size: 13px ">
+                </p:commandButton>
+            </p:column>
+
+        </p:dataTable>
+
+        <p:dialog id="dlgUploadParamVal" widgetVar="dlgUploadParamVal" width="70%"
+                  height="30%" modal="true" header="#{msg['label.upload.param.value']}">
+            <p:fileUpload
+                fileUploadListener="#{paramNodeValController.handUploadFile}"
+                mode="advanced" dragDropSupport="false" multiple="true"
+                auto="false" update="mainMessage, form-param:tableParamValue"
+                sizeLimit="100000000" fileLimit="10"
+                allowTypes="/(\.|\/)(xls|xlsx)$/" />
+        </p:dialog>
+    </h:form>
+
+    <p:dialog id="dlgParamNodeInfo" widgetVar="dlgParamNodeInfo" width="70%"
+              height="50%" modal="true" header="#{msg['label.param.val.header']}">
+        <h:form id="paramValInfoForm">
+            <p:panelGrid style="width: 100%;">
+
+                <div class="Card NoPadding">
+                    <div class="Container50">
+                        <p:autoComplete size="20" placeholder="#{msg['label.nodecode']}"
+                                        dropdown="true" scrollHeight="200"
+                                        value="#{paramNodeValController.node}"
+                                        completeMethod="#{paramNodeValController.autoCompleNode}"
+                                        var="obj" converter="nodeConverter" itemLabel="#{obj.nodeCode}"
+                                        itemValue="#{obj}">
+                        </p:autoComplete>
+                    </div>
+                    <div class="Container50">
+                        <p:inputText placeholder="#{msg['label.interface']}"
+                                     value="#{paramNodeValController.selectedParamVal.interfacePort}" />
+                    </div>
+                </div>
+
+                <div class="Card NoPadding">
+                    <div class="Container50">
+                        <p:inputText placeholder="#{msg['label.paramCode']}"
+                                     value="#{paramNodeValController.selectedParamVal.paramKey}" />
+                    </div>
+                    <div class="Container50">
+                        <p:inputText placeholder="#{msg['label.standardValue']}"
+                                     value="#{paramNodeValController.selectedParamVal.paramValue}" />
+                    </div>
+                </div>
+
+                <div class="Container100 Flex">
+                    <div
+                        style="text-align: center; margin-left: auto; margin-right: auto; display: block">
+                        <p:commandButton id="saveAction" type="submit"
+                                         value="#{msg['label.update']}" icon="fa fa-save"
+                                         styleClass="Fs14 White"
+                                         update="form-param:tableParamValue, mainMessage"
+                                         actionListener="#{paramNodeValController.saveParamVal}" />
+                        <p:spacer height="10px;" />
+                        <p:commandButton id="cancelAction" type="submit"
+                                         icon="fa fa-close" value="#{msg['label.cancel']}"
+                                         styleClass="GrayButton Fs14"
+                                         oncomplete="PF('dlgParamNodeInfo').hide()" />
+                    </div>
+                </div>
+
+            </p:panelGrid>
+        </h:form>
+    </p:dialog>
+
+    <p:confirmDialog global="true"
+                     header="#{msg['label.del.form.relation.node']}" id="dlgDelParamNodeVal"
+                     showEffect="face" hideEffect="scale" widgetVar="dlgDelParamNodeVal">
+
+        <f:facet name="message">
+            <h:outputText
+                value="#{msg['title.confirm.delete']} 
+                #{paramNodeValController.selectedParamVal.paramKey}" />
+        </f:facet>
+
+        <p:commandButton value="#{msg['button.delete']}"
+                         update="form-param:tableParamValue, mainMessage" process="@this"
+                         oncomplete="PF('dlgDelParamNodeVal').hide()"
+                         actionListener="#{paramNodeValController.delParamNodeVal}"
+                         styleClass="ui-confirmdialog-yes AquaButton"
+                         icon="ui-icon-check fa fa-check Fs14 White" />
+        <p:commandButton value="#{msg['button.cancel']}" type="button"
+                         styleClass="ui-confirmdialog-no RedButton"
+                         onclick="PF('dlgDelParamNodeVal').hide()"
+                         icon="ui-icon-close fa fa-close Fs14 White" />
+    </p:confirmDialog>
+</ui:composition>

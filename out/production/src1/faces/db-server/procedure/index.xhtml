@@ -1,0 +1,131 @@
+<ui:composition template="/layout/olympos/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui">
+    <ui:define name="content">
+        <p:messages id="mainMessage2" showDetail="true" showSummary="false" closable="true" />
+        <p:growl id="mainMessage" showDetail="true" showSummary="false"
+                 life="3000" />
+        <h:form id="formc">
+            <p:treeTable value="#{procedureCRTemplateController.rootProcedureId}" var="procedure" resizableColumns="true" nodeVar="procedureTree"
+                         widgetVar="procedureWd" id="procedureId" filterDelay="2000">
+                <f:facet name="header">
+                    <div class="Card NoPadding" style="background: transparent;">
+                        <div class="Container80 Responsive50">
+                            <h:outputText styleClass="Fs20" value="#{msg['label.cr.procedure.list']}"/>
+                        </div>
+                        <div style="text-align: right">
+                            <p:commandButton icon="fa fa-download"
+                                             styleClass="Fs14 White BlueButton"
+                                             ajax="false"
+                                             title="#{msg['title.export.list.procedures.cr']}">
+                                <p:fileDownload value="#{procedureCRTemplateController.onExport()}" />
+                            </p:commandButton>
+                        </div>
+                    </div>
+                </f:facet>
+
+                <p:column headerText="#{msg['view.header.process.name']}" filterBy="#{procedure.procedureGNOCNameSearch}" style="width: 30%" filterMatchMode="contains">
+                    <div style="display: inline-block">
+                        <h:outputText value="#{procedure.procedureGNOCName}" title="#{procedure.procedureGNOCId}_#{procedure.procedureGNOCName}" style="white-space: pre-line" rendered="#{language.localeCode =='vi'}"/>
+                        <h:outputText value="#{procedure.procedureGNOCNameEn}" title="#{procedure.procedureGNOCId}_#{procedure.procedureGNOCNameEn}" style="white-space: pre-line;" rendered="#{language.localeCode =='en'}"/>
+                    </div>
+                </p:column>
+
+                <p:column headerText="#{msg['view.header.process.id']}" filterBy="#{procedure.procedureGNOCId}" style="width: 8%" filterMatchMode="exact">
+                    <div style="display: inline-block">
+                        <h:outputText value="#{procedure.procedureGNOCId}" style="white-space: pre-line" />
+                    </div>
+                </p:column>
+
+                <p:column headerText="#{msg['datatable.header.template']}" style="width: 36%" filterBy="#{procedure.flowTemplateName}" filterMatchMode="contains">
+                    <p:commandButton icon="fa fa-plus" styleClass="White BlackBack"
+                                     update="@widgetVar(addTemp)" process="@this" rendered="#{procedureTree.data.parentId != null and
+                                            (sessionUtil.checkRole('MS_MOP_APPROVE_TEMP_EXEC_MANAGER') or procedureCRTemplateController.canAddTempToProcedure())}"
+                                     actionListener="#{procedureCRTemplateController.preAddTemp4Procedure(procedure,procedureTree)}" oncomplete="PF('addTemp').show()"/>
+                    <p:dataTable value="#{procedure.flowTemplates}" var="temp" rendered="#{procedure.flowTemplates != null and procedure.flowTemplates.size() > 0}"  >
+                        <p:column headerText="#{msg['datatable.header.template']}" style="width: 100px">
+                            <h:outputText value="#{temp.flowTemplateName}" title="#{temp.flowTemplateName}" style="white-space: pre-line"/>
+                        </p:column>
+                        <p:column headerText="#{msg['datatable.header.createby']}" style="width: 20px">
+                            <h:outputText value="#{temp.createBy}" title="#{temp.createBy}"/>
+                        </p:column>
+                        <p:column headerText="#{msg['datatable.header.status']}" style="width: 25px">
+                            <h:outputText rendered="#{temp.status == 9}" value="#{msg['label.status.approved']}" style="white-space: pre-line"/>
+                            <h:outputText rendered="#{temp.status != 9}" value="#{msg['label.status.not.approved']}" style="white-space: pre-line"/>
+                        </p:column>
+                        <p:column style="width: 5px; text-align: center">
+                            <p:commandButton icon="fa fa-trash" styleClass="TransparentButton Red" actionListener="#{procedureCRTemplateController.preDelTemp4Procedure(procedure,temp,procedureTree)}"
+                                             rendered="#{sessionUtil.checkRole('MS_MOP_APPROVE_TEMP_EXEC_MANAGER') or procedureCRTemplateController.canAddTempToProcedure()}" update="@widgetVar(delTemp)" oncomplete="PF('delTemp').show()"/>
+                        </p:column>
+                    </p:dataTable>
+
+
+                </p:column>
+                <p:column headerText="#{msg['view.header.process.code']}" filterBy="#{procedure.procedureGNOCCode}"  style="width: 10%" filterMatchMode="contains">
+                    <h:outputText value="#{procedure.procedureGNOCCode}" title="#{procedure.procedureGNOCCode}"/>
+                </p:column>
+
+                <p:column headerText="#{msg['view.header.process.type']}" filterBy="#{procedure.gnocImpactSegmentName}"  style="width: 8%" filterMatchMode="contains" >
+                    <h:outputText value="#{procedure.gnocImpactSegmentName}" title="#{procedure.gnocImpactSegmentName}"/>
+                </p:column>
+                <p:column headerText="#{msg['view.header.process.device.type']}" filterBy="#{procedure.gnocDeviceTypeName}" style="width: 15%" filterMatchMode="contains">
+                    <h:outputText value="#{procedure.gnocDeviceTypeName}" title="#{procedure.gnocDeviceTypeName}"/>
+                </p:column>
+                <p:column headerText="#{msg['view.header.process.cr.type']}" filterBy="#{procedure.gnocCrTypeName}" style="width: 8%" filterMatchMode="contains" >
+                    <h:outputText value="#{procedure.gnocCrTypeName}" title="#{procedure.gnocCrTypeName}"/>
+                </p:column>
+
+            </p:treeTable>
+            <p:dialog widgetVar="addTemp" modal="true" width="60%" dismissable="true"
+                      header="#{msg['view.title.add.temp.to.procedure']}"
+            >
+                <h:outputText id="timeRunId" value="#{procedureCRTemplateController.selectedProcedureGNOC.procedureGNOCName}"/>
+                <p:blockUI widgetVar="block1" block="timeRunId">
+                    <p:graphicImage value="/resources/olympos-layout/images/ajax-loader.gif" />
+                </p:blockUI>
+                <span class="title-top" style="margin-top: 25px">
+                    <p:autoComplete id="chooseTemplate" value="#{procedureCRTemplateController.selectedFlowTemplate}"
+                                    converter="flowTemplateConverter" autoWidth="false" inputStyle="width: calc(100% - 10px)" panelStyle="width: 50%" style="width: 100%"
+                                    title="#{msg['datatable.header.template']}" forceSelection="true"
+                                    var="temp" completeMethod="#{procedureCRTemplateController.completeTemplate}"
+                                    itemLabel="#{temp.flowTemplateName}" itemValue="#{temp}" dropdownMode="current" queryDelay="1300"
+                                    scrollHeight="200"
+                                    onkeydown="PF('block1').show()" onblur="PF('block1').hide()"
+                    >
+                    </p:autoComplete>
+                </span>
+                <p:commandButton value="#{msg['label.add']}" actionListener="#{procedureCRTemplateController.addTempForProcedure}"
+                                 rendered="#{sessionUtil.checkRole('MS_MOP_APPROVE_TEMP_EXEC_MANAGER') or procedureCRTemplateController.canAddTempToProcedure()}"
+                                 oncomplete="PF('addTemp').hide();" styleClass="MarTop10" process="@widgetVar(addTemp)"
+                                 update="@widgetVar(procedureWd), :mainMessage, @widgetVar(addTemp)"/>
+            </p:dialog>
+            <p:confirmDialog widgetVar="delTemp" header="#{msg['title.confirm.delete.template.from.procedure']}">
+                <f:facet name="message">
+                    <h:outputText value="#{msg['view.header.process.name']}: #{procedureCRTemplateController.selectedProcedureGNOC.procedureGNOCName}"  rendered="#{language.localeCode =='vi'}"/>
+                    <h:outputText value="#{msg['view.header.process.name']}: #{procedureCRTemplateController.selectedProcedureGNOC.procedureGNOCNameEn}"  rendered="#{language.localeCode =='en'}"/>
+                    <br/>
+                    <h:outputText value="#{msg['datatable.header.template']}: #{procedureCRTemplateController.selectedFlowTemplate.flowTemplateName}" style="color: black"/>
+                </f:facet>
+                <p:commandButton value="#{msg['button.delete']}" actionListener="#{procedureCRTemplateController.delTempForProcedure}" styleClass="ui-confirmdialog-yes RedButton White" icon="fa fa-check"
+                                 oncomplete="PF('delTemp').hide();" process="@this" update="@widgetVar(procedureWd), :mainMessage, @widgetVar(delTemp)"/>
+                <p:commandButton value="#{msg['button.cancel']}" styleClass="ui-confirmdialog-no BlueButton White" icon="fa fa-times"  oncomplete="PF('delTemp').hide()" />
+            </p:confirmDialog>
+        </h:form>
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+                ChangeTab("group-tab-2","tab2-11");
+                $("#formc\\:searchTreeId").bind("keypress", function(e) {
+                    if (e.keyCode == 13) {
+                        return false;
+                    }
+                });
+
+            });
+        </script>
+
+    </ui:define>
+</ui:composition>

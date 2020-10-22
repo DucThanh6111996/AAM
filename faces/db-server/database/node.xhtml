@@ -1,0 +1,295 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:f="http://java.sun.com/jsf/core" 
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:c="http://java.sun.com/jsp/jstl/core" 
+                xmlns:ui="http://java.sun.com/jsf/facelets" 
+                xmlns:p="http://primefaces.org/ui" 
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <h:form id="form-node">
+        <p:dataTable var="obj"
+                     value="#{nodeController.lazyNode}" id="tableNode"
+                     widgetVar="tableNode" style="width: 99%"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+                     paginator="true" rows="10" filterEvent="keyup"
+                     rowIndexVar="rowIndex" paginatorPosition="bottom"
+                     resizableColumns="true" rowsPerPageTemplate="10,15,20"
+                     sortMode="mutiple" rowKey="#{obj.nodeId}" selectionMode="single"
+                     sortOrder="descending" emptyMessage="#{msg['datatable.empty']}"
+                     lazy="true" editable="true">
+            <f:facet name="header">
+                <h:outputText style="float: left;" value="#{msg['label.node.header']}" />
+                <p:commandButton style="float: right;" icon="fa fa-plus-square"
+                                 actionListener="#{nodeController.clear}"
+                                 oncomplete="PF('dlgNodeInfo').show()"
+                                 update="nodeInfoForm" title="#{msg['button.insert']}"
+                                 styleClass="White" />
+                <p:commandButton style="float: right;" icon="fa fa-share-square"
+                                 title="#{msg['button.export']}" ajax="false" styleClass="White">
+                    <pe:exporter type="xlsx" target="tableNode" pageOnly="false" fileName="nodes" />
+                </p:commandButton>
+                <p:commandButton style="visibility: hidden; display: none">
+                    <div style="clear: both"></div>
+                </p:commandButton>
+            </f:facet>
+            <p:column style="width : 5%;">
+                <f:facet name="header">  
+                    <h:outputText value="#{msg['label.order']}"/>
+                </f:facet>
+                <h:outputText value="#{rowIndex + 1}" />
+            </p:column>
+            <p:column sortBy="#{obj.countryCode.countryCode}" filterBy="#{obj.countryCode.countryCode}"
+                      style="width : 15%;">
+                <f:facet name="header">
+                    <h:outputText value="#{msg['common.country.code']}"/>
+                </f:facet>
+                <h:outputText value="#{obj.countryCode.countryCode}" />
+            </p:column>
+            <p:column sortBy="#{obj.vendor.vendorName}" filterBy="#{obj.vendor.vendorName}"
+                      style="width : 15%;">
+                <f:facet name="header">  
+                    <h:outputText value="#{msg['label.vendorName']}"/>
+                </f:facet>
+                <h:outputText value="#{obj.vendor.vendorName}" />
+            </p:column>
+            <p:column sortBy="#{obj.version.versionName}" filterBy="#{obj.version.versionName}"
+                      style="width : 15%;">
+                <f:facet name="header">  
+                    <h:outputText value="#{msg['label.versionName']}"/>
+                </f:facet>
+                <h:outputText value="#{obj.version.versionName}" />
+            </p:column>
+            <p:column sortBy="#{obj.nodeType.typeName}" filterBy="#{obj.nodeType.typeName}"
+                      style="width : 15%;">
+                <f:facet name="header">  
+                    <h:outputText value="#{msg['label.auto.nodeType.name']}"/>
+                </f:facet>
+                <h:outputText value="#{obj.nodeType.typeName}" />
+            </p:column>
+            <p:column sortBy="#{obj.nodeCode}" filterBy="#{obj.nodeCode}"
+                      style="width : 15%;">
+                <f:facet name="header">  
+                    <h:outputText value="#{msg['label.nodecode']}"/>
+                </f:facet>
+                <h:outputText value="#{obj.nodeCode}" />
+            </p:column>
+            <p:column sortBy="#{obj.nodeIp}" filterBy="#{obj.nodeIp}"
+                      style="width : 15%;">
+                <f:facet name="header">  
+                    <h:outputText value="IP"/>
+                </f:facet>
+                <h:outputText value="#{obj.nodeIp}" />
+            </p:column>
+            <p:column sortBy="#{obj.port}" filterBy="#{obj.port}"
+                      style="width : 15%;">
+                <f:facet name="header">  
+                    <h:outputText value="Port"/>
+                </f:facet>
+                <h:outputText value="#{obj.port}" />
+            </p:column>
+            <p:column sortBy="#{obj.osType}" filterBy="#{obj.osType}"
+                      style="width : 15%;">
+                <f:facet name="header">  
+                    <h:outputText value="#{msg['label.node.osType']}"/>
+                </f:facet>
+                <h:outputText value="#{obj.osType}" />
+            </p:column>
+            <p:column sortBy="#{obj.effectIp}" filterBy="#{obj.effectIp}"
+                      style="width : 15%;">
+                <f:facet name="header">  
+                    <h:outputText value="#{msg['label.effectip']}"/>
+                </f:facet>
+                <h:outputText value="#{obj.effectIp}" />
+            </p:column>
+            <!--20181210_hoangnd_hien thi active_start-->
+            <p:column sortBy="#{obj.active}" filterBy="#{obj.active}"
+                      style="width : 15%;">
+                <f:facet name="header">
+                    <h:outputText value="#{msg['label.active']}"/>
+                </f:facet>
+                <h:outputText value="#{obj.active}" />
+            </p:column>
+            <!--20181210_hoangnd_hien thi active_end-->
+
+            <p:column style="width: 10%;" exportable="false"
+                      headerText="#{msg['datatable.header.action']}">
+
+                <p:tooltip position="left" />
+                <p:commandButton title="#{msg['title.update']}"
+                                 styleClass="Fs14 White" icon="fa fa-edit" 
+                                 actionListener="#{nodeController.prepareEdit(obj)}" update="nodeInfoForm"
+                                 oncomplete="PF('dlgNodeInfo').show()"
+                                 style="color:green; font-weight: bold;font-size: 13px ">
+                </p:commandButton>
+                <p:spacer width="2px;" />
+                <p:commandButton id="btnDel" title="#{msg['label.del']}"
+                                 icon="fa fa-trash" styleClass="RedButton Fs14 White"
+                                 update="dlgDelNode"
+                                 oncomplete="PF('dlgDelNode').show()"
+                                 actionListener="#{nodeController.prepareDel(obj)}"
+                                 style="color:green; font-weight: bold;font-size: 13px ">
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+    </h:form>
+
+    <p:dialog id="dlgNodeInfo" widgetVar="dlgNodeInfo" width="70%"
+              height="50%" modal="true" header="#{msg['label.node.header']}">
+        <h:form id="nodeInfoForm" enctype="multipart/form-data">
+            <div class="Container100 Flex FlexWrap">
+                <div class="ui-g" style="width: 100%">
+                    <h:inputHidden value="#{nodeController.selectedNode.nodeId}"/>
+
+                    <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                        <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.vendorName']}"/>
+                        <p:selectOneMenu filter="true" filterMatchMode="contains" class="ui-g-8" value="#{nodeController.selectedNode.vendor}" 
+                                         id="vendorName" converter="vendorConverter">
+
+                            <f:selectItems var="vendorObj" itemLabel="#{vendorObj.vendorName}" 
+                                           itemValue="#{vendorObj}" value="#{nodeController.vendors}" />
+
+                        </p:selectOneMenu>
+                    </div>
+
+                    <p:outputPanel style="margin-top: 10px;" class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad">
+                        <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.nodeTypeName']}"/>
+                        <p:selectOneMenu filter="true" filterMatchMode="contains" class="ui-g-8" value="#{nodeController.selectedNode.nodeType}" 
+                                         id="nodeTypeName" converter="nodeTypeConverter">
+
+                            <f:selectItems var="typeObj" itemLabel="#{typeObj.typeName}"
+                                           itemValue="#{typeObj}" value="#{nodeController.nodeTypes}" />
+
+                        </p:selectOneMenu>
+                    </p:outputPanel>
+
+                    <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                        <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.versionName']}"/>
+                        <p:selectOneMenu filter="true" filterMatchMode="contains" class="ui-g-8" value="#{nodeController.selectedNode.version}" 
+                                         id="versionName" converter="versionConverter">
+
+                            <f:selectItems var="verObj" itemLabel="#{verObj.versionName}"
+                                           itemValue="#{verObj}" value="#{nodeController.versions}" />
+
+                        </p:selectOneMenu>
+                    </div>
+
+                    <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                        <h:outputText class="ui-g-3 cd-text-required" value="#{msg['label.nodecode']}"/>
+                        <p:inputText class="ui-g-8" maxlength="200" id="nodeCode"
+                                     value="#{nodeController.selectedNode.nodeCode}"/>
+                    </p:outputPanel>
+
+                    <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                        <h:outputText class="ui-g-3 cd-text-required" value="IP"/>
+                        <p:inputText class="ui-g-8" maxlength="200" id="nodeIP"
+                                     value="#{nodeController.selectedNode.nodeIp}"/>
+                    </p:outputPanel>
+
+                    <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad">
+                        <h:outputText class="ui-g-3" value="Port"/>
+                        <p:inputNumber class="ui-g-8 input-number-fix" decimalPlaces="0"
+                                       thousandSeparator="" maxlength="5" id="port" minValue="0" maxValue="99999"
+                                       value="#{nodeController.selectedNode.port}"/>
+                    </p:outputPanel>
+
+                    <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad">
+                        <h:outputText class="ui-g-3" value="#{msg['label.node.osType']}"/>
+                        <p:inputText class="ui-g-8" maxlength="20" id="osType"
+                                     value="#{nodeController.selectedNode.osType}"/>
+                    </p:outputPanel>
+
+                    <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad">
+                        <h:outputText class="ui-g-3" value="#{msg['label.effectip']}"/>
+                        <p:inputText class="ui-g-8" maxlength="100" id="effectIp"
+                                     value="#{nodeController.selectedNode.effectIp}"/>
+                    </p:outputPanel>
+
+                    <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                        <h:outputText class="ui-g-3" value="#{msg['label.subnetwork']}"/>
+                        <p:inputText class="ui-g-8" maxlength="100" id="subnetwork"
+                                     value="#{nodeController.selectedNode.subnetwork}"/>
+                    </p:outputPanel>
+
+                    <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                        <h:outputText class="ui-g-3" value="#{msg['label.networkType']}"/>
+                        <p:inputText class="ui-g-8" maxlength="100" id="networkType"
+                                     value="#{nodeController.selectedNode.networkType}"/>
+                    </p:outputPanel>
+
+                    <!--thenv_20180615_Start-->
+                    <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                        <h:outputText class="cd-text-required ui-g-3"
+                                      value="#{msg['common.country.code']}"/>
+                        <p:selectOneMenu id="countryCode"
+                                         value="#{nodeController.selectedNode.countryCode}"
+                                         filter="true"
+                                         filterMatchMode="contains"
+                                         class="ui-g-8"
+                                         converter="countryConverter"
+                                         validator="notNullValidator" required="true"
+                                         requiredMessage="#{msg['error.mop.countryCode.empty']}">
+                            <f:selectItems var="countryCodeObj"
+                                           itemLabel="#{countryCodeObj.countryCode}"
+                                           itemValue="#{countryCodeObj}"
+                                           value="#{nodeController.countrys}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <!--thenv_20180615_End-->
+
+                    <!--thenv_20180615_nodeController.selectedNode.nodeLab dung thang nay bi loi_Start-->
+                    <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                        <h:outputText class="ui-g-3" value="#{msg['label.isLab']}"/>
+                        <p:selectBooleanCheckbox value="#{nodeController.checked}" >
+                        </p:selectBooleanCheckbox>
+                    </p:outputPanel>
+                    <!--thenv_20180615_nodeController.selectedNode.nodeLab dung thang nay bi loi_end-->
+
+                    <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-12 ui-g-nopad" style="margin-top: 10px;">
+                        <h:outputText class="responsive125" value="#{msg['label.jdbcUrl']}"/>
+                        <p:inputTextarea rows="3" autoResize="false"
+                                         class="responsive875" maxlength="500" id="jdbcUrl" value="#{nodeController.selectedNode.jdbcUrl}">
+                        </p:inputTextarea>
+                    </p:outputPanel>
+                </div>
+
+                <div class="Container100 Flex">
+                    <div
+                        style="text-align: center; margin-left: auto; margin-right: auto; display: block">
+                        <p:commandButton id="saveNode" type="submit"
+                                         value="#{msg['label.update']}" icon="fa fa-save"
+                                         styleClass="Fs14 White"
+                                         update="form-node:tableNode, mainMessage"
+                                         actionListener="#{nodeController.saveNode}" />
+                        <p:spacer height="10px;" />
+                        <p:commandButton id="cancelAction" type="submit"
+                                         icon="fa fa-close" value="#{msg['label.cancel']}"
+                                         styleClass="GrayButton Fs14"
+                                         oncomplete="PF('dlgNodeInfo').hide()" />
+                    </div>
+                </div>
+            </div>
+        </h:form>
+    </p:dialog>
+
+    <p:confirmDialog global="true"
+                     header="#{msg['label.del.form.node']}" id="dlgDelNode"
+                     showEffect="face" hideEffect="scale" widgetVar="dlgDelNode">
+
+        <f:facet name="message">
+            <h:outputText
+                value="#{msg['title.confirm.delete']} 
+                #{nodeController.selectedNode.nodeCode}" />
+        </f:facet>
+
+        <p:commandButton value="#{msg['button.delete']}"
+                         update="form-node:tableNode, mainMessage" process="@this"
+                         oncomplete="PF('dlgDelNode').hide()"
+                         actionListener="#{nodeController.delNode}"
+                         styleClass="ui-confirmdialog-yes AquaButton"
+                         icon="ui-icon-check fa fa-check Fs14 White" />
+        <p:commandButton value="#{msg['button.cancel']}" type="button"
+                         styleClass="ui-confirmdialog-no RedButton"
+                         onclick="PF('dlgDelNode').hide()"
+                         icon="ui-icon-close fa fa-close Fs14 White" />
+    </p:confirmDialog>
+</ui:composition>

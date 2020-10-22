@@ -1,0 +1,240 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+                xmlns:f="http://java.sun.com/jsf/core" 
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:c="http://java.sun.com/jsp/jstl/core" 
+                xmlns:ui="http://java.sun.com/jsf/facelets" 
+                xmlns:p="http://primefaces.org/ui" 
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <h:form id="form-relation">
+        <p:dataTable var="obj"
+                     value="#{relationNodeController.lazyRelationNode}"
+                     id="tableRelationNode" widgetVar="tableRelationNode"
+                     style="width: 100%;" styleClass="MarTop10"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+                     paginator="true" rows="10" filterEvent="keyup"
+                     rowIndexVar="rowIndex" paginatorPosition="bottom"
+                     resizableColumns="true" rowsPerPageTemplate="10,15,20"
+                     sortMode="mutiple" rowKey="#{obj.id}"
+                     selection="#{relationNodeController.selectedRelationNode}"
+                     selectionMode="single" sortOrder="descending"
+                     emptyMessage="#{msg['datatable.empty']}" lazy="true"
+                     editable="true">
+            <f:facet name="header">
+                <div class="Card NoPadding" style="background: transparent;">
+                    <div class="Container20">
+
+                    </div>
+                    <div class="Container60 TexAlCenter">
+                        <h:outputText value="#{msg['label.node.relation']}" />
+                    </div>
+                    <div class="Container20">
+                        <p:commandButton style="float: right;" icon="fa fa-upload"
+                                         styleClass="White"
+                                         actionListener="#{relationNodeController.clear}"
+                                         oncomplete="PF('dlgUploadFile').show()"
+                                         title="#{msg['button.import']}" />
+                        <p:commandButton style="float: right;" icon="fa fa-download"
+                                         styleClass="White" ajax="false"
+                                         actionListener="#{relationNodeController.clear}"
+                                         oncomplete="PF('dlgRelationNode').show()"
+                                         update="relationNodeInfoForm"
+                                         title="#{msg['button.download.template']}">
+                            <p:fileDownload value="#{relationNodeController.file}" />
+                        </p:commandButton>
+                        <p:commandButton style="float: right;" icon="fa fa-plus-square"
+                                         actionListener="#{relationNodeController.clear}"
+                                         oncomplete="PF('dlgRelationNode').show()"
+                                         update="relationNodeInfoForm" title="#{msg['button.insert']}"
+                                         styleClass="White" />
+                        <p:commandButton style="float: right;" icon="fa fa-share-square"
+                                         title="#{msg['button.export']}" ajax="false" styleClass="White">
+                            <p:dataExporter type="xls" target="tableRelationNode"
+                                            pageOnly="false"
+                                            fileName="#{msg['label.relationnode.filename']}" />
+                        </p:commandButton>
+                    </div>
+
+                    <div class="Container10"></div>
+                </div>
+            </f:facet>
+
+
+            <p:column headerText="#{msg['label.order']}" style="width : 5%;">
+                <h:outputText value="#{rowIndex + 1}" />
+            </p:column>
+
+            <p:column headerText="#{msg['label.nodecode']}"
+                      sortBy="#{obj.nodeCode}" filterBy="#{obj.nodeCode}"
+                      style="width : 15%;">
+                <h:outputText value="#{obj.nodeCode}" />
+            </p:column>
+
+            <p:column headerText="#{msg['label.auto.nodeType.name']}"
+                      sortBy="#{obj.nodeType}" filterBy="#{obj.nodeType}"
+                      style="width : 15%;">
+                <h:outputText value="#{obj.nodeType}" />
+            </p:column>
+
+            <p:column headerText="#{msg['label.interface']}"
+                      sortBy="#{obj.interfacePort}" filterBy="#{obj.interfacePort}"
+                      style="width : 15%;">
+                <h:outputText value="#{obj.interfacePort}" />
+            </p:column>
+
+            <p:column headerText="#{msg['label.node.relation']}"
+                      sortBy="#{obj.nodeCodeRelation}"
+                      filterBy="#{obj.nodeCodeRelation}" style="width : 15%;">
+                <h:outputText value="#{obj.nodeCodeRelation}" />
+            </p:column>
+
+            <p:column headerText="#{msg['label.nodetype.relation']}"
+                      sortBy="#{obj.nodeTypeRelation}"
+                      filterBy="#{obj.nodeTypeRelation}" style="width : 10%;">
+                <h:outputText value="#{obj.nodeTypeRelation}" />
+            </p:column>
+
+            <p:column headerText="#{msg['label.interface.node.relation']}"
+                      sortBy="#{obj.interfacePortRelation}"
+                      filterBy="#{obj.interfacePortRelation}" style="width : 15%;">
+                <h:outputText value="#{obj.interfacePortRelation}" />
+            </p:column>
+
+            <p:column style="width: 10%;" exportable="false"
+                      headerText="#{msg['datatable.header.action']}">
+
+                <p:tooltip position="left" />
+                <p:commandButton id="btnViewCmdInActionTemp"
+                                 title="#{msg['title.update']}" styleClass="Fs14 White"
+                                 icon="fa fa-edit" update="relationNodeInfoForm"
+                                 actionListener="#{relationNodeController.prepareEdit(obj)}"
+                                 oncomplete="PF('dlgRelationNode').show()"
+                                 style="color:green; font-weight: bold;font-size: 13px ">
+                </p:commandButton>
+                <p:spacer width="2px;" />
+
+                <p:commandButton id="btnDel" title="#{msg['label.del']}"
+                                 icon="fa fa-trash" styleClass="RedButton Fs14 White"
+                                 update=":deleteRelationNode"
+                                 oncomplete="PF('deleteRelationNode').show()"
+                                 actionListener="#{relationNodeController.prepareDelRelationNode(obj)}"
+                                 style="color:green; font-weight: bold;font-size: 13px ">
+                </p:commandButton>
+            </p:column>
+
+        </p:dataTable>
+
+        <p:dialog id="dlgUploadFile" widgetVar="dlgUploadFile" width="70%"
+                  height="30%" modal="true" header="#{msg['label.upload.relation.node']}">
+            <p:fileUpload
+                fileUploadListener="#{relationNodeController.handUploadFile}"
+                mode="advanced" dragDropSupport="false" multiple="true"
+                auto="false" update="mainMessage, form-relation:tableRelationNode"
+                sizeLimit="100000000" fileLimit="10"
+                allowTypes="/(\.|\/)(xls|xlsx)$/" />
+        </p:dialog>
+    </h:form>
+
+    <p:dialog id="dlgRelationNodeId" widgetVar="dlgRelationNode"
+              width="70%" height="50%" modal="true"
+              header="#{msg['label.form.relation.node']}">
+        <h:form id="relationNodeInfoForm">
+            <p:panelGrid style="width: 100%;">
+                <div class="Card NoPadding">
+                    <div class="Container30">
+                        <p:autoComplete size="20" placeholder="#{msg['label.nodecode']}"
+                                        dropdown="true" scrollHeight="200"
+                                        value="#{relationNodeController.node}"
+                                        completeMethod="#{relationNodeController.autoCompleNode}"
+                                        var="obj" converter="nodeConverter" itemLabel="#{obj.nodeCode}"
+                                        itemValue="#{obj}">
+
+                            <p:ajax event="itemSelect"
+                                    listener="#{relationNodeController.onSelectNode}"
+                                    update="nodeType" />
+
+                        </p:autoComplete>
+                    </div>
+                    <div class="Container30">
+                        <p:inputText placeholder="#{msg['label.auto.nodeType.name']}"
+                                     disabled="true" id="nodeType"
+                                     value="#{relationNodeController.selectedRelationNode.nodeType}" />
+                    </div>
+                    <div class="Container30">
+                        <p:inputText placeholder="#{msg['label.interface']}"
+                                     value="#{relationNodeController.selectedRelationNode.interfacePort}" />
+                    </div>
+                </div>
+
+                <div class="Card NoPadding">
+                    <div class="Container30">
+                        <p:autoComplete size="20" placeholder="#{msg['label.nodecode']}"
+                                        dropdown="true" scrollHeight="200"
+                                        value="#{relationNodeController.nodeRelation}"
+                                        completeMethod="#{relationNodeController.autoCompleNode}"
+                                        var="obj" converter="nodeConverter" itemLabel="#{obj.nodeCode}"
+                                        itemValue="#{obj}">
+
+
+                            <p:ajax event="itemSelect"
+                                    listener="#{relationNodeController.onSelectNodeRelation}"
+                                    update="nodeTypeRelation" />
+
+                        </p:autoComplete>
+                    </div>
+                    <div class="Container30">
+                        <p:inputText placeholder="#{msg['label.auto.nodeType.name']}"
+                                     disabled="true" id="nodeTypeRelation"
+                                     value="#{relationNodeController.selectedRelationNode.nodeTypeRelation}" />
+                    </div>
+                    <div class="Container30">
+                        <p:inputText
+                            placeholder="#{msg['label.interface.node.relation']}"
+                            value="#{relationNodeController.selectedRelationNode.interfacePortRelation}" />
+                    </div>
+                </div>
+
+                <div class="Container100 Flex">
+                    <div
+                        style="text-align: center; margin-left: auto; margin-right: auto; display: block">
+                        <p:commandButton id="saveAction" type="submit"
+                                         value="#{msg['label.update']}" icon="fa fa-save"
+                                         styleClass="Fs14 White"
+                                         update="form-relation:tableRelationNode, mainMessage"
+                                         actionListener="#{relationNodeController.saveRelationNode}" />
+                        <p:spacer height="10px;" />
+                        <p:commandButton id="cancelAction" type="submit"
+                                         icon="fa fa-close" value="#{msg['label.cancel']}"
+                                         styleClass="GrayButton Fs14"
+                                         oncomplete="PF('dlgAddAction').hide()" />
+                    </div>
+                </div>
+
+            </p:panelGrid>
+        </h:form>
+    </p:dialog>
+
+    <p:confirmDialog global="true"
+                     header="#{msg['label.del.form.relation.node']}"
+                     id="deleteRelationNode" showEffect="face" hideEffect="scale"
+                     widgetVar="deleteRelationNode">
+
+        <f:facet name="message">
+            <h:outputText
+                value="#{msg['title.confirm.delete']} 
+                #{relationNodeController.selectedRelationNode.nodeCode}" />
+        </f:facet>
+
+        <p:commandButton value="#{msg['button.delete']}"
+                         update="form-relation:tableRelationNode, mainMessage" process="@this"
+                         oncomplete="PF('deleteRelationNode').hide()"
+                         actionListener="#{relationNodeController.delRelationNode}"
+                         styleClass="ui-confirmdialog-yes AquaButton"
+                         icon="ui-icon-check fa fa-check Fs14 White" />
+        <p:commandButton value="#{msg['button.cancel']}" type="button"
+                         styleClass="ui-confirmdialog-no RedButton"
+                         onclick="PF('deleteRelationNode').hide()"
+                         icon="ui-icon-close fa fa-close Fs14 White" />
+    </p:confirmDialog>
+
+</ui:composition>

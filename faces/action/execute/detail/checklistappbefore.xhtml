@@ -1,0 +1,146 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <h:form>
+        <p:dataTable var="data"
+                     style="width:100%; height: 100%; min-height: 196px"
+                     rowKey="#{data.appId}" rowIndexVar="rowIndex"
+                     styleClass="cl_app_bf_data_table"
+                     value="#{executeChecklistController.cklAppBeforeValues}"
+                     id="checklistAppBeforeDataTable"
+                     widgetVar="checklistAppBeforeDataTable" scrollable="true"
+                     scrollWidth="100%" scrollHeight="100%" tableStyleClass="longlt6"
+                     filteredValue="#{executeChecklistController.filteredChecklistAppBefore}">
+
+            <f:facet name="header">
+                <h:outputText value="#{msg['list.application.checklist']}"/> <h:outputText styleClass="Fs18"/>
+
+                <p:commandButton id="checklistAppBeforeToggler"
+                                 type="button" style="float:right"
+                                 icon="fa fa-reorder White" styleClass="GreenButton"/>
+                <p:columnToggler datasource="checklistAppBeforeDataTable"
+                                 id="clBfColumnToggler" trigger="checklistAppBeforeToggler">
+                    <p:ajax event="toggle"
+                            listener="#{executeChecklistController.onClAppBfToggler}"/>
+                </p:columnToggler>
+            </f:facet>
+
+            <p:column selectionMode="multiple"
+                      style="width:24px;text-align:center;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      rendered="false"/>
+
+            <p:column
+                    style="width: 20px; text-align: center;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                    headerText="#{msg['label.order']}"
+                    visible="#{executeChecklistController.clAppAtVisibale[0]}">
+                <h:outputText value="#{rowIndex+ 1}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['module.code']}"
+                      style="width: 142px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.module.moduleCode}" filterMatchMode="contains"
+                      visible="#{executeChecklistController.clAppAtVisibale[1]}">
+                <h:outputText styleClass="preformatted" value="#{data.module.moduleCode}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['module.name']}"
+                      style="width: 128px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.module.moduleName}" filterMatchMode="contains"
+                      visible="#{executeChecklistController.clAppAtVisibale[2]}">
+                <h:outputText styleClass="preformatted" value="#{data.module.moduleName}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['service.code']}"
+                      style="width: 110px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.module.serviceCode}" filterMatchMode="contains"
+                      visible="#{executeChecklistController.clAppAtVisibale[3]}">
+                <h:outputText styleClass="preformatted" value="#{data.module.serviceCode}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['service.name']}"
+                      style="width: 196px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.module.serviceName}" filterMatchMode="contains"
+                      visible="#{executeChecklistController.clAppAtVisibale[4]}">
+                <h:outputText styleClass="preformatted" value="#{data.module.serviceName}"/>
+            </p:column>
+
+            <!--<p:column headerText="Đường dẫn cài đặt" style="width: 296px; text-align: left; white-space: nowrap"
+                      filterBy="#{data.path}" filterMatchMode="contains" visible="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.path}"/>
+            </p:column>
+
+            <p:column headerText="Ip server" style="width: 96px; text-align: center; white-space: nowrap"
+                      filterBy="#{data.ipServer}" filterMatchMode="contains" visible="false">
+                <h:outputText styleClass="preformatted"
+                              value="#{data.ipServer}"/>
+            </p:column>-->
+
+            <p:column headerText="#{msg['kpi']}"
+                      style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.name}" filterMatchMode="contains"
+                      visible="#{executeChecklistController.clAppAtVisibale[5]}">
+                <h:outputText styleClass="preformatted" value="#{data.name}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['log']}"
+                      style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.result.log}" filterMatchMode="contains"
+                      visible="#{executeChecklistController.clAppAtVisibale[6]}">
+                <h:outputText styleClass="preformatted" value="#{data.result.log}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['operation.feel']}"
+                      style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.result.mathOption}" filterMatchMode="contains"
+                      visible="#{executeChecklistController.clAppAtVisibale[7]}">
+                <h:outputText styleClass="preformatted" value="#{msg['checklist.operation.'.concat(data.result.mathOption)]}"/>
+            </p:column>
+
+            <p:column headerText="#{msg['result.analysis']}"
+                      style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.resultBefore != null ? data.resultBefore : data.result.operationData}" filterMatchMode="contains"
+                      visible="#{executeChecklistController.clAppAtVisibale[8]}">
+                <!--20190125_hoangnd_fix bug show checklist_start-->
+                <h:outputText styleClass="preformatted"
+                              value="#{data.resultBefore != null ? data.resultBefore : data.result.operationData}"/>
+                <!--20190125_hoangnd_fix bug show checklist_end-->
+            </p:column>
+
+            <p:column headerText="#{msg['limited.value']}"
+                      style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.limitedBefore != null ? data.limitedBefore : data.result.threholdValue}" filterMatchMode="contains"
+                      visible="#{executeChecklistController.clAppAtVisibale[9]}">
+                <!--20190125_hoangnd_fix bug show checklist_start-->
+                <h:outputText id="cklAppLimit" styleClass="preformatted"
+                              value="#{utils.subContent(data.limitedBefore != null ? data.limitedBefore : data.result.threholdValue, 128)}"/>
+                <pe:tooltip for="cklAppLimit" mouseTracking="true" adjustX="10" adjustY="10" hideDelay="5">
+                    <h:outputText value="#{data.limitedBefore != null ? data.limitedBefore : data.result.threholdValue}" styleClass="Fs14" style="width: 100%"/>
+                </pe:tooltip>
+                <!--20190125_hoangnd_fix bug show checklist_end-->
+            </p:column>
+
+            <p:column headerText="#{msg['undervest']}"
+                      style="width: 96px; text-align: center; white-space: nowrap;#{data.result.status eq 0 ? 'background: #FF4136;color: white;' : ''}"
+                      filterBy="#{data.statusBefore != null ? data.statusBefore : data.result.status}"
+                      visible="#{executeChecklistController.clAppBfVisibale[10]}">
+                <f:facet name="filter">
+                    <p:selectOneMenu
+                            onchange="PF('checklistAppBeforeDataTable').filter()">
+                        <f:selectItem itemLabel="#{msg['common.select']}" noSelectionOption="true"/>
+                        <f:selectItem itemLabel="#{msg['common.ok']}" itemValue="1" noSelectionOption="true"/>
+                        <f:selectItem itemLabel="#{msg['common.not.ok']}" itemValue="0"
+                                      noSelectionOption="true"/>
+                    </p:selectOneMenu>
+                </f:facet>
+                <!--20190125_hoangnd_fix bug show checklist_start-->
+                <h:outputText styleClass="preformatted" rendered="#{(data.statusBefore != null ? data.statusBefore : data.result.status) eq 1}" value="#{msg['common.ok']}"/>
+                <h:outputText styleClass="preformatted" rendered="#{(data.statusBefore != null ? data.statusBefore : data.result.status) eq 0}" value="#{msg['common.not.ok']}"/>
+                <!--20190125_hoangnd_fix bug show checklist_end-->
+            </p:column>
+        </p:dataTable>
+    </h:form>
+</ui:composition>

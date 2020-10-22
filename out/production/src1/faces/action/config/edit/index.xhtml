@@ -1,0 +1,205 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <p:wizard flowListener="#{actionController.onFlowProcess}" id="editwizard" showNavBar="true" widgetVar="editwizard"
+              onback="PF('blockUiWizard').block()" onnext="PF('blockUiWizard').block()">
+        <p:tab id="common" title="#{actionController.uctt ? msg['script.information'] : msg['cr.information']}">
+            <div style="padding-bottom: 44px; padding-top: 8px">
+                <p:commandButton style="float: right" value="Next" oncomplete="PF('editwizard').next()"
+                                 icon="fa fa-chevron-right White" process="commoninfo"/>
+            </div>
+            <h:panelGroup id="commoninfo">
+                <ui:insert name="detail-dialog">
+                    <ui:include src="common.xhtml"/>
+                </ui:insert>
+            </h:panelGroup>
+        </p:tab>
+
+        <p:tab id="uctt" title="#{msg['cr.kb.uctt']}" rendered="#{actionController.newObj.kbGroup.equals(1)}">
+            <div style="padding-bottom: 44px; padding-top: 8px">
+                <p:commandButton style="float: left" value="Back" oncomplete="PF('editwizard').back()"
+                                 icon="fa fa-chevron-left White" process="@this"/>
+
+                <p:commandButton style="float: right" value="Next" oncomplete="PF('editwizard').next()"
+                                 icon="fa fa-chevron-right White" process="@this"/>
+            </div>
+            <h:panelGroup id="kbbductt">
+                <ui:insert name="detail-dialog">
+                    <ui:include src="uctt.xhtml"/>
+                </ui:insert>
+            </h:panelGroup>
+        </p:tab>
+        <p:tab id="devops" title="#{msg['cr.kb.autoupcode']}" rendered="#{actionController.newObj.kbGroup.equals(2)}">
+            <div style="padding-bottom: 44px; padding-top: 8px">
+                <p:commandButton style="float: left" value="Back" oncomplete="PF('editwizard').back()"
+                                 icon="fa fa-chevron-left White" process="@this"/>
+
+                <p:commandButton style="float: right" value="Next" oncomplete="PF('editwizard').next()"
+                                 icon="fa fa-chevron-right White" process="@this"/>
+            </div>
+            <h:panelGroup id="kbdev">
+                <ui:insert name="detail-dialog">
+                    <ui:include src="devops.xhtml"/>
+                </ui:insert>
+            </h:panelGroup>
+        </p:tab>
+
+        <p:tab id="module" title="#{msg['module.impact']}">
+            <div style="padding-bottom: 44px; padding-top: 8px">
+                <p:commandButton style="float: left" value="Back" oncomplete="PF('editwizard').back()"
+                                 icon="fa fa-chevron-left White" process="@this"/>
+
+                <p:commandButton style="float: right" value="Next" oncomplete="PF('editwizard').next()"
+                                 icon="fa fa-chevron-right White" process="@this"/>
+            </div>
+            <h:panelGroup id="moduleinfo">
+                <ui:insert name="detail-dialog">
+                    <ui:include src="module.xhtml"/>
+                </ui:insert>
+            </h:panelGroup>
+        </p:tab>
+        <p:tab id="checklistapp" title="#{msg['checklist.app']}">
+            <div style="padding-bottom: 44px; padding-top: 8px">
+                <p:commandButton style="float: left" value="Back" oncomplete="PF('editwizard').back()"
+                                 icon="fa fa-chevron-left White" process="@this"/>
+
+                <p:commandButton style="float: right" value="Next" oncomplete="PF('editwizard').next()"
+                                 icon="fa fa-chevron-right White" process="@this"/>
+            </div>
+            <ui:insert name="detail-dialog">
+                <ui:include src="checklistapp.xhtml"/>
+            </ui:insert>
+        </p:tab>
+        <p:tab id="checklistdb" title="#{msg['checklist.db']}">
+            <div style="padding-bottom: 44px; padding-top: 8px">
+                <p:commandButton style="float: left" value="Back" oncomplete="PF('editwizard').back()"
+                                 icon="fa fa-chevron-left White" process="@this"/>
+
+                <p:commandButton style="float: right" value="Next" oncomplete="PF('editwizard').next()"
+                                 icon="fa fa-chevron-right White" process="@this"/>
+            </div>
+            <ui:insert name="detail-dialog">
+                <ui:include src="checklistdb.xhtml"/>
+            </ui:insert>
+        </p:tab>
+        <p:tab id="app" title="#{msg['impact.application']}">
+            <div style="padding-bottom: 44px; padding-top: 8px">
+                <p:commandButton style="float: left" value="Back" oncomplete="PF('editwizard').back()"
+                                 icon="fa fa-chevron-left White" process="@this"/>
+
+                <p:commandButton style="float: right" value="Next" oncomplete="PF('editwizard').next()"
+                                 icon="fa fa-chevron-right White" process="@this"/>
+            </div>
+            <ui:insert name="detail-dialog">
+                <ui:include src="tdapp.xhtml"/>
+            </ui:insert>
+
+        </p:tab>
+
+        <p:tab id="db" title="#{msg['impact.database']}">
+            <div style="padding-bottom: 44px; padding-top: 8px">
+                <p:commandButton style="float: left" value="Back" oncomplete="PF('editwizard').back()"
+                                 icon="fa fa-chevron-left White" process="@this"/>
+
+                <p:commandButton style="float: right" value="Next" oncomplete="PF('editwizard').next()"
+                                 icon="fa fa-chevron-right White" process="@this"/>
+            </div>
+            <ui:insert name="detail-dialog">
+                <ui:include src="tddb.xhtml"/>
+            </ui:insert>
+        </p:tab>
+
+        <p:tab id="advance" title="#{msg['special.impact']}" rendered="true">
+            <div style="padding-bottom: 44px; padding-top: 8px">
+                <p:commandButton style="float: left" value="Back" oncomplete="PF('editwizard').back()"
+                                 icon="fa fa-chevron-left White" process="@this"/>
+
+                <p:commandButton style="float: right" value="Next" oncomplete="PF('editwizard').next()"
+                                 icon="fa fa-chevron-right White" process="@this"/>
+            </div>
+            <ui:insert name="detail-dialog">
+                <ui:include src="advance.xhtml"/>
+            </ui:insert>
+        </p:tab>
+
+        <p:tab id="testcase" title="#{msg['test.to.service']}">
+            <div style="padding-bottom: 44px; padding-top: 8px">
+                <p:commandButton style="float: left" value="Back" oncomplete="PF('editwizard').back()"
+                                 icon="fa fa-chevron-left White" process="@this"/>
+                <p:commandButton style="float: right" value="Next" oncomplete="PF('editwizard').next()"
+                                 icon="fa fa-chevron-right White" process="@this"/>
+            </div>
+            <ui:insert name="detail-dialog">
+                <ui:include src="testcase.xhtml"/>
+            </ui:insert>
+
+        </p:tab>
+
+        <p:tab id="verify" title="#{msg['verify']}">
+            <div style="padding-bottom: 44px; padding-top: 8px">
+                <p:commandButton style="float: left" value="Back" oncomplete="PF('editwizard').back()"
+                                 icon="fa fa-chevron-left White" process="@this"/>
+
+            </div>
+            <ui:insert name="detail-dialog">
+                <ui:include src="verify.xhtml"/>
+            </ui:insert>
+            <div align="center" style="margin-top: 10px">
+                <h:outputText value="#{msg['cr.company']}"/>
+                <p:selectOneMenu id="processSelectAgain" style="margin-left: 10px ;width: 115px"
+                                 disabled="#{(!sessionUtil.getUrlDisplay('/action/config/approve') and verifyController.disableCountrySelect) or actionController.viewOnly}"
+                                 value="#{actionController.newObj.impactProcess}" converter="impactProcessConverter">
+                    <f:selectItems value="#{actionController.impactProcesses}" itemValue="#{timezone.value}" itemLabel="#{timezone.label}"/>
+                    <p:ajax event="change" update="process"
+                            listener="#{actionController.handleChangeImpactProcess(actionController.newObj)}" />
+                </p:selectOneMenu>
+            </div>
+
+            <div class="button-area fa" align="center">
+                <h:panelGrid columns="4" cellpadding="6">
+                    <p:commandButton process="@this" disabled="#{actionController.viewOnly}"
+                                     value="#{msg['common.save']}" icon="fa fa-save White"
+                                     styleClass="GreenButton"
+                                     update=":mop:lst :insertEditForm:designGrowl"
+                                     onstart="PF('blockUiWizard').block()" oncomplete="PF('blockUiWizard').unblock()"
+                                     actionListener="#{actionController.saveOrUpdate(true)}"/>
+
+                    <p:commandButton disabled="#{actionController.viewOnly}" value="#{msg['button.cancel']}"
+                                     icon="fa fa-remove White"
+                                     actionListener="#{actionController.closeTab}"
+                                     styleClass="ButtonRed" update="lst"/>
+                    <!--20200603_namlh add button download verify information_start-->
+                    <p:commandButton disabled="#{actionController.viewOnly}" ajax="false"
+                                     value="#{msg['download.verify']}" icon="fa fa-download White"
+                                     styleClass="Blue">
+                        <p:fileDownload value="#{verifyController.onExport()}"/>
+                    </p:commandButton>
+                    <!--20200603_namlh add button download verify information_end-->
+                </h:panelGrid>
+            </div>
+        </p:tab>
+    </p:wizard>
+
+    <p:confirmDialog id="confirmSaveWithowValid" message="#{msg['cr.has.not.been.verified']}?"
+                     header="#{msg['confirm.save.cr']}"
+                     severity="alert" widgetVar="confirmSaveWithowValid">
+        <p:commandButton value="#{msg['continue']}" icon="fa fa-check White" styleClass="GreenButton"
+                         update=":mop:lst :insertEditForm:designGrowl"
+                         actionListener="#{actionController.saveOrUpdate(false)}"
+                         oncomplete="PF('blockUiWizard').unblock()" process="@this"
+                         onstart="PF('blockUiWizard').block(); PF('confirmSaveWithowValid').hide()"/>
+
+        <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                         onclick="PF('confirmSaveWithowValid').hide()"
+                         styleClass="ButtonRed"/>
+    </p:confirmDialog>
+
+    <style>
+        .ui-wizard-step-title {
+            min-width: 70px !important;
+        }
+    </style>
+</ui:composition>

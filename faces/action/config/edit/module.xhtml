@@ -1,0 +1,425 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions" xmlns:c="http://java.sun.com/jsp/jstl/core">
+    <p:growl id="moduleGrowl" showDetail="false" widgetVar="moduleGrowl"/>
+
+    <div style="float: left; width: 100%">
+        <div class="divStyle">
+            <div style="float: left; width: 100%; overflow-x: auto; overflow-y: auto; white-space: nowrapp; max-height: 320px;">
+                <p:dataTable var="data" style="width:100%; height: 320px" rowKey="#{data.moduleId}" lazy="true"
+                             paginator="true" rows="25" rowsPerPageTemplate="25, 50, 100" paginatorPosition="bottom"
+                             rowIndexVar="rowIndex" value="#{actionController.lazyAppModel}"
+                             selection="#{actionController.selectedBeforeModdules}" id="appDataTable"
+                             widgetVar="appDataTable" scrollable="true"
+                             scrollWidth="100%" scrollHeight="100%">
+
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['list.module']}" styleClass="Fs18 Blue FontItalic"/>
+                        <p:commandButton id="toggler" type="button" style="float:right" icon="fa fa-reorder White"
+                                         styleClass="GreenButton"/>
+                        <p:columnToggler datasource="appDataTable" trigger="toggler">
+                            <p:ajax event="toggle" listener="#{actionController.onToggler}"/>
+                        </p:columnToggler>
+                    </f:facet>
+
+                    <p:ajax event="page" onstart="PF('blockUiApp').block()" oncomplete="PF('blockUiApp').unblock()"/>
+
+                    <p:ajax event="sort" onstart="PF('blockUiApp').block()" oncomplete="PF('blockUiApp').unblock()"/>
+
+                    <p:ajax event="filter" onstart="PF('blockUiApp').block()" oncomplete="PF('blockUiApp').unblock()"/>
+
+                    <p:column selectionMode="multiple" style="width:24px;text-align:center" visible="#{actionController.columnVisible[0]}"/>
+
+                    <p:column style="width: 34px; text-align: center;" headerText="#{msg['label.order']}" visible="#{actionController.columnVisible[1]}">
+                        <h:outputText value="#{rowIndex+ 1}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['service.code']}"
+                              style="width: 164px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.serviceCode}" filterMatchMode="contains" visible="#{actionController.columnVisible[2]}">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.serviceCode}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['service.name']}" visible="#{actionController.columnVisible[3]}"
+                              style="width: 196px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.serviceName}" filterMatchMode="contains">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.serviceName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.code']}" visible="#{actionController.columnVisible[4]}"
+                              style="width: 196px; text-align: center; white-space: nowrap" filterBy="#{data.moduleCode}"
+                              filterMatchMode="contains" >
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.moduleCode}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.name']}" visible="#{actionController.columnVisible[5]}"
+                              style="width: 256px; text-align: center; white-space: nowrap" filterBy="#{data.moduleName}"
+                              filterMatchMode="contains">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.moduleName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.typename']}" visible="#{actionController.columnVisible[6]}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.moduleTypeName}"
+                              filterMatchMode="contains">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.moduleTypeName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.groupname']}" visible="#{actionController.columnVisible[7]}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.groupModuleName}"
+                              filterMatchMode="contains" >
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.groupModuleName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['path.to.install']}" visible="#{actionController.columnVisible[8]}"
+                              style="width: 296px; text-align: center; white-space: nowrap" filterBy="#{data.path}"
+                              filterMatchMode="contains">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.executePath}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['ip.of.server']}" visible="#{actionController.columnVisible[9]}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.ipServer}"
+                              filterMatchMode="contains">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.ipServer}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['user']}" style="width: 96px; text-align: center; white-space: nowrap" visible="#{actionController.columnVisible[10]}"
+                              filterBy="#{data.username}" filterMatchMode="contains">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.username}"/>
+                    </p:column>
+
+                    <!--<p:column headerText="#{msg['status']}" style="width: 96px; text-align: center; white-space: nowrap" visible="#{actionController.columnVisible[11]}"
+                              filterBy="#{data.moduleStatus}" filterMatchMode="contains">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.moduleStatus}"/>
+                    </p:column>-->
+
+                    <p:column headerText="#{msg['module.status']}" style="width: 96px; text-align: center; white-space: nowrap" visible="#{actionController.columnVisible[11]}"
+                              filterBy="#{data.moduleStatus}" filterMatchMode="contains">
+                        <f:facet name="filter">
+                            <p:selectOneMenu onchange="PF('appDataTable').filter()">
+                                <f:selectItem itemLabel="#{msg['common.choose']}"/>
+                                <f:selectItem itemLabel="#{msg['datatable.header.user.country.status.1']}"
+                                              itemValue="1"/>
+                                <f:selectItem itemLabel="#{msg['datatable.header.user.country.status.0']}"
+                                              itemValue="0"/>
+                            </p:selectOneMenu>
+                        </f:facet>
+                        <h:outputText styleClass="preformatted"
+                                      value="#{msg['common.choose']}" rendered="#{data.moduleStatus == 1 and data.moduleStatus == 0}"/>
+                        <h:outputText styleClass="preformatted"
+                                      value="#{msg['datatable.header.user.country.status.1']}" rendered="#{data.moduleStatus == 1}"/>
+                        <h:outputText styleClass="preformatted"
+                                      value="#{msg['datatable.header.user.country.status.0']}" rendered="#{data.moduleStatus == 0}"/>
+                    </p:column>
+                </p:dataTable>
+            </div>
+
+            <div style="float: left; max-width: 20%; max-height: 300px; margin-left: 10px; margin-right: 10px">
+                <h:panelGrid style="float:left;width:100%; text-alight:centrel" columns="5"
+                             id="optionBtPanel">
+                    <p:commandButton value="#{msg['common.add']}" disabled="#{actionController.viewOnly || actionController.bdUctt}"
+                                     style="width:124px" styleClass="GreenButton" icon="fa fa-plus White"
+                                     actionListener="#{actionController.chooseOpt}" oncomplete="PF('testbedDataTable').clearFilters()"
+                                     update=":mop:lst:dataTable :mop:lst:appDataTable :mop:lst:testbedDataTable :mop:lst:moduleGrowl">
+                    </p:commandButton>
+
+                    <p:commandButton value="#{msg['button.delete']}" disabled="#{actionController.viewOnly || actionController.bdUctt}"
+                                     style="width:124px" styleClass="ButtonRed" icon="fa fa-minus White"
+                                     actionListener="#{actionController.clearOpt}"
+                                     update=":mop:lst:dataTable :mop:lst:appDataTable :mop:lst:testbedDataTable :mop:lst:moduleGrowl">
+                    </p:commandButton>
+
+                    <p:commandButton value="#{msg['button.update']}" disabled="#{actionController.viewOnly || actionController.bdUctt}"
+                                     style="width:124px" styleClass="ButtonRed" icon="fa fa-exchange White"
+                                     actionListener="#{actionController.updateAction}"
+                                     update=":mop:lst:dataTable :mop:lst:appDataTable :mop:lst:testbedDataTable :mop:lst:moduleGrowl">
+                    </p:commandButton>
+
+                    <p:inputText style="width:124px" value="#{actionController.kbGroup}"/>
+
+                    <p:selectOneMenu id="deviceTypeCode" style="width: 128px" disabled="#{actionController.viewOnly || actionController.bdUctt}"
+                                     value="#{actionController.actionType}">
+                        <f:selectItems value="#{actionController.moduleActions}" var="obj" itemLabel="#{obj.label()}"
+                                       itemValue="#{obj.value()}"/>
+                    </p:selectOneMenu>
+                </h:panelGrid>
+            </div>
+
+            <!--20180630_hoangnd_update_edit_cell-->
+            <div style="float: left; width: 100%; overflow-x: auto; overflow-y: auto; white-space: nowrapp; max-height: 320px;">
+                <p:dataTable var="data" style="width:100%; height: 320px" rowKey="#{data.moduleId}" rowIndexVar="rowIndex"
+                             value="#{actionController.lstNormalImpactModules}" selection="#{actionController.selectedModdules}"
+                             filteredValue="#{actionController.dataTableFilters}" id="dataTable" widgetVar="dataTable"
+                             scrollable="true"
+                             scrollWidth="100%" scrollHeight="100%"
+                             editable="true" editMode="cell">
+
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['list.module.impaction']}" styleClass="Fs18 Blue FontItalic"/>
+                        <p:commandButton id="toggler" type="button" style="float:right" icon="fa fa-reorder White"
+                                         styleClass="GreenButton"/>
+                        <p:columnToggler datasource="dataTable" trigger="toggler"/>
+                    </f:facet>
+
+                    <p:ajax event="page" onstart="PF('blockUiSelectApp').block()"
+                            oncomplete="PF('blockUiSelectApp').unblock()"/>
+
+                    <p:ajax event="sort" onstart="PF('blockUiSelectApp').block()"
+                            oncomplete="PF('blockUiSelectApp').unblock()"/>
+
+                    <p:ajax event="filter" onstart="PF('blockUiSelectApp').block()"
+                            oncomplete="PF('blockUiSelectApp').unblock()"/>
+
+                    <!--20180630_hoangnd_cau_hinh_user_tac_dong_start-->
+                    <p:ajax event="cellEdit" listener="#{actionController.onCellEdit}" update="dataTable" />
+                    <!--20180630_hoangnd_cau_hinh_user_tac_dong_end-->
+
+                    <p:column selectionMode="multiple" style="width:24px;text-align:center"/>
+
+                    <p:column style="width: 34px; text-align: center;" headerText="#{msg['label.order']}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{rowIndex+ 1}"/>
+                    </p:column>
+
+                    <p:column style="width: 40px; text-align: center;" headerText="#{msg['module.kb.group']}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.kbGroup}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['type.of.impact']}"
+                              style="width: 110px; text-align: center; white-space: nowrap" visible="true">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{actionController.actionTypeStr(data.actionType)}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['service.code']}"
+                              style="width: 110px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.serviceCode}" filterMatchMode="contains" visible="false">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.serviceCode}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['service.name']}"
+                              style="width: 196px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.serviceName}" filterMatchMode="contains">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.serviceName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.code']}"
+                              style="width: 142px; text-align: center; white-space: nowrap" filterBy="#{data.moduleCode}"
+                              filterMatchMode="contains" visible="false">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.moduleCode}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.name']}"
+                              style="width: 256px; text-align: center; white-space: nowrap" filterBy="#{data.moduleName}"
+                              filterMatchMode="contains">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.moduleName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.typename']}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.moduleTypeName}"
+                              filterMatchMode="contains">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.moduleTypeName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.groupname']}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.groupModuleName}"
+                              filterMatchMode="contains" visible="false">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.groupModuleName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['path.to.install']}"
+                              style="width: 296px; text-align: center; white-space: nowrap" filterBy="#{data.executePath}"
+                              filterMatchMode="contains">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.executePath}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['ip.of.server']}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.ipServer}"
+                              filterMatchMode="contains">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.ipServer}"/>
+                    </p:column>
+
+                    <!--20180630_hoangnd_cho_phep_cau_hinh_user_tac_dong_start-->
+                    <p:column headerText="#{msg['user']}" style="width: 96px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.username}" filterMatchMode="contains">
+                        <h:outputText rendered="#{data.osType != 3}" styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}" value="#{data.username}"/>
+                        <p:cellEditor rendered="#{data.osType == 3}">
+                            <!--20180727_hoangnd_fix bug cau hinh user tac dong_start-->
+                            <c:set var="data" value="#{actionController.loadUser(data)}" />
+                            <f:facet name="output"><h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}" value="#{data.username}"/></f:facet>
+                            <f:facet name="input">
+                                <h:selectOneMenu id="sltUsername" value="#{data.username}" style="width:100%">
+                                    <f:selectItems value="#{actionController.lstOsAccounts}" var="account" itemLabel="#{account.username}" itemValue="#{account.username}" />
+                                </h:selectOneMenu>
+                            </f:facet>
+                            <!--20180727_hoangnd_fix bug cau hinh user tac dong_end-->
+                        </p:cellEditor>
+
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.status']}" style="width: 96px; text-align: center; white-space: nowrap" visible="#{actionController.columnVisible[11]}"
+                              filterBy="#{data.moduleStatus}" filterMatchMode="contains">
+                        <f:facet name="filter">
+                            <p:selectOneMenu onchange="PF('dataTable').filter()">
+                                <f:selectItem itemLabel="#{msg['common.choose']}"/>
+                                <f:selectItem itemLabel="#{msg['datatable.header.user.country.status.1']}"
+                                              itemValue="1"/>
+                                <f:selectItem itemLabel="#{msg['datatable.header.user.country.status.0']}"
+                                              itemValue="0"/>
+                            </p:selectOneMenu>
+                        </f:facet>
+                        <h:outputText styleClass="preformatted"
+                                      value="#{msg['common.choose']}" rendered="#{data.moduleStatus == 1 and data.moduleStatus == 0}"/>
+                        <h:outputText styleClass="preformatted"
+                                      value="#{msg['datatable.header.user.country.status.1']}" rendered="#{data.moduleStatus == 1}"/>
+                        <h:outputText styleClass="preformatted"
+                                      value="#{msg['datatable.header.user.country.status.0']}" rendered="#{data.moduleStatus == 0}"/>
+                    </p:column>
+                    <!--20180630_hoangnd_cho_phep_cau_hinh_user_tac_dong_end-->
+                </p:dataTable>
+            </div>
+
+            <div style="float: left; width: 100%; overflow-x: auto; overflow-y: auto; white-space: nowrapp; max-height: 320px;">
+                <p:dataTable var="data" style="width:100%; height: 320px" rowKey="#{data.moduleId}" rowIndexVar="rowIndex"
+                             value="#{actionController.lstTestBedImpactModules}"
+                             filteredValue="#{actionController.testbedDataTableFilters}" id="testbedDataTable" widgetVar="testbedDataTable"
+                             scrollable="true"
+                             scrollWidth="100%" scrollHeight="100%">
+
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['list.module.testbed.impaction']}" styleClass="Fs18 Blue FontItalic"/>
+                        <p:commandButton id="testbed_toggler" type="button" style="float:right" icon="fa fa-reorder White"
+                                         styleClass="GreenButton"/>
+                        <p:columnToggler datasource="testbedDataTable" trigger="testbed_toggler"/>
+                    </f:facet>
+
+                    <p:ajax event="page" onstart="PF('blockUiSelectApp').block()"
+                            oncomplete="PF('blockUiSelectApp').unblock()"/>
+
+                    <p:ajax event="sort" onstart="PF('blockUiSelectApp').block()"
+                            oncomplete="PF('blockUiSelectApp').unblock()"/>
+
+                    <p:ajax event="filter" onstart="PF('blockUiSelectApp').block()"
+                            oncomplete="PF('blockUiSelectApp').unblock()"/>
+
+                    <p:column selectionMode="multiple" style="width:24px;text-align:center"/>
+
+                    <p:column style="width: 34px; text-align: center;" headerText="#{msg['label.order']}" rendered="false">
+                        <h:outputText value="#{rowIndex+ 1}"/>
+                    </p:column>
+
+                    <p:column style="width: 40px; text-align: center;" headerText="#{msg['module.kb.group']}">
+                        <h:outputText value="#{data.kbGroup}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['type.of.impact']}"
+                              style="width: 110px; text-align: center; white-space: nowrap" visible="true">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{actionController.actionTypeStr(data.actionType)}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['service.code']}"
+                              style="width: 110px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.serviceCode}" filterMatchMode="contains" visible="false">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.serviceCode}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['service.name']}"
+                              style="width: 196px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.serviceName}" filterMatchMode="contains">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.serviceName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.code']}"
+                              style="width: 142px; text-align: center; white-space: nowrap" filterBy="#{data.moduleCode}"
+                              filterMatchMode="contains" visible="false">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.moduleCode}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.name']}"
+                              style="width: 256px; text-align: center; white-space: nowrap" filterBy="#{data.moduleName}"
+                              filterMatchMode="contains">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.moduleName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.typename']}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.moduleTypeName}"
+                              filterMatchMode="contains">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.moduleTypeName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.groupname']}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.groupModuleName}"
+                              filterMatchMode="contains" visible="false">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.groupModuleName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['path.to.install']}"
+                              style="width: 296px; text-align: center; white-space: nowrap" filterBy="#{data.executePath}"
+                              filterMatchMode="contains">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.executePath}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['ip.of.server']}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.ipServer}"
+                              filterMatchMode="contains">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.ipServer}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['user']}" style="width: 96px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.username}" filterMatchMode="contains" visible="false">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.username}"/>
+                    </p:column>
+                </p:dataTable>
+            </div>
+        </div>
+    </div>
+    <style>
+        .textExclusion {
+            color: red;
+        }
+        .ui-datatable tr.ui-datatable-even:hover, .ui-datatable tr.ui-datatable-odd:hover, .ui-datatable-data tr.ui-state-hover {
+            background: #F4E7C1 !important;
+            background-color: #F4E7C1 !important;
+        }
+
+        .ui-datatable table tbody .ui-state-hover > td {
+            background-color: #F4E7C1 !important;
+        }
+
+        #id1, #id2 {
+
+        }
+    </style>
+
+</ui:composition>

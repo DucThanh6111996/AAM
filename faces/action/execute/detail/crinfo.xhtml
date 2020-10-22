@@ -1,0 +1,54 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions">
+    <div class="Container100 NoIndent Flex FlexWrap">
+        <div class="Container25 Responsive50 Flex">
+            <div class="Card">
+                <div class="EmptyBox10"></div>
+                <div class="Container100 NoIndent Responsive100">
+                    <i class="icon-mind Green Fs60 Fleft MarRight10"></i>
+                    <span class="FontLatoBlack Black Opac80 Fleft Fs18 DispBlock"
+                          style="text-transform: uppercase;">#{msg['creator.cr']}</span><br/>
+                    <span class="FontLatoRegular Green Fleft Fs28 DispBlock">#{executeController.selectedAction.createdBy}</span>
+                </div>
+
+            </div>
+        </div>
+        <div class="Container25 Responsive50 Flex">
+            <div class="Card">
+                <div class="EmptyBox10"></div>
+                <div class="Container100 NoIndent Responsive100">
+                    <i class="icon-document187 Blue Fs60 Fleft MarRight10"></i>
+                    <span class="FontLatoBlack Black Opac80 Fleft Fs18 DispBlock">#{executeController.selectedAction.tdCode}</span><br/>
+                    <span class="FontLatoRegular Blue Fleft Fs20 DispBlock">#{executeController.selectedAction.crName}</span>
+                </div>
+            </div>
+        </div>
+        <div class="Container25 Responsive50 Flex">
+            <div class="Card">
+                <div class="EmptyBox10"></div>
+                <div class="Container100 NoIndent Responsive100">
+                    <i class="icon-clock4 Yellow Fs60 Fleft MarRight10"></i>
+                    <span class="FontLatoBlack Black Opac80 Fleft Fs18 DispBlock"
+                          style="text-transform: uppercase;">#{msg['time']}</span><br/>
+                    <span class="FontLatoRegular Yellow Fleft Fs20 DispBlock">#{sessionUtil.toTimeZoneDate(executeController.selectedAction.beginTime)}-#{sessionUtil.toTimeZoneDate(executeController.selectedAction.endTime)}</span>
+                </div>
+            </div>
+        </div>
+        <div class="Container25 Responsive50 Flex">
+            <div class="Card">
+                <div class="EmptyBox10"></div>
+                <div class="Container100 NoIndent Responsive100">
+                    <i class="icon-chat51 Red Fs60 Fleft MarRight10"></i>
+                    <span class="FontLatoBlack Black Opac80 Fleft Fs18 DispBlock"
+                          style="text-transform: uppercase;">#{msg['impaction.reason']}</span><br/>
+                    <span class="FontLatoRegular Red Fleft Fs20 DispBlock">#{executeController.selectedAction.reason}</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</ui:composition>

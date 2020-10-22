@@ -1,0 +1,333 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/layout/olympos/template.xhtml">
+    <ui:define name="content">
+        <p:messages id="mainMessage" showDetail="true" showSummary="false" closable="true"/>
+        <h:form id="form">
+            <!--<p:messages id="mainMessage3" showDetail="true" showSummary="false" closable="true"/>-->
+            <p:growl id="growl" showDetail="true" showSummary="false" widgetVar="growl"/>
+            <p:dataTable value="#{commandBlacklistController.lazyDataModel}"
+                         var="obj" rows="10" rowKey="#{obj.id}"
+                         lazy="true" widgetVar="cmdBlacklistWidget" id="cmdBlacklistId"
+                         paginatorPosition="bottom"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}"
+                         paginator="true" styleClass="Table Container100 NoPadding MarTop10"
+                         editable="true" editMode="cell"
+                         rowsPerPageTemplate="10,20,30" rowIndexVar="cmdBlacklistIdx"
+                         selection="#{commandBlacklistController.commandBlacklists}">
+                <f:facet name="header">
+                    <div class="Card NoPadding" style="background: transparent;">
+                        <div class="Container10" style="text-align: left;">
+                            <p:tooltip position="right" for="addCmdBlacklist"></p:tooltip>
+                            <p:commandButton id="addId" icon="fa fa-plus-circle" styleClass="OrangeButton White"
+                                             style="margin-top: 5px"
+                                             onclick="PF('block').show()"
+                                             oncomplete="PF('addCmdBlacklist').show();PF('block').hide()"
+                                             update=":form,addCmdBlacklist" rendered="#{sessionUtil.actionAdmin}"
+                                             actionListener="#{commandBlacklistController.preAddCmdBlacklist}"
+                                             title="#{msg['button.insert']}"
+                            />
+                        </div>
+                        <div class="Container80 Responsive50">
+                            <h:outputText styleClass="Fs20" value="#{msg['menu.title.database.command.blacklist']}"/>
+                        </div>
+                        <div class="Container10" style="text-align: right">
+                            <p:commandButton id="toggler" type="button"
+                                             style="float:right" icon="fa fa-sliders"
+                                             styleClass="Fs14 White GreenButton"/>
+                            <p:columnToggler datasource="cmdBlacklistId" trigger="toggler">
+                                <p:ajax event="toggle" listener="#{commandBlacklistController.onToggler}" />
+                            </p:columnToggler>
+                        </div>
+                    </div>
+
+                </f:facet>
+
+                <p:ajax event="page" onstart="PF('block').show()" oncomplete="PF('block').hide()"></p:ajax>
+                <p:ajax event="filter" onstart="PF('block').show()" oncomplete="PF('block').hide()"></p:ajax>
+                <p:column headerText="#{msg['datatable.header.stt']}" width="40" style="text-align: center"
+                          visible="#{commandBlacklistController.columnVisibale[0]}">
+                    <h:outputText value="#{cmdBlacklistIdx +1}"/>
+                </p:column>
+
+                <p:column style="text-align: center;white-space: pre-wrap"
+                          filterBy="#{obj.vendor.vendorName}" id="vendorName" filterMatchMode="contains"
+                          visible="#{commandBlacklistController.columnVisibale[1]}">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['label.vendorName']}"/>
+                    </f:facet>
+                    <h:outputText value="#{obj.vendor.vendorName}"/>
+                </p:column>
+                <p:column style="text-align: center;white-space: pre-wrap;"
+                          filterBy="#{obj.nodeType.typeName}" filterMatchMode="contains"
+                          visible="#{commandBlacklistController.columnVisibale[2]}">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['label.nodeTypeName']}"/>
+                    </f:facet>
+                    <h:outputText value="#{obj.nodeType.typeName}"/>
+                </p:column>
+                <p:column style="text-align: center;white-space: pre-wrap;"
+                          filterBy="#{obj.version.versionName}" filterMatchMode="contains"
+                          visible="#{commandBlacklistController.columnVisibale[3]}">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['label.versionName']}"/>
+                    </f:facet>
+                    <h:outputText value="#{obj.version.versionName}"/>
+                </p:column>
+
+                <p:column style="text-align: center" filterBy="#{obj.cmdRegex}" filterMatchMode="contains"
+                          visible="#{commandBlacklistController.columnVisibale[4]}">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['label.cmdBlacklistRegex']}"/>
+                    </f:facet>
+                    <h:outputText value="#{obj.cmdRegex}"/>
+                </p:column>
+                <p:column style="text-align: center;white-space: pre-wrap" filterBy="#{obj.operator}"
+                          filterMatchMode="contains"
+                          visible="#{commandBlacklistController.columnVisibale[5]}">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['label.operator']}"/>
+                    </f:facet>
+                    <h:outputText value="#{obj.operator}"/>
+                </p:column>
+                <p:column style="text-align: center;white-space: pre-wrap" filterBy="#{obj.standardValue}"
+                          filterMatchMode="contains"
+                          visible="#{commandBlacklistController.columnVisibale[6]}">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['label.standardValue']}"/>
+                    </f:facet>
+                    <h:outputText value="#{obj.standardValue}"/>
+                </p:column>
+
+                <p:column style="text-align: center" filterBy="#{obj.createdBy}"
+                          filterMatchMode="contains"
+                          visible="#{commandBlacklistController.columnVisibale[7]}">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['datatable.header.createby']}"/>
+                    </f:facet>
+                    <h:outputText value="#{obj.createdBy}"/>
+                </p:column>
+                <p:column headerText="#{msg['datatable.header.time.create']}"
+                          filterBy="#{obj.createTime}" filterMatchMode="contains"
+                          style="text-align: center;" visible="#{commandBlacklistController.columnVisibale[8]}">
+                    <h:outputText value="#{obj.createTime}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss"/>
+                    </h:outputText>
+                </p:column>
+                <p:column style="text-align: center" filterBy="#{obj.lastUpdateBy}"
+                          filterMatchMode="contains"
+                          visible="#{commandBlacklistController.columnVisibale[9]}">
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['datatable.header.lastUpdateBy']}"/>
+                    </f:facet>
+                    <h:outputText value="#{obj.lastUpdateBy}"/>
+                </p:column>
+                <p:column headerText="#{msg['label.updateTime']}"
+                          filterBy="#{obj.updateTime}" filterMatchMode="contains"
+                          style="text-align: center;" visible="#{commandBlacklistController.columnVisibale[10]}">
+                    <h:outputText value="#{obj.updateTime}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss"/>
+                    </h:outputText>
+                </p:column>
+
+                <p:column headerText="#{msg['datatable.header.action']}" width="120" style="text-align: center" visible="#{commandBlacklistController.columnVisibale[11]}">
+                    <div style="text-align: center">
+                        <p:tooltip position="top"></p:tooltip>
+                        <p:commandButton id="update" type="submit" rendered="#{sessionUtil.actionAdmin}"
+                                         title="#{msg['label.update']}" icon="fa fa-edit"
+                                         onstart="PF('block').show()"
+                                         update="form, cmdBlacklistId,addCmdBlacklist"
+                                         oncomplete="PF('addCmdBlacklist').show();PF('block').hide()"
+                                         styleClass="Fs14 White GreenButton"
+                                         style="color:green; font-weight: bold;font-size: 13px "
+                                         actionListener="#{commandBlacklistController.prepareEdit(obj)}"/>
+                        <p:commandButton rendered="#{sessionUtil.actionAdmin}"
+                                         styleClass="RedButton Fs14 White MarTop5 Marleft5"
+                                         actionListener="#{commandBlacklistController.prepareDelete(obj)}"
+                                         title="#{msg['button.delete']}"
+                                         oncomplete="PF('confirmDialogCmd').show()" icon="fa fa-remove"
+                                         update=":form:cmdBlacklistId"/>
+                    </div>
+                </p:column>
+
+            </p:dataTable>
+
+        </h:form>
+
+        <p:confirmDialog id="confirmDialogCmd" message="#{msg['title.confirm.delete']}"
+                         header="#{msg['label.del']}" severity="alert" widgetVar="confirmDialogCmd">
+            <p:commandButton id="confirmCmd" value="#{msg['button.confirm']}"
+                             actionListener="#{commandBlacklistController.onDelete()}"
+                             update=":form:cmdBlacklistId :form:growl" oncomplete="PF('confirmDialogCmd').hide()"/>
+            <p:commandButton id="cancelCmd" value="#{msg['button.cancel']}"
+                             onclick="PF('confirmDialogCmd').hide()"/>
+        </p:confirmDialog>
+
+        <p:dialog widgetVar="addCmdBlacklist" width="75%"
+                  id="addCmdBlacklist"
+                  height="80%" modal="true" showEffect="size" hideEffect="scale">
+            <f:facet name="header">
+                <h:outputText value="#{msg['label.add']}" rendered="#{!commandBlacklistController.update}"/>
+                <h:outputText value="#{msg['label.update']}" rendered="#{commandBlacklistController.update}"/>
+            </f:facet>
+            <h:form id="addCategoryForm">
+                <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px">
+                    <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.vendorName']}"/>
+                    <p:selectOneMenu filter="true" filterMatchMode="contains"
+                                     rendered="#{commandBlacklistController.update}" class="ui-g-8"
+                                     value="#{commandBlacklistController.vendorSelected}"
+                                     id="vendorNameAdd" converter="vendorConverter">
+
+                        <f:selectItems var="vendorObj" itemLabel="#{vendorObj.vendorName}"
+                                       itemValue="#{vendorObj}" value="#{commandBlacklistController.vendors}"/>
+
+                    </p:selectOneMenu>
+
+                    <p:selectManyMenu filter="true" filterMatchMode="contains" showCheckbox="true"
+                                      scrollHeight="100"
+                                      converter="vendorConverter"
+                                      value="#{commandBlacklistController.vendorSeleteds}"
+                                      rendered="#{!commandBlacklistController.update}" class="ui-g-8"
+                                      id="vendorName1">
+                        <f:selectItems var="vendorObj" itemLabel="#{vendorObj.vendorName}"
+                                       itemValue="#{vendorObj}" value="#{commandBlacklistController.vendors}"/>
+                    </p:selectManyMenu>
+                </p:outputPanel>
+
+                <p:outputPanel id="groupDomain" class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px;">
+                    <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.nodeTypeName']}"/>
+                    <p:selectOneMenu filter="true" filterMatchMode="contains"
+                                     rendered="#{commandBlacklistController.update}"
+                                     class="ui-g-8" value="#{commandBlacklistController.nodeTypeSelected}"
+                                     id="nodeTypeName" converter="nodeTypeConverter">
+
+                        <f:selectItems var="typeObj" itemLabel="#{typeObj.typeName}"
+                                       itemValue="#{typeObj}" value="#{commandBlacklistController.nodeTypes}"/>
+
+                    </p:selectOneMenu>
+                    <p:selectManyMenu filter="true" filterMatchMode="contains" showCheckbox="true"
+                                      scrollHeight="100"
+                                      converter="nodeTypeConverter"
+                                      value="#{commandBlacklistController.nodeTypeSelecteds}"
+                                      rendered="#{!commandBlacklistController.update}"
+                                      class="ui-g-8" id="nodeTypeName1" required="false">
+                        <f:selectItems var="typeObj" itemLabel="#{typeObj.typeName}"
+                                       itemValue="#{typeObj}" value="#{commandBlacklistController.nodeTypes}"/>
+                    </p:selectManyMenu>
+                </p:outputPanel>
+
+                <p:outputPanel class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px">
+                    <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.versionName']}"/>
+                    <p:selectOneMenu filter="true" filterMatchMode="contains"
+                                     rendered="#{commandBlacklistController.update}" class="ui-g-8"
+                                     value="#{commandBlacklistController.versionSelected}"
+                                     id="versionName" converter="versionConverter">
+
+                        <f:selectItem itemValue="null" itemLabel="#{msg['common.choose']}"/>
+                        <f:selectItems var="verObj" itemLabel="#{verObj.versionName}"
+                                       itemValue="#{verObj}" value="#{commandBlacklistController.versions}"/>
+
+                    </p:selectOneMenu>
+                    <p:selectManyMenu filter="true" filterMatchMode="contains" showCheckbox="true"
+                                      scrollHeight="100"
+                                      converter="versionConverter"
+                                      value="#{commandBlacklistController.versionSelecteds}"
+                                      rendered="#{!commandBlacklistController.update}" class="ui-g-8"
+                                      id="versionName1" required="false">
+                        <f:selectItems var="versionObj" itemLabel="#{versionObj.versionName}"
+                                       itemValue="#{versionObj}" value="#{commandBlacklistController.versions}"/>
+                    </p:selectManyMenu>
+                </p:outputPanel>
+
+                <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px">
+                    <h:outputText id="cmdRegexLabel"
+                                  class="ui-g-3"
+                                  value="#{msg['label.cmdBlacklistRegex']}"/>
+                    <p:inputText class="ui-g-8" maxlength="500" id="cmdRegex"
+                                 value="#{commandBlacklistController.commandBlacklist.cmdRegex}">
+                    </p:inputText>
+                </div>
+
+                <div class="ui-g-12 ui-md-6 ui-lg-12 ui-g-nopad">
+                    <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px">
+                        <h:outputText class="cd-text-required ui-g-3" value="#{msg['label.operator']}"/>
+                        <p:selectOneMenu filter="true" filterMatchMode="contains" class="ui-g-8"
+                                         value="#{commandBlacklistController.opeSelected}"
+                                         id="operator" converter="operatorConverter">
+
+                            <f:selectItem itemValue="" itemLabel="#{msg['common.choose']}"/>
+                            <f:selectItems var="operObj" itemLabel="#{operObj.label}"
+                                           itemValue="#{operObj}" value="#{commandBlacklistController.operators}"/>
+                            <p:ajax event="change" listener="#{commandBlacklistController.onChangeOperator}"
+                                    update="cmdStandardValue standardValueLabel"/>
+                        </p:selectOneMenu>
+                    </div>
+
+                    <div class="ui-g-12 ui-md-6 ui-lg-6 ui-g-nopad" style="margin-top: 10px">
+                        <h:outputText id="standardValueLabel"
+                                      class="#{commandBlacklistController.standardValueRequired ? 'cd-text-required' : ''} ui-g-3"
+                                      value="#{msg['label.standardValue']}"/>
+                        <p:inputText class="ui-g-8" maxlength="500" id="cmdStandardValue"
+                                     readonly="#{commandBlacklistController.standardValueReadonly}"
+                                     placeholder="#{commandBlacklistController.standardValuePrompt}"
+                                     value="#{commandBlacklistController.commandBlacklist.standardValue}">
+                        </p:inputText>
+                    </div>
+                </div>
+
+                <div class="Container100 Flex FlexWrap NoPadding TexAlCenter"
+                     style="overflow: hidden;text-align: center; margin-top: 10px;">
+
+                    <p:outputPanel class="Container100 TexAlCenter" id="add">
+                        <p:commandButton icon="fa fa-save" styleClass="White Fs14" value="#{msg['button.save']}"
+                                         style="size: 111px" rendered="#{sessionUtil.actionAdmin}"
+                                         actionListener="#{commandBlacklistController.onSaveOrUpdateCmdBlacklist}"
+                                         onstart="PF('block').show()" oncomplete="PF('block').hide()"
+                                         update="form, :form:cmdBlacklistId">
+                        </p:commandButton>
+                        <p:commandButton style="color: white;" icon="fa fa-close" id="close"
+                                         oncomplete="PF('addCmdBlacklist').hide()"
+                                         value="#{msg['button.close']}">
+                        </p:commandButton>
+                    </p:outputPanel>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <p:dialog modal="true" class="transparent-dialog" showHeader="false"
+                  widgetVar="block" draggable="false" closable="false" resizable="false">
+            <span class="fa-stack fa-2x" style="width: 5em; height: 5em; line-height: 5em;">
+                <i class="fa fa-fire fa-stack-1x" style="bottom: 40px; color: #FAFAFA; font-size: 0.8em"></i>
+                <i class="fa fa-spinner fa-pulse fa-3x fa-fw fa-stack-2x" style="color: #00AAFF; font-size: 3em;"></i>
+                <i class="fa fa-coffee fa-stack-1x" style="color: #975524; bottom: 20px;font-size: 1.2em"></i>
+            </span>
+        </p:dialog>
+
+        <style type="text/css">
+            .ui-datatable .ui-column-filter{
+                width: 95% !important;
+                padding-left: 0px!important;
+                padding-right: 0px!important;
+            }
+            .ui-filter-column{
+                vertical-align: bottom;
+            }
+            .ui-column-customfilter .ui-selectonemenu{
+                min-width: 20px !important;
+                padding: 0px !important;
+                width: 99% !important;
+            }
+
+            .ui-column-customfilter .ui-selectonemenu label{
+                width: 99% !important;
+                padding-left: 0px !important;
+                padding-right: 0px !important;
+            }
+
+        </style>
+    </ui:define>
+</ui:composition>

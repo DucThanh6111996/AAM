@@ -1,0 +1,1928 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html" xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions">
+    <p:growl showDetail="false" widgetVar="tdAppGrowl" id="tdAppGrowl"/>
+
+
+    <p:panel header="#{msg['impact.application']}" toggleable="false">
+
+        <div class="button-area fa" align="right">
+            <p:commandButton value="#{msg['button.insert']}" styleClass="GreenButton"
+                             action="#{actionDetailAppController.preAddAppDetail()}"
+                             oncomplete="PF('editDialogApp').show()" rendered="false"/>
+        </div>
+
+        <pe:blockUI target=":mop:lst:flow" content="blockUIContent" widgetVar="blockUiApp"/>
+
+
+        <h:panelGrid id="blockUIContent" columns="2" style="display:none;table-layout:auto;" styleClass="blockUi">
+            <h:graphicImage library="olympos-layout/images" name="loading-bars-blue.svg"
+                            style="margin-right: 12px; vertical-align: middle;"/>
+            <h:outputText value="#{msg['executing']} ......" style="white-space: nowrap;"/>
+        </h:panelGrid>
+
+
+        <p:blockUI block="flow" trigger="flow"/>
+
+        <p:accordionPanel id="flow" multiple="true">
+            <p:tab title="Stop ( #{actionDetailAppController.lstStop.size()} ) ">
+                <p:dataTable var="obj" value="#{actionDetailAppController.lstStop}" paginator="true"
+                             rows="15" filterEvent="keyup" rowIndexVar="rowIndex" paginatorPosition="bottom"
+                             id="objectTableStop"
+                             widgetVar="objectTableStop" rowsPerPageTemplate="25, 50, 100" lazy="false"
+                             editable="true" emptyMessage="#{msg['common.data.not.found']}" scrollable="true"
+                             scrollWidth="100%" frozenColumns="0" editMode="cell"
+                             filteredValue="#{actionDetailAppController.filteredLstStop}">
+
+                    <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:column style="width: 30px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['label.order']}">
+                        <h:outputText value="#{rowIndex+ 1}"/>
+                    </p:column>
+                    <p:column id="line" style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <p:splitButton value="#{msg['common.edit']}" process="@this"
+                                       disabled="#{actionController.viewOnly}"
+                                       actionListener="#{actionDetailAppController.prepareEdit(obj)}"
+                                       onclick="PF('blockUiSearch').block()"
+                                       oncomplete="PF('blockUiSearch').unblock();PF('editDialogApp').show()"
+                                       update=":mop:lst:panelApp" icon="fa fa-edit White">
+
+                            <p:menuitem value="#{msg['common.duplicate']}" process="@this"
+                                        actionListener="#{actionDetailAppController.duplicate(obj)}"
+                                        onclick="PF('blockUiSearch').block()"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('editDialogApp').show()"
+                                        update=":mop:lst:form:panel" icon="fa fa-copy">
+                            </p:menuitem>
+
+                            <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                        onclick="PF('blockUiSearch').block()"
+                                        update=":mop:lst:confirmDeleteApp"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('confirmDeleteApp').show()"
+                                        icon="fa fa-remove">
+                                <f:setPropertyActionListener target="#{actionDetailAppController.selectedObj}"
+                                                             value="#{obj}"/>
+                            </p:menuitem>
+                        </p:splitButton>
+                    </p:column>
+
+                    <p:column style="width: 64px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.kb.group']}"
+                              rendered="true" sortBy="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}"/>
+                    </p:column>
+
+                    <p:column style="width: 86px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.function_type']}"
+                              rendered="true"
+                              sortBy="#{actionDetailAppController.getModule(obj.moduleId).functionCode}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).functionCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 64px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['ordinal']}"
+                              rendered="true" sortBy="#{obj.moduleOrder}">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText value="#{obj.moduleOrder}"/></f:facet>
+                            <f:facet name="input"><p:inputText value="#{obj.moduleOrder}" style="width:48px"
+                                                               readonly="false"/></f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['service.name']}"
+                              filterBy="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.name']}"
+                              filterBy="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['module.code']}"
+                              filterBy="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" headerText="#{msg['ip']}"
+                              filterBy="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <h:outputText value="#{msg['common.stop']}" rendered="#{obj.groupAction == '1'}"/>
+                        <h:outputText value="#{msg['up.code']}" rendered="#{obj.groupAction == '2'}"/>
+                        <h:outputText value="#{msg['clear.cache']}" rendered="#{obj.groupAction == '3'}"/>
+                        <h:outputText value="#{msg['common.restart']}" rendered="#{obj.groupAction == '4'}"/>
+                        <h:outputText value="#{msg['common.start']}" rendered="#{obj.groupAction == '5'}"/>
+                    </p:column>
+
+                    <p:column style="width: 260px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['command']}">
+                        <h:outputText id="stopCmd" value="#{actionDetailAppController.detailDt(obj, '1')}"/>
+
+                        <p:overlayPanel for="stopCmd" hideEffect="fade">
+                            <div style="white-space: pre-wrap"><h:outputText
+                                    value="#{actionDetailAppController.detailDt(obj, '1')}"/></div>
+                        </p:overlayPanel>
+                    </p:column>
+
+                    <p:column style="width: 260px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['rollback']}" rendered="true">
+                        <h:outputText id="stopRollback" value="#{actionDetailAppController.detailDt(obj, '1')}"/>
+
+                        <p:overlayPanel for="stopRollback" hideEffect="fade">
+                            <div style="white-space: pre-wrap"><h:outputText
+                                    value="#{actionDetailAppController.detailDt(obj, '5')}"/></div>
+                        </p:overlayPanel>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['description']}"
+                              rendered="false">
+                        <h:outputText value="#{utils.exeDescription(obj)}"/>
+                    </p:column>
+
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['up.code.directory']}">
+                        <h:outputText value="#{obj.upcodePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['source.code']}">
+
+                        <h:outputText value="#{obj.uploadFilePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 150px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['list.file']}">
+                        <h:outputText value="#{obj.listFileCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['command.check']}">
+                        <h:outputText value="#{obj.checkCmd}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['results.check']}">
+                        <p:commandLink id="view" oncomplete="PF('viewCheckCmdResult').show()"
+                                       action="#{actionDetailAppController.checkLog(obj)}"
+                                       update=":mop:lst:checkResult">
+                            <p:graphicImage value="/resources/olympos-layout/images/edit.png" width="15"
+                                            height="18" title="view-result"/>
+                        </p:commandLink>
+                    </p:column>
+                </p:dataTable>
+            </p:tab>
+            <p:tab title="Backup ( #{actionDetailAppController.lstUpcode.size()} )">
+                <p:dataTable var="obj" value="#{actionDetailAppController.lstUpcode}" paginator="true"
+                             rows="15" filterEvent="keyup" rowIndexVar="rowIndex" paginatorPosition="bottom"
+                             id="objectTableBackup"
+                             widgetVar="objectTableBackup" rowsPerPageTemplate="25, 50, 100" lazy="false"
+                             editable="true" emptyMessage="#{msg['common.data.not.found']}" scrollable="true"
+                             scrollWidth="100%" frozenColumns="0" editMode="cell"
+                             filteredValue="#{actionDetailAppController.filteredBackup}">
+
+                    <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:column style="width: 30px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['label.order']}">
+                        <h:outputText value="#{rowIndex+ 1}"/>
+                    </p:column>
+                    <p:column id="line" style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <p:splitButton value="#{msg['common.edit']}" process="@this"
+                                       actionListener="#{actionDetailAppController.prepareEdit(obj)}"
+                                       onclick="PF('blockUiSearch').block()"
+                                       oncomplete="PF('blockUiSearch').unblock();PF('editDialogApp').show()"
+                                       update=":mop:lst:panelApp" icon="fa fa-edit White">
+
+                            <p:menuitem value="#{msg['common.duplicate']}" process="@this"
+                                        actionListener="#{actionDetailAppController.duplicate(obj)}"
+                                        onclick="PF('blockUiSearch').block()"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('editDialogApp').show()"
+                                        update=":mop:lst:form:panel" icon="fa fa-copy">
+                            </p:menuitem>
+
+                            <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                        onclick="PF('blockUiSearch').block()"
+                                        update=":mop:lst:confirmDeleteApp"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('confirmDeleteApp').show()"
+                                        icon="fa fa-remove">
+                                <f:setPropertyActionListener target="#{actionDetailAppController.selectedObj}"
+                                                             value="#{obj}"/>
+                            </p:menuitem>
+                        </p:splitButton>
+                    </p:column>
+
+                    <p:column style="width: 64px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.kb.group']}"
+                              rendered="true" sortBy="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}"/>
+                    </p:column>
+
+                    <p:column style="width: 86px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.function_type']}"
+                              rendered="true"
+                              sortBy="#{actionDetailAppController.getModule(obj.moduleId).functionCode}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).functionCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 50px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['ordinal']}"
+                              rendered="true" sortBy="#{obj.moduleOrder}">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText value="#{obj.moduleOrder}"/></f:facet>
+                            <f:facet name="input"><p:inputText value="#{obj.moduleOrder}" style="width:48px"
+                                                               readonly="false"/></f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['service.name']}"
+                              filterBy="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.name']}"
+                              filterBy="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['module.code']}"
+                              filterBy="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" headerText="#{msg['ip']}"
+                              filterBy="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <h:outputText value="#{msg['common.stop']}" rendered="#{obj.groupAction == '1'}"/>
+                        <h:outputText value="#{msg['up.code']}" rendered="#{obj.groupAction == '2'}"/>
+                        <h:outputText value="#{msg['clear.cache']}" rendered="#{obj.groupAction == '3'}"/>
+                        <h:outputText value="#{msg['common.restart']}" rendered="#{obj.groupAction == '4'}"/>
+                        <h:outputText value="#{msg['common.start']}" rendered="#{obj.groupAction == '5'}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['command']}">
+                        <h:outputText id="backupCmd" value="#{actionDetailAppController.detailDt(obj, '0')}"/>
+
+                        <p:overlayPanel for="backupCmd" hideEffect="fade">
+                            <div style="white-space: pre-wrap"><h:outputText
+                                    value="#{actionDetailAppController.detailDt(obj, '0')}"/></div>
+                        </p:overlayPanel>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['description']}"
+                              rendered="false">
+                        <h:outputText value="#{utils.exeDescription(obj)}"/>
+                    </p:column>
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['rollback']}" rendered="false">
+                        <h:outputText value="#{msg['common.stop']}" rendered="#{obj.actionRollback == '1'}"/>
+                        <h:outputText value="#{msg['up.code']}" rendered="#{obj.actionRollback == '2'}"/>
+                        <h:outputText value="#{msg['clear.cache']}" rendered="#{obj.actionRollback == '3'}"/>
+                        <h:outputText value="#{msg['common.restart']}" rendered="#{obj.actionRollback == '4'}"/>
+                        <h:outputText value="#{msg['common.start']}" rendered="#{obj.actionRollback == '5'}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" rendered="true"
+                              headerText="#{msg['folder.backup']}">
+                        <h:outputText value="#{obj.upcodePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['source.code']}">
+                        <h:outputText value="#{obj.uploadFilePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 150px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['list.file']}">
+                        <h:outputText value="#{obj.listFileCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['command.check']}">
+                        <h:outputText value="#{obj.checkCmd}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['results.check']}">
+                        <p:commandLink id="view" oncomplete="PF('viewCheckCmdResult').show()"
+                                       action="#{actionDetailAppController.checkLog(obj)}"
+                                       update=":mop:lst:checkResult">
+                            <p:graphicImage value="/resources/olympos-layout/images/edit.png" width="15"
+                                            height="18" title="view-result"/>
+                        </p:commandLink>
+                    </p:column>
+                </p:dataTable>
+            </p:tab>
+            <p:tab title="Upcode ( #{actionDetailAppController.lstUpcode.size()} )">
+                <div class="button-area fa" align="right" style="padding-top: 8px; padding-bottom: 8px">
+                    <p:commandButton rendered="#{actionController.newObj.mopType eq 0}" style="color: white;" icon="fa fa-cloud-upload"
+                                     actionListener="#{actionDetailAppController.onImportAppClick()}"
+                                     oncomplete="PF('importDialog').show()"
+                                     update=":mop:lst:flow:objectTableUpcode mop:lst:downloadImportResult mop:lst:fileZipUpcode mop:lst:fileExcelUpcode" value="#{msg['button.import']}"/>
+                </div>
+                <p:dataTable var="obj" value="#{actionDetailAppController.lstUpcode}" paginator="true"
+                             rows="15" filterEvent="keyup" rowIndexVar="rowIndex" paginatorPosition="bottom"
+                             id="objectTableUpcode"
+                             widgetVar="objectTableUpcode" rowsPerPageTemplate="25, 50, 100" lazy="false"
+                             editable="true" emptyMessage="#{msg['common.data.not.found']}" scrollable="true"
+                             scrollWidth="100%" frozenColumns="0" editMode="cell"
+                             filteredValue="#{actionDetailAppController.filteredUpcode}">
+
+                    <f:facet name="header">
+                        <div class="Container15" style="text-align: right;padding-right: 20px">
+                            <p:commandButton id="upcodeImportRule" icon="fa fa-upload"
+                                             styleClass="GreenButton Fs14 White"
+                                             title="#{msg['import.file.rule.config']}" process="@this"
+                                             disabled="#{actionController.viewOnly}"
+                                             rendered="#{actionDetailAppController.lstUpcode.size()>0 and sessionUtil.changeConfig}"
+                                             update="mop:lst:buttonResultImport"
+                                             actionListener="#{actionDetailAppController.preImportRule(2)}"></p:commandButton>
+                        </div>
+                    </f:facet>
+                    <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:column style="width: 30px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['label.order']}">
+                        <h:outputText value="#{rowIndex+ 1}"/>
+                    </p:column>
+
+                    <p:column id="line" style="width: 120px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="true">
+                        <p:commandButton update=":mop:lst:panelApp :mop:lst:changeUpcode" title="#{msg['common.edit']}"
+                                         styleClass="GreenButton" process="@this"
+                                         disabled="#{actionController.viewOnly}"
+                                         actionListener="#{actionDetailAppController.prepareEdit(obj)}"
+                                         icon="fa fa-edit White"
+                                         onstart="PF('blockUiApp').block()"
+                                         oncomplete="PF('blockUiApp').unblock();PF('editDialogApp').show()"/>
+
+                        <p:commandButton update=":mop:lst:panelApp :mop:lst:changeUpcode"
+                                         title="#{msg['common.duplicate']}"
+                                         process="@this" disabled="#{actionController.viewOnly}"
+                                         actionListener="#{actionDetailAppController.duplicate(obj)}"
+                                         icon="fa fa-copy White"
+                                         onstart="PF('blockUiApp').block()"
+                                         oncomplete="PF('blockUiApp').unblock();PF('editDialogApp').show()"/>
+
+                        <p:commandButton update=":mop:lst:panelApp :mop:lst:changeUpcode"
+                                         title="#{msg['button.delete']}"
+                                         styleClass="ButtonRed" process="@this" disabled="#{actionController.viewOnly}"
+                                         icon="fa fa-remove White"
+                                         onstart="PF('blockUiApp').block()"
+                                         oncomplete="PF('blockUiApp').unblock();PF('editDialogApp').show()">
+                            <f:setPropertyActionListener target="#{actionDetailAppController.selectedObj}"
+                                                         value="#{obj}"/>
+                        </p:commandButton>
+
+                        <p:splitButton value="#{msg['common.edit']}" process="@this" rendered="false"
+                                       disabled="#{actionController.viewOnly}"
+                                       actionListener="#{actionDetailAppController.prepareEdit(obj)}"
+                                       onclick="PF('blockUiApp').block()"
+                                       oncomplete="PF('blockUiApp').unblock();PF('editDialogApp').show()"
+                                       update=":mop:lst:panelApp :mop:lst:changeUpcode" icon="fa fa-edit White">
+
+                            <p:menuitem value="#{msg['common.duplicate']}" process="@this"
+                                        actionListener="#{actionDetailAppController.duplicate(obj)}"
+                                        onclick="PF('blockUiApp').block()"
+                                        oncomplete="PF('blockUiApp').unblock();PF('editDialogApp').show()"
+                                        update=":mop:lst:panelApp :mop:lst:changeUpcode" icon="fa fa-copy">
+                            </p:menuitem>
+
+                            <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                        onclick="PF('blockUiSearch').block()"
+                                        update=":mop:lst:confirmDeleteApp"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('confirmDeleteApp').show()"
+                                        icon="fa fa-remove">
+                                <f:setPropertyActionListener target="#{actionDetailAppController.selectedObj}"
+                                                             value="#{obj}"/>
+                            </p:menuitem>
+                        </p:splitButton>
+                    </p:column>
+
+                    <p:column style="width: 64px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.kb.group']}"
+                              rendered="true" sortBy="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}"/>
+                    </p:column>
+
+                    <p:column style="width: 86px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.function_type']}"
+                              rendered="true"
+                              sortBy="#{actionDetailAppController.getModule(obj.moduleId).functionCode}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).functionCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 50px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['ordinal']}"
+                              rendered="true" sortBy="#{obj.moduleOrder}">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText value="#{obj.moduleOrder}"/></f:facet>
+                            <f:facet name="input"><p:inputText value="#{obj.moduleOrder}" style="width:48px"
+                                                               readonly="false"/></f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['service.name']}"
+                              filterBy="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.name']}"
+                              filterBy="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['module.code']}"
+                              filterBy="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 160px; text-align: center; white-space: nowrap" headerText="#{msg['ip']}"
+                              filterBy="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <h:outputText value="#{msg['common.stop']}" rendered="#{obj.groupAction == '1'}"/>
+                        <h:outputText value="#{msg['up.code']}" rendered="#{obj.groupAction == '2'}"/>
+                        <h:outputText value="#{msg['clear.cache']}" rendered="#{obj.groupAction == '3'}"/>
+                        <h:outputText value="#{msg['common.restart']}" rendered="#{obj.groupAction == '4'}"/>
+                        <h:outputText value="#{msg['common.start']}" rendered="#{obj.groupAction == '5'}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" rendered="true"
+                              headerText="#{msg['up.code.directory']}">
+                        <h:outputText value="#{obj.upcodePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="true"
+                              headerText="#{msg['source.code']}">
+
+                        <p:commandLink id="sourceCode" ajax="false" process="@this">
+                            <h:outputText value="#{obj.uploadFilePath}"/>
+                            <p:fileDownload value="#{actionDetailAppController.downloadFile(obj)}"/>
+                        </p:commandLink>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['command']}"
+                              rendered="false">
+                        <h:outputText id="upcodeCmd" value="#{actionDetailAppController.detailDt(obj, '2')}"/>
+
+                        <p:tooltip for="upcodeCmd" position="top"
+                                   value="#{actionDetailAppController.detailDt(obj, '2')}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['modify.date']}">
+                        <h:outputText value="#{obj.modifyDate}">
+                            <f:convertDateTime pattern="yyyy-MM-dd HH:mm"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['description']}"
+                              rendered="false">
+                        <h:outputText value="#{utils.exeDescription(obj)}"/>
+                    </p:column>
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['rollback']}" rendered="false">
+                        <h:outputText value="#{msg['common.stop']}" rendered="#{obj.actionRollback == '1'}"/>
+                        <h:outputText value="#{msg['up.code']}" rendered="#{obj.actionRollback == '2'}"/>
+                        <h:outputText value="#{msg['clear.cache']}" rendered="#{obj.actionRollback == '3'}"/>
+                        <h:outputText value="#{msg['common.restart']}" rendered="#{obj.actionRollback == '4'}"/>
+                        <h:outputText value="#{msg['common.start']}" rendered="#{obj.actionRollback == '5'}"/>
+                    </p:column>
+
+                    <p:column style="width: 150px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['list.file']}">
+                        <h:outputText value="#{obj.listFileCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['command.check']}">
+                        <h:outputText value="#{obj.checkCmd}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['results.check']}">
+                        <p:commandLink id="view" oncomplete="PF('viewCheckCmdResult').show()"
+                                       action="#{actionDetailAppController.checkLog(obj)}"
+                                       update=":mop:lst:checkResult">
+                            <p:graphicImage value="/resources/olympos-layout/images/edit.png" width="15"
+                                            height="18" title="view-result"/>
+                        </p:commandLink>
+                    </p:column>
+                </p:dataTable>
+            </p:tab>
+
+            <p:tab title="Clear cache ( #{actionDetailAppController.lstClearCache.size()} )">
+                <p:dataTable var="obj" value="#{actionDetailAppController.lstClearCache}" paginator="true"
+                             rows="15" filterEvent="keyup" rowIndexVar="rowIndex" paginatorPosition="bottom"
+                             id="objectTableClearCache"
+                             widgetVar="objectTableClearCache" rowsPerPageTemplate="25, 50, 100" lazy="false"
+                             editable="true" emptyMessage="#{msg['common.data.not.found']}" scrollable="true"
+                             scrollWidth="100%" frozenColumns="0" editMode="cell"
+                             filteredValue="#{actionDetailAppController.filteredClearcache}">
+
+                    <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:column style="width: 30px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['label.order']}">
+                        <h:outputText value="#{rowIndex+ 1}"/>
+                    </p:column>
+                    <p:column id="line" style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <p:splitButton value="#{msg['common.edit']}" process="@this"
+                                       actionListener="#{actionDetailAppController.prepareEdit(obj)}"
+                                       onclick="PF('blockUiSearch').block()"
+                                       oncomplete="PF('blockUiSearch').unblock();PF('editDialogApp').show()"
+                                       update=":mop:lst:panelApp" icon="fa fa-edit White">
+
+                            <p:menuitem value="#{msg['common.duplicate']}" process="@this"
+                                        actionListener="#{actionDetailAppController.duplicate(obj)}"
+                                        onclick="PF('blockUiSearch').block()"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('editDialogApp').show()"
+                                        update=":mop:lst:form:panel" icon="fa fa-copy">
+                            </p:menuitem>
+
+                            <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                        onclick="PF('blockUiSearch').block()"
+                                        update=":mop:lst:confirmDeleteApp"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('confirmDeleteApp').show()"
+                                        icon="fa fa-remove">
+                                <f:setPropertyActionListener target="#{actionDetailAppController.selectedObj}"
+                                                             value="#{obj}"/>
+                            </p:menuitem>
+                        </p:splitButton>
+                    </p:column>
+
+                    <p:column style="width: 64px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.kb.group']}"
+                              rendered="true" sortBy="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}"/>
+                    </p:column>
+
+                    <p:column style="width: 86px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.function_type']}"
+                              rendered="true"
+                              sortBy="#{actionDetailAppController.getModule(obj.moduleId).functionCode}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).functionCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 50px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['ordinal']}"
+                              rendered="true" sortBy="#{obj.moduleOrder}">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText value="#{obj.moduleOrder}"/></f:facet>
+                            <f:facet name="input"><p:inputText value="#{obj.moduleOrder}" style="width:48px"
+                                                               readonly="false"/></f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['service.name']}"
+                              filterBy="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.name']}"
+                              filterBy="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['module.code']}"
+                              filterBy="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" headerText="#{msg['ip']}"
+                              filterBy="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <h:outputText value="#{msg['common.stop']}" rendered="#{obj.groupAction == '1'}"/>
+                        <h:outputText value="#{msg['up.code']}" rendered="#{obj.groupAction == '2'}"/>
+                        <h:outputText value="#{msg['clear.cache']}" rendered="#{obj.groupAction == '3'}"/>
+                        <h:outputText value="#{msg['common.restart']}" rendered="#{obj.groupAction == '4'}"/>
+                        <h:outputText value="#{msg['common.start']}" rendered="#{obj.groupAction == '5'}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['command']}">
+                        <h:outputText id="clearCacheCmd" value="#{actionDetailAppController.detailDt(obj, '3')}"/>
+
+                        <p:overlayPanel for="clearCacheCmd" hideEffect="fade">
+                            <div style="white-space: pre-wrap"><h:outputText
+                                    value="#{actionDetailAppController.detailDt(obj, '3')}"/></div>
+                        </p:overlayPanel>
+                    </p:column>
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['description']}"
+                              rendered="false">
+                        <h:outputText value="#{utils.exeDescription(obj)}"/>
+                    </p:column>
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['rollback']}" rendered="false">
+                        <h:outputText value="#{msg['common.stop']}" rendered="#{obj.actionRollback == '1'}"/>
+                        <h:outputText value="#{msg['up.code']}" rendered="#{obj.actionRollback == '2'}"/>
+                        <h:outputText value="#{msg['clear.cache']}" rendered="#{obj.actionRollback == '3'}"/>
+                        <h:outputText value="#{msg['common.restart']}" rendered="#{obj.actionRollback == '4'}"/>
+                        <h:outputText value="#{msg['common.start']}" rendered="#{obj.actionRollback == '5'}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['up.code.directory']}">
+                        <h:outputText value="#{obj.upcodePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['source.code']}">
+
+                        <h:outputText value="#{obj.uploadFilePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 150px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['list.file']}">
+                        <h:outputText value="#{obj.listFileCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['command.check']}">
+                        <h:outputText value="#{obj.checkCmd}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['results.check']}">
+                        <p:commandLink id="view" oncomplete="PF('viewCheckCmdResult').show()"
+                                       action="#{actionDetailAppController.checkLog(obj)}"
+                                       update=":mop:lst:checkResult">
+                            <p:graphicImage value="/resources/olympos-layout/images/edit.png" width="15"
+                                            height="18" title="view-result"/>
+                        </p:commandLink>
+                    </p:column>
+                </p:dataTable>
+            </p:tab>
+            <p:tab title="Restart(Stop + Start) ( #{actionDetailAppController.lstRestart.size()} )">
+                <p:dataTable var="obj" value="#{actionDetailAppController.lstRestart}" paginator="true"
+                             rows="15" filterEvent="keyup" rowIndexVar="rowIndex" paginatorPosition="bottom"
+                             id="objectTableRestart"
+                             widgetVar="objectTableRestart" rowsPerPageTemplate="25, 50, 100" lazy="false"
+                             editable="true" emptyMessage="#{msg['common.data.not.found']}" scrollable="true"
+                             scrollWidth="100%" frozenColumns="0" editMode="cell"
+                             filteredValue="#{actionDetailAppController.filteredLstRestart}">
+
+                    <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:column style="width: 30px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['label.order']}">
+                        <h:outputText value="#{rowIndex+ 1}"/>
+                    </p:column>
+                    <p:column id="line" style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <p:splitButton value="#{msg['common.edit']}" process="@this"
+                                       actionListener="#{actionDetailAppController.prepareEdit(obj)}"
+                                       onclick="PF('blockUiSearch').block()"
+                                       oncomplete="PF('blockUiSearch').unblock();PF('editDialogApp').show()"
+                                       update=":mop:lst:panelApp" icon="fa fa-edit White">
+
+                            <p:menuitem value="#{msg['common.duplicate']}" process="@this"
+                                        actionListener="#{actionDetailAppController.duplicate(obj)}"
+                                        onclick="PF('blockUiSearch').block()"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('editDialogApp').show()"
+                                        update=":mop:lst:panel" icon="fa fa-copy">
+                            </p:menuitem>
+
+                            <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                        onclick="PF('blockUiSearch').block()"
+                                        update=":mop:lst:confirmDeleteApp"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('confirmDeleteApp').show()"
+                                        icon="fa fa-remove">
+                                <f:setPropertyActionListener target="#{actionDetailAppController.selectedObj}"
+                                                             value="#{obj}"/>
+                            </p:menuitem>
+                        </p:splitButton>
+                    </p:column>
+
+                    <p:column style="width: 64px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.kb.group']}"
+                              rendered="true" sortBy="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}"/>
+                    </p:column>
+
+                    <p:column style="width: 86px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.function_type']}"
+                              rendered="true"
+                              sortBy="#{actionDetailAppController.getModule(obj.moduleId).functionCode}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).functionCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 50px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['ordinal']}"
+                              rendered="true" sortBy="#{obj.moduleOrder}">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText value="#{obj.moduleOrder}"/></f:facet>
+                            <f:facet name="input"><p:inputText value="#{obj.moduleOrder}" style="width:48px"
+                                                               readonly="false"/></f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['service.name']}"
+                              filterBy="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.name']}"
+                              filterBy="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['module.code']}"
+                              filterBy="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" headerText="#{msg['ip']}"
+                              filterBy="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <h:outputText value="#{msg['common.stop']}" rendered="#{obj.groupAction == '1'}"/>
+                        <h:outputText value="#{msg['up.code']}" rendered="#{obj.groupAction == '2'}"/>
+                        <h:outputText value="#{msg['clear.cache']}" rendered="#{obj.groupAction == '3'}"/>
+                        <h:outputText value="#{msg['common.restart']}" rendered="#{obj.groupAction == '4'}"/>
+                        <h:outputText value="#{msg['common.start']}" rendered="#{obj.groupAction == '5'}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['command']}">
+                        <h:outputText id="restartCmd" value="#{actionDetailAppController.detailDt(obj, '4')}"/>
+
+                        <p:overlayPanel for="restartCmd" hideEffect="fade">
+                            <div style="white-space: pre-wrap"><h:outputText
+                                    value="#{actionDetailAppController.detailDt(obj, '4')}"/></div>
+                        </p:overlayPanel>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['rollback']}" rendered="true">
+                        <h:outputText id="restartRollback" value="#{actionDetailAppController.detailDt(obj, '4')}"/>
+
+                        <p:overlayPanel for="restartRollback" hideEffect="fade">
+                            <div style="white-space: pre-wrap"><h:outputText
+                                    value="#{actionDetailAppController.detailDt(obj, '4')}"/></div>
+                        </p:overlayPanel>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['description']}"
+                              rendered="false">
+                        <h:outputText value="#{utils.exeDescription(obj)}"/>
+                    </p:column>
+
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['up.code.directory']}">
+                        <h:outputText value="#{obj.upcodePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['source.code']}">
+
+                        <h:outputText value="#{obj.uploadFilePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 150px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['list.file']}">
+                        <h:outputText value="#{obj.listFileCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['command.check']}">
+                        <h:outputText value="#{obj.checkCmd}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['results.check']}">
+                        <p:commandLink id="view" oncomplete="PF('viewCheckCmdResult').show()"
+                                       action="#{actionDetailAppController.checkLog(obj)}"
+                                       update=":mop:lst:checkResult">
+                            <p:graphicImage value="/resources/olympos-layout/images/edit.png" width="15"
+                                            height="18" title="view-result"/>
+                        </p:commandLink>
+                    </p:column>
+                </p:dataTable>
+            </p:tab>
+
+            <p:tab title="Restart ( #{actionDetailAppController.lstRestartCmd.size()} )">
+                <p:dataTable var="obj" value="#{actionDetailAppController.lstRestartCmd}" paginator="true"
+                             rows="15" filterEvent="keyup" rowIndexVar="rowIndex" paginatorPosition="bottom"
+                             id="objectTableRestartCmd"
+                             widgetVar="objectTableRestartCmd" rowsPerPageTemplate="25, 50, 100" lazy="false"
+                             editable="true" emptyMessage="#{msg['common.data.not.found']}" scrollable="true"
+                             scrollWidth="100%" frozenColumns="0" editMode="cell"
+                             filteredValue="#{actionDetailAppController.filteredLstRestartCmd}">
+
+                    <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:column style="width: 30px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['label.order']}">
+                        <h:outputText value="#{rowIndex+ 1}"/>
+                    </p:column>
+
+                    <p:column style="width: 64px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.kb.group']}"
+                              rendered="true" sortBy="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}"/>
+                    </p:column>
+
+                    <p:column style="width: 86px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.function_type']}"
+                              rendered="true"
+                              sortBy="#{actionDetailAppController.getModule(obj.moduleId).functionCode}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).functionCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 50px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['ordinal']}"
+                              rendered="true" sortBy="#{obj.moduleOrder}">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText value="#{obj.moduleOrder}"/></f:facet>
+                            <f:facet name="input"><p:inputText value="#{obj.moduleOrder}" style="width:48px"
+                                                               readonly="false"/></f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['service.name']}"
+                              filterBy="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.name']}"
+                              filterBy="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['module.code']}"
+                              filterBy="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" headerText="#{msg['ip']}"
+                              filterBy="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <h:outputText value="#{msg['common.stop']}" rendered="#{obj.groupAction == '1'}"/>
+                        <h:outputText value="#{msg['up.code']}" rendered="#{obj.groupAction == '2'}"/>
+                        <h:outputText value="#{msg['clear.cache']}" rendered="#{obj.groupAction == '3'}"/>
+                        <h:outputText value="#{msg['common.restart']}" rendered="#{obj.groupAction == '4'}"/>
+                        <h:outputText value="#{msg['common.start']}" rendered="#{obj.groupAction == '5'}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['command']}">
+                        <h:outputText id="restartCmd" value="#{actionDetailAppController.detailDt(obj, '6')}"/>
+
+                        <p:overlayPanel for="restartCmd" hideEffect="fade">
+                            <div style="white-space: pre-wrap"><h:outputText
+                                    value="#{actionDetailAppController.detailDt(obj, '6')}"/></div>
+                        </p:overlayPanel>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['rollback']}" rendered="true">
+                        <h:outputText id="restartRollback" value="#{actionDetailAppController.detailDt(obj, '6')}"/>
+
+                        <p:overlayPanel for="restartRollback" hideEffect="fade">
+                            <div style="white-space: pre-wrap"><h:outputText
+                                    value="#{actionDetailAppController.detailDt(obj, '4')}"/></div>
+                        </p:overlayPanel>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['description']}"
+                              rendered="false">
+                        <h:outputText value="#{utils.exeDescription(obj)}"/>
+                    </p:column>
+
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['up.code.directory']}">
+                        <h:outputText value="#{obj.upcodePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['source.code']}">
+
+                        <h:outputText value="#{obj.uploadFilePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 150px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['list.file']}">
+                        <h:outputText value="#{obj.listFileCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['command.check']}">
+                        <h:outputText value="#{obj.checkCmd}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['results.check']}">
+                        <p:commandLink id="view" oncomplete="PF('viewCheckCmdResult').show()"
+                                       action="#{actionDetailAppController.checkLog(obj)}"
+                                       update=":mop:lst:checkResult">
+                            <p:graphicImage value="/resources/olympos-layout/images/edit.png" width="15"
+                                            height="18" title="view-result"/>
+                        </p:commandLink>
+                    </p:column>
+                </p:dataTable>
+            </p:tab>
+
+            <p:tab title="Upcode + Stop/Start ( #{actionDetailAppController.lstUpcodeStart.size()} )">
+                <p:dataTable var="obj" value="#{actionDetailAppController.lstUpcodeStart}" paginator="true"
+                             rows="15" filterEvent="keyup" rowIndexVar="rowIndex" paginatorPosition="bottom"
+                             id="objectTableUpcodeStart"
+                             widgetVar="objectTableUpcodeStart" rowsPerPageTemplate="25, 50, 100" lazy="false"
+                             editable="true" emptyMessage="#{msg['common.data.not.found']}" scrollable="true"
+                             scrollWidth="100%" frozenColumns="0" editMode="cell"
+                             filteredValue="#{actionDetailAppController.filteredUpcodeStart}">
+
+                    <f:facet name="header">
+                        <div class="Container15" style="text-align: right;padding-right: 20px">
+                            <p:commandButton id="stopStartImportRule" icon="fa fa-upload"
+                                             styleClass="GreenButton Fs14 White"
+                                             title="#{msg['import.file.rule.config']}" process="@this"
+                                             disabled="#{actionController.viewOnly}"
+                                             rendered="#{actionDetailAppController.lstUpcodeStart.size()>0 and sessionUtil.changeConfig}"
+                                             update="mop:lst:buttonResultImport"
+                                             actionListener="#{actionDetailAppController.preImportRule(15)}"></p:commandButton>
+                        </div>
+                    </f:facet>
+
+                    <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:column style="width: 30px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['label.order']}">
+                        <h:outputText value="#{rowIndex+ 1}"/>
+                    </p:column>
+                    <p:column id="line" style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="true">
+                        <p:splitButton value="#{msg['common.edit']}" process="@this"
+                                       disabled="#{actionController.viewOnly}"
+                                       actionListener="#{actionDetailAppController.prepareEdit(obj)}"
+                                       onclick="PF('blockUiApp').block()"
+                                       oncomplete="PF('blockUiApp').unblock();PF('editDialogApp').show()"
+                                       update=":mop:lst:panelApp" icon="fa fa-edit White">
+
+                            <p:menuitem value="#{msg['common.duplicate']}" process="@this"
+                                        actionListener="#{actionDetailAppController.duplicate(obj)}"
+                                        onclick="PF('blockUiApp').block()"
+                                        oncomplete="PF('blockUiApp').unblock();PF('editDialogApp').show()"
+                                        update=":mop:lst:panelApp" icon="fa fa-copy">
+                            </p:menuitem>
+
+                            <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                        onclick="PF('blockUiSearch').block()"
+                                        update=":mop:lst:confirmDeleteApp"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('confirmDeleteApp').show()"
+                                        icon="fa fa-remove">
+                                <f:setPropertyActionListener target="#{actionDetailAppController.selectedObj}"
+                                                             value="#{obj}"/>
+                            </p:menuitem>
+                        </p:splitButton>
+                    </p:column>
+
+                    <p:column style="width: 64px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.kb.group']}"
+                              rendered="true" sortBy="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}"/>
+                    </p:column>
+
+                    <p:column style="width: 86px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.function_type']}"
+                              rendered="true"
+                              sortBy="#{actionDetailAppController.getModule(obj.moduleId).functionCode}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).functionCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 50px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['ordinal']}"
+                              rendered="true" sortBy="#{obj.moduleOrder}">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText value="#{obj.moduleOrder}"/></f:facet>
+                            <f:facet name="input"><p:inputText value="#{obj.moduleOrder}" style="width:48px"
+                                                               readonly="false"/></f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['service.name']}"
+                              filterBy="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.name']}"
+                              filterBy="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['module.code']}"
+                              filterBy="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 160px; text-align: center; white-space: nowrap" headerText="#{msg['ip']}"
+                              filterBy="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <h:outputText value="#{msg['common.stop']}" rendered="#{obj.groupAction == '1'}"/>
+                        <h:outputText value="#{msg['up.code']}" rendered="#{obj.groupAction == '2'}"/>
+                        <h:outputText value="#{msg['clear.cache']}" rendered="#{obj.groupAction == '3'}"/>
+                        <h:outputText value="#{msg['common.restart']}" rendered="#{obj.groupAction == '4'}"/>
+                        <h:outputText value="#{msg['common.start']}" rendered="#{obj.groupAction == '5'}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" rendered="true"
+                              headerText="#{msg['up.code.directory']}">
+                        <h:outputText value="#{obj.upcodePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="true"
+                              headerText="#{msg['source.code']}">
+
+                        <p:commandLink id="sourceCode" ajax="false" process="@this">
+                            <h:outputText value="#{obj.uploadFilePath}"/>
+                            <p:fileDownload value="#{actionDetailAppController.downloadFile(obj)}"/>
+                        </p:commandLink>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['command']}"
+                              rendered="false">
+                        <h:outputText id="upcodeCmd" value="#{actionDetailAppController.detailDt(obj, '2')}"/>
+
+                        <p:tooltip for="upcodeCmd" position="top"
+                                   value="#{actionDetailAppController.detailDt(obj, '2')}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['modify.date']}">
+                        <h:outputText value="#{obj.modifyDate}">
+                            <f:convertDateTime pattern="yyyy-MM-dd HH:mm"/>
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['description']}"
+                              rendered="false">
+                        <h:outputText value="#{utils.exeDescription(obj)}"/>
+                    </p:column>
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['rollback']}" rendered="false">
+                        <h:outputText value="#{msg['common.stop']}" rendered="#{obj.actionRollback == '1'}"/>
+                        <h:outputText value="#{msg['up.code']}" rendered="#{obj.actionRollback == '2'}"/>
+                        <h:outputText value="#{msg['clear.cache']}" rendered="#{obj.actionRollback == '3'}"/>
+                        <h:outputText value="#{msg['common.restart']}" rendered="#{obj.actionRollback == '4'}"/>
+                        <h:outputText value="#{msg['common.start']}" rendered="#{obj.actionRollback == '5'}"/>
+                    </p:column>
+
+                    <p:column style="width: 150px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['list.file']}">
+                        <h:outputText value="#{obj.listFileCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['command.check']}">
+                        <h:outputText value="#{obj.checkCmd}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['results.check']}">
+                        <p:commandLink id="view" oncomplete="PF('viewCheckCmdResult').show()"
+                                       action="#{actionDetailAppController.checkLog(obj)}"
+                                       update=":mop:lst:checkResult">
+                            <p:graphicImage value="/resources/olympos-layout/images/edit.png" width="15"
+                                            height="18" title="view-result"/>
+                        </p:commandLink>
+                    </p:column>
+                </p:dataTable>
+            </p:tab>
+
+            <p:tab title="Start ( #{actionDetailAppController.lstStart.size()} )">
+                <p:dataTable var="obj" value="#{actionDetailAppController.lstStart}" paginator="true"
+                             rows="15" filterEvent="keyup" rowIndexVar="rowIndex" paginatorPosition="bottom"
+                             id="objectTableStart"
+                             widgetVar="objectTableStart" rowsPerPageTemplate="25, 50, 100" lazy="false"
+                             editable="true" emptyMessage="#{msg['common.data.not.found']}" scrollable="true"
+                             scrollWidth="100%" frozenColumns="0" editMode="cell"
+                             filteredValue="#{actionDetailAppController.filteredLstStart}">
+
+                    <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                            oncomplete="PF('blockUiSearch').unblock()"/>
+
+                    <p:column style="width: 30px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['label.order']}">
+                        <h:outputText value="#{rowIndex+ 1}"/>
+                    </p:column>
+                    <p:column id="line" style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <p:splitButton value="#{msg['common.edit']}" process="@this"
+                                       actionListener="#{actionDetailAppController.prepareEdit(obj)}"
+                                       onclick="PF('blockUiSearch').block()"
+                                       oncomplete="PF('blockUiSearch').unblock();PF('editDialogApp').show()"
+                                       update=":mop:lst:panelApp" icon="fa fa-edit White">
+
+                            <p:menuitem value="#{msg['common.duplicate']}" process="@this"
+                                        actionListener="#{actionDetailAppController.duplicate(obj)}"
+                                        onclick="PF('blockUiSearch').block()"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('editDialogApp').show()"
+                                        update=":mop:lst:panel" icon="fa fa-copy">
+                            </p:menuitem>
+
+                            <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                        onclick="PF('blockUiSearch').block()"
+                                        update=":mop:lst:confirmDeleteApp"
+                                        oncomplete="PF('blockUiSearch').unblock();PF('confirmDeleteApp').show()"
+                                        icon="fa fa-remove">
+                                <f:setPropertyActionListener target="#{actionDetailAppController.selectedObj}"
+                                                             value="#{obj}"/>
+                            </p:menuitem>
+                        </p:splitButton>
+                    </p:column>
+
+                    <p:column style="width: 64px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.kb.group']}"
+                              rendered="true" sortBy="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).kbGroup}"/>
+                    </p:column>
+
+                    <p:column style="width: 86px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.function_type']}"
+                              rendered="true"
+                              sortBy="#{actionDetailAppController.getModule(obj.moduleId).functionCode}">
+                        <h:outputText value="#{actionDetailAppController.getModule(obj.moduleId).functionCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 50px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['ordinal']}"
+                              rendered="true" sortBy="#{obj.moduleOrder}">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText value="#{obj.moduleOrder}"/></f:facet>
+                            <f:facet name="input"><p:inputText value="#{obj.moduleOrder}" style="width:48px"
+                                                               readonly="false"/></f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['service.name']}"
+                              filterBy="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppGrNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['module.name']}"
+                              filterBy="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppNameByAppId(obj.moduleId)}"/>
+                    </p:column>
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['module.code']}"
+                              filterBy="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidAppCodeByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" headerText="#{msg['ip']}"
+                              filterBy="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"
+                              filterMatchMode="contains">
+                        <h:outputText value="#{actionDetailAppController.buidIpByAppId(obj.moduleId)}"/>
+                    </p:column>
+
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['common.action']}" rendered="false">
+                        <h:outputText value="#{msg['common.stop']}" rendered="#{obj.groupAction == '1'}"/>
+                        <h:outputText value="#{msg['up.code']}" rendered="#{obj.groupAction == '2'}"/>
+                        <h:outputText value="#{msg['clear.cache']}" rendered="#{obj.groupAction == '3'}"/>
+                        <h:outputText value="#{msg['common.restart']}" rendered="#{obj.groupAction == '4'}"/>
+                        <h:outputText value="#{msg['common.start']}" rendered="#{obj.groupAction == '5'}"/>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['command']}">
+                        <h:outputText id="startCmd" value="#{actionDetailAppController.detailDt(obj, '5')}"/>
+
+                        <p:overlayPanel for="startCmd" hideEffect="fade">
+                            <div style="white-space: pre-wrap"><h:outputText
+                                    value="#{actionDetailAppController.detailDt(obj, '5')}"/></div>
+                        </p:overlayPanel>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['rollback']}" rendered="true">
+                        <h:outputText id="startRollback" value="#{actionDetailAppController.detailDt(obj, '1')}"/>
+
+                        <p:overlayPanel for="startRollback" hideEffect="fade">
+                            <div style="white-space: pre-wrap"><h:outputText
+                                    value="#{actionDetailAppController.detailDt(obj, '1')}"/></div>
+                        </p:overlayPanel>
+                    </p:column>
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap"
+                              headerText="#{msg['description']}"
+                              rendered="false">
+                        <h:outputText value="#{utils.exeDescription(obj)}"/>
+                    </p:column>
+
+
+                    <p:column style="width: 200px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['up.code.directory']}">
+                        <h:outputText value="#{obj.upcodePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 250px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['source.code']}">
+
+                        <h:outputText value="#{obj.uploadFilePath}"/>
+                    </p:column>
+
+                    <p:column style="width: 150px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['list.file']}">
+                        <h:outputText value="#{obj.listFileCode}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['command.check']}">
+                        <h:outputText value="#{obj.checkCmd}"/>
+                    </p:column>
+
+                    <p:column style="width: 100px; text-align: center; white-space: nowrap" rendered="false"
+                              headerText="#{msg['results.check']}">
+                        <p:commandLink id="view" oncomplete="PF('viewCheckCmdResult').show()"
+                                       action="#{actionDetailAppController.checkLog(obj)}"
+                                       update=":mop:lst:checkResult">
+                            <p:graphicImage value="/resources/olympos-layout/images/edit.png" width="15"
+                                            height="18" title="view-result"/>
+                        </p:commandLink>
+                    </p:column>
+                </p:dataTable>
+            </p:tab>
+        </p:accordionPanel>
+
+
+        <p:confirmDialog id="confirmDeleteApp" message="#{msg['confirm.sure.delete']}?"
+                         header="#{msg['button.confirm']}"
+                         severity="alert" widgetVar="confirmDeleteApp">
+            <p:commandButton value="#{msg['button.confirm']}" actionListener="#{actionDetailAppController.delete()}"
+                             icon="fa fa-check White"
+                             update=":mop:lst:flow:objectTableUpcode :mop:lst:flow:objectTableBackup :mop:lst:tdAppGrowl"
+                             process="@this"
+                             oncomplete="PF('confirmDeleteApp').hide()"/>
+            <p:commandButton value="#{msg['button.cancel']}?" icon="fa fa-remove White"
+                             onclick="PF('confirmDeleteApp').hide()"/>
+        </p:confirmDialog>
+
+        <p:dialog id="editDialogApp" widgetVar="editDialogApp" width="70%" resizable="false" showEffect="clip"
+                  hideEffect="clip" modal="true" header="#{msg['page.title']}">
+
+            <p:panel id="panelApp" header="#{msg['edit.info']}" toggleable="false">
+                <h:panelGrid columns="4" cellpadding="5" width="100%">
+
+
+                    <h:outputText value="#{msg['module']}"/>
+                    <p:selectOneMenu value="#{actionDetailAppController.newObj.moduleId}" style="width:119px"
+                                     disabled="true">
+                        <f:selectItems value="#{actionController.listModuleSelected}" var="obj"
+                                       itemLabel="#{obj.getLabel()}" itemValue="#{obj.getValue()}"/>
+                    </p:selectOneMenu>
+
+                    <h:outputText value="#{msg['label.order']}"/>
+                    <h:panelGrid columns="1">
+                        <p:inputText id="priorityAction" value="#{actionDetailAppController.newObj.moduleOrder}"/>
+                        <p:slider for="priorityAction" minValue="1"/>
+                    </h:panelGrid>
+
+                    <h:outputText value="#{msg['command.check']}" rendered="false"/>
+
+                    <h:panelGroup rendered="false">
+                        <p:inputText id="checkcmd" value="#{actionDetailAppController.newObj.checkCmd}"/>
+                        <p:watermark value="#{msg['check.file.configuration']}" for="checkcmd"/>
+                    </h:panelGroup>
+
+                    <h:outputText value="#{msg['results.check']}" rendered="false"/>
+                    <p:commandLink id="view" onclick="PF('editCheckCmdResult').show()" rendered="false"
+                                   update=":mop:lst:checkCmdResult">
+                        <p:graphicImage value="/resources/olympos-layout/images/edit.png" width="15" height="18"
+                                        title="view-result"/>
+                    </p:commandLink>
+
+                    <h:outputText value="#{msg['up.code.directory']}"/>
+                    <h:panelGroup>
+                        <p:inputText id="upcodePath" value="#{actionDetailAppController.newObj.upcodePath}"
+                                     readonly="true"/>
+                        <p:overlayPanel id="upcodePathPanel" for="upcodePath" showEffect="fade" hideEffect="fade">
+                            <p:commandLink process="@this" ajax="true"
+                                           actionListener="#{actionDetailAppController.upLevelTree}" update="dir">
+                                <span class="fa fa-level-up"/>
+                            </p:commandLink>
+                            <p:outputPanel
+                                    style="width: 107%;min-height: 100px; height: 320px;overflow: auto;display: block">
+                                <p:tree id="dir" dynamic="true" cache="false"
+                                        value="#{actionDetailAppController.upcodeRoot}" var="dir"
+                                        selectionMode="single"
+                                        selection="#{actionDetailAppController.selectedUpcodeDir}" animate="true">
+                                    <p:ajax event="select" listener="#{actionDetailAppController.selectDir(dir)}"
+                                            process="dir"
+                                            update=":mop:lst:upcodePath :mop:lst:upcodePathPanel :mop:lst:source_code
+                                                    :mop:lst:removeUpcodePath :mop:lst:removeUpcodePathPanel :mop:lst:lstFileRemove
+                                                    :mop:lst:sourceCodePanel :mop:lst:changeConfig"/>
+                                    <p:ajax event="expand" process="@this"
+                                            listener="#{actionDetailAppController.onNodeExpand}"/>
+
+                                    <p:treeNode expandedIcon="ui-icon-folder-open"
+                                                collapsedIcon="#{dir.isDir ? 'ui-icon-folder-collapsed' : 'ui-icon-document'}">
+                                        <h:outputText value="#{dir.name}"/>
+                                    </p:treeNode>
+                                </p:tree>
+                            </p:outputPanel>
+                        </p:overlayPanel>
+                    </h:panelGroup>
+
+                    <h:outputText value="#{msg['code.files.to.be.deleted']}"/>
+                    <h:panelGroup>
+                        <p:inputText id="removeUpcodePath" value="Chọn file cần xóa"
+                                     disabled="#{empty actionDetailAppController.newObj.upcodePath or actionDetailAppController.newObj.file}">
+                            <p:ajax event="click" listener="#{actionDetailAppController.checkUpcodeFolderChosen}"
+                                    update=":insertEditForm:designGrowl"/>
+                        </p:inputText>
+                        <p:overlayPanel id="removeUpcodePathPanel" for="removeUpcodePath" showEffect="fade"
+                                        hideEffect="fade">
+                            <p:commandLink process="@this" ajax="true"
+                                           actionListener="#{actionDetailAppController.upLevelTreeRemove}"
+                                           update="fileRemove">
+                                <span class="fa fa-level-up"/>
+                            </p:commandLink>
+                            <p:commandLink process="@this" value="#{msg['clear.list']}" ajax="true"
+                                           actionListener="#{actionDetailAppController.clearRemove}"
+                                           update="lstFileRemove">
+                            </p:commandLink>
+                            <p:outputPanel
+                                    style="width: 107%;min-height: 100px; height: 320px;overflow: auto;display: block">
+
+                                <p:contextMenu widgetVar="fucking" for=":mop:lst:fileRemove"
+                                               rendered="#{(actionDetailAppController.removeUpcodeRoot != null) and (actionDetailAppController.removeUpcodeRoot.childCount > 0) }">
+                                    <p:menuitem value="#{msg['button.delete']}"
+                                                update=":mop:lst:lstFileRemove, :mop:lst:tdAppGrowl"
+                                                actionListener="#{actionDetailAppController.removeFile}"
+                                                icon="fa fa-minus"/>
+                                </p:contextMenu>
+
+                                <p:tree id="fileRemove" dynamic="true" cache="false"
+                                        value="#{actionDetailAppController.removeUpcodeRoot}" var="file"
+                                        selectionMode="single" animate="true">
+                                    <p:ajax event="select" listener="#{actionDetailAppController.onNodeSelect}"
+                                            process="fileRemove"
+                                            update=":mop:lst:removeUpcodePath :mop:lst:removeUpcodePathPanel"/>
+                                    <p:ajax event="contextMenu" listener="#{actionDetailAppController.onNodeSelect}"/>
+                                    <p:ajax event="expand" process="@this"
+                                            listener="#{actionDetailAppController.onNodeExpandRemove}"/>
+
+                                    <p:treeNode expandedIcon="ui-icon-folder-open"
+                                                collapsedIcon="#{file.isDir ? 'ui-icon-folder-collapsed' : 'ui-icon-document'}">
+                                        <h:outputText value="#{file.name}"/>
+                                    </p:treeNode>
+                                </p:tree>
+
+                            </p:outputPanel>
+                            <h:outputText value="#{msg['right.click.to.select']}" styleClass="FontItalic"/>
+                        </p:overlayPanel>
+                    </h:panelGroup>
+
+
+                    <ui:remove>
+                        <p:inputTextarea value="#{actionDetailAppController.newObj.checkCmdResult}" rows="3"/>
+                    </ui:remove>
+
+
+                </h:panelGrid>
+                <p:panel header="#{msg['upload.source.code']}">
+                    <h:panelGrid columns="4" cellpadding="10" id="sourceCodePanel">
+                        <h:outputText value="#{msg['source.code']}"/>
+                        <h:panelGroup id="source_code">
+                            <p:fileUpload fileUploadListener="#{actionDetailAppController.handleUploadCode}"
+                                          disabled="#{empty actionDetailAppController.newObj.upcodePath}"
+                                          mode="advanced" auto="true" sizeLimit="1000000000"
+                                          allowTypes="/(\.|\/)(zip)$/" update="sourceCode"/>
+                        </h:panelGroup>
+                        <p:commandButton value="#{msg['btn.change.config']}"
+                                         action="#{actionDetailAppController.preChangeConfig()}"
+                                         rendered="#{sessionUtil.changeConfig}"
+                                         disabled="#{!actionDetailAppController.isShowChangeConfigButton()}"/>
+
+
+                        <p:commandLink id="sourceCode" ajax="false" process=":mop:lst:upcodePath">
+                            <h:outputText value="#{actionDetailAppController.newObj.uploadFilePath}"/>
+                            <p:fileDownload
+                                    value="#{actionDetailAppController.downloadFile(actionDetailAppController.newObj)}"/>
+                        </p:commandLink>
+
+
+                    </h:panelGrid>
+
+                    <h:panelGrid columns="3" cellpadding="10">
+                        <h:outputText value="#{msg['similar.module']}"/>
+                        <p:commandButton value="#{msg['common.select']}" icon="fa fa-list White"
+                                         onclick="PF('changeUpcode').show()"/>
+                        <h:outputText value="#{actionDetailAppController.dualListModel.target.size()}" id="counter"/>
+                    </h:panelGrid>
+
+                    <h:panelGrid columns="2" cellpadding="10">
+                        <h:outputText value="#{msg['file.need.delete']}: "/>
+                        <h:outputText id="lstFileRemove" style="color: red"
+                                      value="#{actionDetailAppController.newObj.lstFileRemove}"/>
+                    </h:panelGrid>
+                </p:panel>
+                <h:panelGrid columns="2" cellpadding="5">
+                    <p:commandButton process="panelApp" styleClass="GreenButton" icon="fa fa-check White"
+                                     value="#{actionDetailAppController.isEdit ? msg['button.update'] : msg['button.insert']}"
+                                     update=":mop:lst:flow:objectTableUpcode :mop:lst:flow:objectTableBackup :mop:lst:flow:objectTableUpcodeStart panelApp :insertEditForm:designGrowl"
+                                     actionListener="#{actionDetailAppController.addAppDetail}"/>
+                    <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                                     onclick="PF('editDialogApp').hide()"
+                                     styleClass="ButtonRed"/>
+                </h:panelGrid>
+            </p:panel>
+        </p:dialog>
+
+        <p:dialog id="editCheckCmdResult" widgetVar="editCheckCmdResult" width="900" height="540"
+                  header="#{msg['check.the.result']}" modal="true">
+            <h:inputTextarea id="checkCmdResult" value="#{actionDetailAppController.checkCmdResult}"
+                             style="width:800px;height:480px"/>
+            <h:panelGrid columns="2" cellpadding="5">
+                <p:commandButton styleClass="GreenButton" process="editCheckCmdResult" value="OK"
+                                 actionListener="#{actionDetailAppController.setLogCheck}"
+                                 oncomplete="PF('editCheckCmdResult').hide()"/>
+
+                <p:commandButton value="#{msg['button.cancel']}" onclick="PF('editCheckCmdResult').hide()"
+                                 styleClass="ButtonRed"/>
+            </h:panelGrid>
+
+        </p:dialog>
+
+        <p:dialog id="viewCheckCmdResult" widgetVar="viewCheckCmdResult" width="600" height="600"
+                  header="#{msg['check.the.result']}" modal="true">
+            <h:inputTextarea id="checkResult" value="#{actionDetailAppController.checkCmdResult}"
+                             style="width:560px;height:585px"/>
+        </p:dialog>
+
+        <p:dialog id="changeUpcode" widgetVar="changeUpcode" resizable="false"
+                  showEffect="fade" hideEffect="fade" modal="true"
+                  header="#{msg['up.code.similar.module']}"
+                  draggable="true" width="812px" height="400px">
+
+            <p:pickList id="pickList" style="width: 100%"
+                        value="#{actionDetailAppController.dualListModel}"
+                        converter="pickAppConverter" var="dept" itemLabel="#{dept.moduleName}"
+                        itemValue="#{dept}" showCheckbox="true" showSourceFilter="true"
+                        showTargetFilter="true" filterMatchMode="contains"/>
+
+            <f:facet name="footer">
+                <p:commandButton value="Submit" oncomplete="PF('changeUpcode').hide()" update=":mop:lst:counter"
+                                 icon="fa fa-check White"
+                                 process="changeUpcode"/>
+            </f:facet>
+        </p:dialog>
+
+        <!-- 20190417_thenv_start change file config -->
+        <p:dialog id="changeConfig" widgetVar="changeConfig"
+                  showEffect="clip"
+                  hideEffect="clip" modal="true"
+                  style="width: auto; left: 5px; top: 5px; z-index: 1029;right: 42.5px;bottom: 28.5px;"
+                  width="auto"
+                  height="99%"
+                  header="#{msg['dlg.change.config']}">
+            <p:scrollPanel style="height: 85%" mode="native">
+
+                <p:panel>
+                    <table>
+                        <tr>
+                            <td class="cfg-label"><h:outputText value="#{msg['label.change.config.file.edit']}"/></td>
+                            <td><p:inputText value="#{actionDetailAppController.newObj.upcodePath}" readonly="true"/>
+                            </td>
+                        </tr>
+                    </table>
+                </p:panel>
+
+                <p:panel id="panelRule">
+                    <table>
+                        <tr>
+                            <td>
+                                <div class="configRule scrollbarCustom">
+                                    <p:repeat id="repeatRules" value="#{actionDetailAppController.lstRuleConfigNewObj}"
+                                              var="rule" varStatus="myRule">
+                                        <p:panel id="item">
+                                            <table class="martop10 rule-config">
+                                                <tr>
+                                                    <td class="cfg-label cfg-align-left">
+                                                        <h:outputText value="#{msg['label.change.config.rule']}"/>
+                                                        <h:outputText styleClass="cd-text-required" value=" *"/>
+                                                    </td>
+                                                    <td style="width: 200px;">
+                                                        <!--<p:selectOneMenu value="#{rule.ruleEdit}" style="width: 200px;" >-->
+                                                        <!--<f:selectItem itemValue="" itemLabel="#{msg['title.rule.choose']}" />-->
+                                                        <!--<f:selectItem itemValue="RULE_ADD_ON_BOTTOM" itemLabel="#{msg['title.rule.RULE_ADD_ON_BOTTOM']}" />-->
+                                                        <!--<f:selectItem itemValue="RULE_ADD_ON_HEAD" itemLabel="#{msg['title.rule.RULE_ADD_ON_HEAD']}" />-->
+                                                        <!--<f:selectItem itemValue="RULE_ADD_BEFORE_KEYWORD" itemLabel="#{msg['title.rule.RULE_ADD_BEFORE_KEYWORD']}" />-->
+                                                        <!--<f:selectItem itemValue="RULE_ADD_AFTER_KEYWORD" itemLabel="#{msg['title.rule.RULE_ADD_AFTER_KEYWORD']}" />-->
+                                                        <!--<f:selectItem itemValue="RULE_REPLACE_KEYWORD" itemLabel="#{msg['title.rule.RULE_REPLACE_KEYWORD']}" />-->
+                                                        <!--<f:selectItem itemValue="RULE_ADD_BEFORE_LINE_KEYWORD" itemLabel="#{msg['title.rule.RULE_ADD_BEFORE_LINE_KEYWORD']}" />-->
+                                                        <!--<f:selectItem itemValue="RULE_ADD_AFTER_LINE_KEYWORD" itemLabel="#{msg['title.rule.RULE_ADD_AFTER_LINE_KEYWORD']}" />-->
+                                                        <!--<f:selectItem itemValue="RULE_DELETE_KEYWORD" itemLabel="#{msg['title.rule.RULE_DELETE_KEYWORD']}" />-->
+                                                        <!--</p:selectOneMenu>-->
+                                                        <p:selectOneMenu value="#{rule.ruleEdit}" style="width: 200px;">
+                                                            <f:selectItem itemValue=""
+                                                                          itemLabel="#{msg['title.rule.choose']}"
+                                                                          noSelectionOption="true"/>
+                                                            <f:selectItems
+                                                                    value="#{actionDetailAppController.lstRuleEdit}"
+                                                                    var="obj" itemLabel="#{obj}" itemValue="#{obj}"/>
+                                                            <p:ajax event="change"
+                                                                    update=":mop:lst:repeatRules:#{myRule.index}:item"/>
+                                                        </p:selectOneMenu>
+                                                    </td>
+                                                    <td class="cfg-label cfg-align-left">
+                                                        <h:outputText value="#{msg['label.change.config.keyword']}"/>
+                                                        <h:outputText
+                                                                rendered="#{rule.ruleEdit != 'RULE_ADD_ON_BOTTOM' and rule.ruleEdit != 'RULE_ADD_ON_HEAD'}"
+                                                                styleClass="cd-text-required" value=" *"/>
+                                                    </td>
+                                                    <td><p:inputText value="#{rule.keyword}" maxlength="200"
+                                                                     converter="keywordConverter"/></td>
+                                                    <td rowspan="2" class="cfg-action">
+                                                        <p:commandButton title="#{msg['btn.del.change.config']}"
+                                                                         update=":mop:lst:panelRule"
+                                                                         rendered="#{actionDetailAppController.lstRuleConfigNewObj.size() > 1}"
+                                                                         actionListener="#{actionDetailAppController.delRuleConfigPanel(rule)}"
+                                                                         icon="fa fa-remove"
+                                                                         styleClass="Fs14 White RedButton"/>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="cfg-label cfg-align-top cfg-align-left">
+                                                        <h:outputText value="#{msg['label.change.config.content']}"/>
+                                                        <h:outputText
+                                                                rendered="#{rule.ruleEdit != 'RULE_DELETE_KEYWORD'}"
+                                                                styleClass="cd-text-required" value=" *"/>
+                                                    </td>
+                                                    <td colspan="3"><p:inputTextarea rows="3" maxlength="1000"
+                                                                                     autoResize="false"
+                                                                                     placeholder="#{msg['label.change.config.content.title']}"
+                                                                                     value="#{rule.content}"
+                                                                                     converter="keywordConverter"></p:inputTextarea>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </p:panel>
+                                    </p:repeat>
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                <p:commandButton title="#{msg['btn.add.change.config']}" update=":mop:lst:panelRule"
+                                                 actionListener="#{actionDetailAppController.addRuleConfigPanel}"
+                                                 icon="fa fa-plus" styleClass="Fs14 White GreenButton"/>
+                            </td>
+                        </tr>
+                    </table>
+                </p:panel>
+
+                <p:panel id="panelContent">
+                    <table>
+                        <tr>
+                            <td class="cfg-file-content"><p:inputTextarea styleClass="scrollbarCustom" rows="21"
+                                                                          autoResize="false" readonly="true"
+                                                                          value="#{actionDetailAppController.fileContentOld}"></p:inputTextarea>
+                            </td>
+                            <td class="cfg-action">
+                                <h:panelGrid columns="1">
+                                    <p:commandButton title="#{msg['btn.refresh.change.config']}"
+                                                     actionListener="#{actionDetailAppController.refreshConfig}"
+                                                     icon="fa fa-refresh" styleClass="Fs14 White BlueButton"/>
+                                    <p:commandButton title="#{msg['btn.execute.change.config']}"
+                                                     actionListener="#{actionDetailAppController.executeConfig}"
+                                                     icon="fa fa-angle-right" styleClass="Fs14 White BlueButton"/>
+                                </h:panelGrid>
+                            </td>
+                            <td class="cfg-file-content"><p:inputTextarea styleClass="scrollbarCustom" rows="21"
+                                                                          autoResize="false"
+                                                                          value="#{actionDetailAppController.fileContentNew}"></p:inputTextarea>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="Container100 NoPadding" style="text-align: center;margin-bottom: 10px">
+                        <p:commandButton value="Submit" process="changeConfig" icon="fa fa-check White"
+                                         actionListener="#{actionDetailAppController.submitChangeConfig}"/>
+                    </div>
+                </p:panel>
+            </p:scrollPanel>
+        </p:dialog>
+
+
+        <!-- 20190417_thenv_end change file config -->
+
+        <!--20190416_tudn_start import rule config-->
+        <p:dialog id="importDlgId" widgetVar="importDlg"
+                  header="#{msg['import.file.rule.config']}" width="50%" modal="true"
+                  draggable="true" resizable="true" styleClass="searchNodeDlg">
+            <div class="Container100 NoPadding">
+                <p:commandLink ajax="false" process="@this">
+                    <h:outputText value="#{msg['button.download.template']}"/>
+                    <p:fileDownload value="#{actionDetailAppController.exportTemplateImportRuleConfig()}"/>
+                </p:commandLink>
+                <p:fileUpload allowTypes="/(\.|\/)(xls|xlsx)$/"
+                              uploadLabel="#{msg['button.import']}"
+                              fileUploadListener="#{actionDetailAppController.handleImportRuleConfig}"
+                              label="#{msg['label.fileImport']}"
+                              invalidFileMessage="#{msg['message.invalid.file.excel']}"
+                              invalidSizeMessage="#{msg['message.invalid.file.size']}"
+                              mode="advanced" sizeLimit="2097152"
+                              update="mop:lst:buttonResultImport :mop:lst:flow:objectTableUpcodeStart :mop:lst:flow:objectTableUpcode @this"
+                              fileLimit="1" process="@this"
+                              fileLimitMessage="#{msg['message.invalid.one.file']}"
+                              dragDropSupport="true">
+                    <f:attribute name="paramTypeStep" value="#{actionDetailAppController.typeStep}"/>
+                </p:fileUpload>
+            </div>
+
+            <div class="Container100 NoPadding" style="text-align: right">
+                <p:commandButton style="color: white;" icon="fa fa-download" ajax="false"
+                                 disabled="#{actionDetailAppController.resultImport == null}" id="buttonResultImport"
+                                 value="#{msg['report.result']}">
+                    <p:fileDownload value="#{actionDetailAppController.downloadFileResultImport()}"/>
+                </p:commandButton>
+            </div>
+        </p:dialog>
+        <!--20190416_tudn_end import rule config-->
+
+        <p:dialog modal="true" id="importDialog" widgetVar="importDialog" header="#{msg['title.importCommand']}"
+                  width="600" draggable="false" closable="false" resizable="false">
+            <div class="Container100 NoPadding">
+                <p:growl id="importMsg" showDetail="true" />
+                <h:outputText value="#{msg['module.list']}"/>
+                <p:fileUpload value="#{actionDetailAppController.searchUploadFilePath}" allowTypes="/(\.|\/)(xls|xlsx)$/"
+                              uploadLabel="#{msg['button.import']}" fileUploadListener="#{actionDetailAppController.handUploadFileExcelUpcode}"
+                              label="#{msg['label.fileImport']}" update="mop:lst:downloadImportResult :mop:lst:flow:objectTableUpcode fileExcelUpcode"
+                              invalidFileMessage="#{msg['message.invalid.file.excel']}" invalidSizeMessage="#{msg['message.invalid.file.size']}"
+                              mode="advanced" skinSimple="true" sizeLimit="2097152" auto="true">
+                </p:fileUpload>
+                <h:outputText id="fileExcelUpcode" value="#{actionDetailAppController.nameFileExcelUpcode}"/>
+
+            <div id="excl" style="padding-top: 5px;">
+                <h:outputText value="#{msg['source.code']}"/>
+            </div>
+                <p:fileUpload value="#{actionDetailAppController.searchUploadFilePath}" allowTypes="/(\.|\/)(zip)$/"
+                              uploadLabel="#{msg['button.import']}" fileUploadListener="#{actionDetailAppController.handUploadFileZipUpcode}"
+                              label="#{msg['label.fileImport']}" update="mop:lst:downloadImportResult :mop:lst:flow:objectTableUpcode fileZipUpcode"
+                              invalidFileMessage="#{msg['message.invalid.file.excel']}" invalidSizeMessage="#{msg['message.invalid.file.size']}"
+                              mode="advanced" skinSimple="true" sizeLimit="2097152" auto="true">
+                </p:fileUpload>
+                <h:outputText id="fileZipUpcode" value="#{actionDetailAppController.nameFileZipUpcode}"/>
+
+                <div class="row" style="margin-top: 20px;text-align: center;margin-left: auto;margin-right: auto;display: block">
+                    <p:commandButton style="color: white;" icon="fa fa-download" ajax="false"
+                                     value="#{msg['button.download.template']}">
+                        <p:fileDownload value="#{actionDetailAppController.onDownloadUpcodeTemplate()}" />
+                    </p:commandButton>
+                    <p:commandButton style="color: red !important;" ajax="false" id="downloadImportResult" styleClass="cd-text-required"
+                                     value="#{msg['button.download.result']}" disabled="#{actionDetailAppController.importSuccess}">
+                        <p:fileDownload value="#{actionDetailAppController.onDownloadImportUpcodeResult()}" />
+                    </p:commandButton>
+                </div>
+                <div class="row" style="margin-top: 20px;text-align: center;margin-left: auto;margin-right: auto;display: block">
+                    <p:commandButton style="color: white;" icon="fa fa-save"
+                                     update="mop:lst:downloadImportResult :mop:lst:flow:objectTableUpcode"
+                                     actionListener="#{actionDetailAppController.importFileDataUpcode}" styleClass="GreenButton" value="#{msg['button.save']}"/>
+                    <p:commandButton style="color: white;" icon="fa fa-close"
+                                     onclick="PF('importDialog').hide()" value="#{msg['button.close']}"/>
+                </div>
+            </div>
+        </p:dialog>
+
+    </p:panel>
+
+
+
+    <script type="text/javascript">
+        function start() {
+            PF('statusDialog').show();
+        }
+
+        function stop() {
+            PF('statusDialog').hide();
+        }
+
+        function onShowConfigDialog() {
+            // fix for auto width in IE
+           alert("Hello");
+        }
+    </script>
+    <style>
+        .c1 {
+            vertical-align: top;
+            width: 70%
+        }
+
+        .c2 {
+            vertical-align: top;
+            width: 30%
+        }
+
+        .ui-picklist-source {
+            width: 97% !important;
+        }
+
+        .ui-picklist-target {
+            width: 97% !important;;
+        }
+
+        /* 20190417_thenv_start change file config */
+        #mop\:lst\:changeConfig .ui-panel {
+            border: none;
+        }
+
+        #mop\:lst\:changeConfig table {
+            width: 100%;
+        }
+
+        #mop\:lst\:changeConfig table, #mop\:lst\:changeConfig td {
+            border: none;
+        }
+
+        #mop\:lst\:changeConfig table.rule-config {
+            border: 1px solid #cecece;
+            padding: 5px;
+        }
+
+        #mop\:lst\:changeConfig .cfg-label {
+            width: 15%;
+            padding-right: 5px;
+        }
+
+        #mop\:lst\:changeConfig .cfg-align-top {
+            vertical-align: top;
+            padding-top: 7px;
+        }
+
+        #mop\:lst\:changeConfig .cfg-align-left {
+            padding-left: 10px;
+        }
+
+        #mop\:lst\:changeConfig td input, #mop\:lst\:changeConfig td textarea {
+            width: calc(100% - 20px);
+        }
+
+        #mop\:lst\:changeConfig .cfg-file-content {
+            width: 45%;
+        }
+
+        #mop\:lst\:changeConfig .cfg-file-content textarea {
+            width: calc(100% - 20px);
+        }
+
+        #mop\:lst\:changeConfig .cfg-action {
+            text-align: center;
+        }
+
+        #mop\:lst\:changeConfig .martop10 {
+            margin-top: 10px;
+        }
+
+        .configRule {
+            border: 1px solid #cecece !important;
+            height: 245px;
+            overflow-y: auto;
+            padding: 0 10px 10px 10px;
+        }
+
+        .scrollbarCustom::-webkit-scrollbar {
+            width: 5px;
+            background-color: #F5F5F5;
+        }
+
+        .scrollbarCustom::-webkit-scrollbar-thumb {
+            border-radius: 10px;
+            background-color: #a0a0a0;
+        }
+
+        .scrollbarCustom::-webkit-scrollbar-track {
+            border-radius: 10px;
+            background-color: #F5F5F5;
+        }
+
+        .cd-text-required {
+            color: red;
+        }
+
+        /* 20190417_thenv_end change file config */
+    </style>
+</ui:composition>
+

@@ -1,0 +1,53 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions">
+
+	<p:dataTable var="obj" value="#{historyDetailController.upcodeObjects}"
+		widgetVar="upcodeObjects" id="upcodeObjects">
+
+		<p:column headerText="#{msg['information']}" style="width:30%">
+			<div style="white-space: pre">
+				<p:outputLabel rows="8" autoResize="false" style="width:100%"
+					styleClass="unresizable" value="#{obj.description}" readonly="true" />
+			</div>
+		</p:column>
+		<p:column headerText="#{msg['view.log.impact']}" style="width:30%;text-align: center">
+			<p:commandLink ajax="true" update=":form:detailDlg" process="@this" actionListener="#{historyDetailController.viewLogDetail(obj)}" oncomplete="PF('dlg').show()">
+				<!--<p:fileDownload value="#{historyDetailController.downloadLogFile(obj)}" />-->
+				<i class="fa fa-search Blue Fs30" />
+			</p:commandLink>
+		</p:column>
+
+		<p:column headerText="#{msg['time']}" style="width:10%; text-align: center">
+			<h:outputText value="#{obj.beginDate}" readonly="true">
+				<f:convertDateTime pattern="dd-MM HH:mm:ss" />
+			</h:outputText>
+			<br />
+			<h:outputText value="#{obj.endDate}" readonly="true">
+				<f:convertDateTime pattern="dd-MM HH:mm:ss" />
+			</h:outputText>
+		</p:column>
+		<p:column headerText="#{msg['end.time']}" style="width:10%"
+			rendered="false">
+			<h:outputText value="#{obj.endDate}" readonly="true">
+				<f:convertDateTime pattern="dd-MM-yyyy HH:mm:ss" />
+			</h:outputText>
+		</p:column>
+		<p:column headerText="#{msg['common.status']}" style="text-align: center;width:10%"
+			filterBy="#{obj.runStt}"  filterMatchMode="exact">
+			<f:facet name="filter">
+				<p:selectOneMenu onchange="PF('upcodeObjects').filter()"
+					style="width:60px">
+					<f:selectItem itemLabel="#{msg['common.all']}" itemValue="#{null}"
+						noSelectionOption="true" />
+					<f:selectItems value="#{historyDetailController.statusFitterList}"
+						var="obj" itemLabel="#{obj.label}" itemValue="#{obj.value}" />
+				</p:selectOneMenu>
+			</f:facet>
+			<i class="#{iconUtils.statusIcon(obj.runStt)}"></i>
+		</p:column>
+	</p:dataTable>
+</ui:composition>

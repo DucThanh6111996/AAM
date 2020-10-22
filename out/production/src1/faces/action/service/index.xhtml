@@ -1,0 +1,225 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions"
+                template="/layout/olympos/template.xhtml">
+    <ui:define name="content">
+        <h:form id="insertEditForm">
+            <p:growl id="designGrowl" showDetail="false"/>
+
+            <div class="messagebox tc">
+                <p:growl id="mainMessage" life="5000" showDetail="true"
+                         autoUpdate="true" globalOnly="true" for="mainMessage"
+                         widgetVar="aGrowl"/>
+            </div>
+
+            <pe:blockUI target=":form:objectTable" content="blockUIContent" widgetVar="blockUiSearch"/>
+
+            <h:panelGrid id="blockUIContent" columns="2" style="display:none;table-layout:auto;" styleClass="blockUi">
+                <h:graphicImage library="olympos-layout/images" name="loading-bars-blue.svg"
+                                style="margin-right: 12px; vertical-align: middle;"/>
+                <h:outputText value="#{msg['executing']} ......" style="white-space: nowrap;"/>
+            </h:panelGrid>
+        </h:form>
+
+        <h:form id="search">
+            <div class="button-area fa" align="right" style="padding-top: 2px">
+                <p:commandButton value="#{msg['button.insert']}" update=":form:panel" process="@this"
+                                 actionListener="#{actionDtFileController.clear()}"
+                                 oncomplete="PF('editDialog').show()" styleClass="GreenButton" icon="fa fa-plus White"/>
+            </div>
+
+            <p:spacer height="12px"/>
+        </h:form>
+
+        <div class="cl h6"></div>
+        <h:form id="form">
+            <p:dataTable var="obj" value="#{actionDtFileController.lazyDataModel}"
+                         paginator="true" rows="25" filterEvent="keyup" rowKey="#{obj.id}"
+                         rowIndexVar="rowIndex" paginatorPosition="bottom" id="objectTable"
+                         widgetVar="objectTable" rowsPerPageTemplate="25, 50, 100"
+                         lazy="true" editable="false" emptyMessage="#{msg['common.data.not.found']}">
+
+                <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                        oncomplete="PF('blockUiSearch').unblock()"/>
+
+                <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                        oncomplete="PF('blockUiSearch').unblock()"/>
+
+                <p:column style="width: 3%; text-align: center;" headerText="#{msg['label.order']}">
+                    <h:outputText value="#{rowIndex+ 1}"/>
+                </p:column>
+
+                <p:column id="line" style="width: 10%; text-align: center;"
+                          headerText="#{msg['common.action']}">
+                    <p:splitButton value="#{msg['common.edit']}" process="@this"
+                                   actionListener="#{actionDtFileController.prepareEdit(obj)}"
+                                   onclick="PF('blockUiSearch').block()"
+                                   oncomplete="PF('blockUiSearch').unblock();PF('editDialog').show()"
+                                   update=":form:panel" icon="fa fa-edit White">
+
+                        <p:menuitem value="#{msg['button.delete']}" process="@this"
+                                    onclick="PF('blockUiSearch').block()"
+                                    update=":form:confirmDelete"
+                                    oncomplete="PF('blockUiSearch').unblock();PF('confirmDelete').show()"
+                                    icon="fa fa-remove">
+                            <f:setPropertyActionListener
+                                    target="#{actionDtFileController.selectedObj}" value="#{obj}"/>
+                        </p:menuitem>
+                    </p:splitButton>
+                </p:column>
+
+                <p:column id="appGroupId" style="width: 10%; text-align: center;"
+                          sortBy="#{obj.appGroupId}" headerText="#{msg['service']}">
+                    <h:outputText value="#{obj.service.serviceName}"/>
+                </p:column>
+
+                <p:column id="name" style="width: 10%; text-align: center;"
+                          sortBy="#{obj.name}" headerText="#{msg['name.guidance']}">
+                    <h:outputText value="#{obj.name}"/>
+                </p:column>
+
+                <p:column id="impactFile" style="width: 10%; text-align: center;"
+                          sortBy="#{obj.impactFile}" headerText="#{msg['impaction.file']}">
+                    <h:outputText value="#{obj.impactFile}"/>
+                </p:column>
+
+                <p:column id="rollbackFile" style="width: 10%; text-align: center;"
+                          sortBy="#{obj.rollbackFile}" headerText="#{msg['file.rollback']}">
+                    <h:outputText value="#{obj.rollbackFile}"/>
+                </p:column>
+
+                <p:column id="impactDescription" style="width: 10%; text-align: center;" rendered="false"
+                          sortBy="#{obj.impactDescription}" headerText="#{msg['describe.the.impact']}">
+                    <h:outputText value="#{obj.impactDescription}"/>
+                </p:column>
+
+                <p:column id="rollbackDescription" style="width: 10%; text-align: center;" rendered="false"
+                          sortBy="#{obj.rollbackDescription}" headerText="#{msg['description.rollback']}">
+                    <h:outputText value="#{obj.rollbackDescription}"/>
+                </p:column>
+
+                <p:column id="localFilename" style="width: 10%; text-align: center;"
+                          sortBy="#{obj.localFilename}" headerText="localFilename" rendered="false">
+                    <h:outputText value="#{obj.localFilename}"/>
+                </p:column>
+
+                <p:column id="impactTime" style="width: 10%; text-align: center;"
+                          sortBy="#{obj.impactTime}" headerText="#{msg['execution.time']}">
+                    <h:outputText value="#{obj.impactTime}"/>
+                </p:column>
+            </p:dataTable>
+
+            <p:confirmDialog id="confirmDelete"
+                             message="#{msg['confirm.sure.delete']} #{actionDtFileController.selectedObj.id}?"
+                             header="#{msg['button.confirm']}" severity="alert" widgetVar="confirmDelete">
+                <p:commandButton value="#{msg['button.confirm']}" icon="fa fa-check White"
+                                 actionListener="#{actionDtFileController.delete()}"
+                                 update=":form:objectTable :insertEditForm:designGrowl"
+                                 process="@this" oncomplete="PF('confirmDelete').hide()"/>
+                <p:commandButton value="#{msg['button.cancel']}?" icon="fa fa-remove White"
+                                 onclick="PF('confirmDelete').hide()"/>
+            </p:confirmDialog>
+
+            <p:dialog id="editDialog" widgetVar="editDialog" width="70%"
+                      resizable="false" showEffect="fade" hideEffect="fade" modal="true"
+                      header="#{msg['page.title']}" draggable="true">
+                <p:panel id="panel" header="#{msg['edit.info']}" toggleable="false">
+                    <h:panelGrid columns="6" cellpadding="5" width="100%">
+                        <h:outputText value="#{msg['service']}"/>
+                        <p:selectOneMenu id="appGroupId" value="#{actionDtFileController.newObj.appGroupId}"
+                                         style="width:119px"
+                                         required="true" requiredMessage="#{msg['service.did.not.selected']}">
+                            <f:selectItems value="#{actionDtFileController.appGroups}" var="obj"
+                                           itemLabel="#{obj.getLabel()}" itemValue="#{obj.getValue()}"/>
+                        </p:selectOneMenu>
+                        <p:watermark for="appGroupId" value="#{msg['service']}"/>
+
+                        <h:outputText value="#{msg['name.guidance']}"/>
+                        <p:inputText id="name" value="#{actionDtFileController.newObj.name}"
+                                     required="true" requiredMessage="#{msg['name.have.not.entered']}"/>
+                        <p:watermark for="name" value="#{msg['name.guidance']}"/>
+
+                        <h:outputText value="#{msg['execution.time']}"/>
+                        <p:inputText id="impactTime" value="#{actionDtFileController.newObj.impactTime}"
+                                     required="true" requiredMessage="#{msg['execution.time.have.not.entered']}"/>
+                        <p:watermark for="impactTime" value="#{msg['minute']}"/>
+
+                    </h:panelGrid>
+
+                    <h:panelGrid columns="3" width="100%" columnClasses="cl1, cl2, cl3">
+                        <h:outputText value="#{msg['describe.the.impact']}"/>
+                        <p:inputTextarea cols="90" rows="4" autoResize="false"
+                                         value="#{actionDtFileController.newObj.impactDescription}"/>
+                        <p:watermark for="logpath" value=""/>
+
+                        <h:outputText value="#{msg['description.rollback']}"/>
+                        <p:inputTextarea id="logpath" cols="90" rows="4" autoResize="false"
+                                         value="#{actionDtFileController.newObj.rollbackDescription}"/>
+                        <p:watermark for="logpath" value=""/>
+                    </h:panelGrid>
+
+                    <h:panelGrid columns="3" width="100%" columnClasses="c1, c2, c3">
+                        <h:outputText value="#{msg['impaction.file']}"/>
+                        <p:fileUpload id="source_code" allowTypes="/(\.|\/)(doc|docx|xls|xlsx|zip|rar)$/"
+                                      fileUploadListener="#{actionDtFileController.handleUploadImpactFile}"
+                                      mode="advanced" auto="true" sizeLimit="1000000000" update="sourceCode"/>
+
+                        <p:commandLink id="sourceCode" ajax="false" process=":mop:lst:upcodePath">
+                            <h:outputText value="#{actionDtFileController.newObj.impactFile}"/>
+                            <p:fileDownload
+                                    value="#{actionDtFileController.downloadFile(actionDtFileController.newObj)}"/>
+                        </p:commandLink>
+
+                        <h:outputText value="#{msg['file.rollback']}"/>
+                        <p:fileUpload fileUploadListener="#{actionDtFileController.handleUploadRollbackFile}"
+                                      allowTypes="/(\.|\/)(doc|docx|xls|xlsx|zip|rar)$/"
+                                      mode="advanced" auto="true" sizeLimit="10000000" update="rollback"/>
+
+                        <p:commandLink id="rollback" ajax="false" process=":mop:lst:upcodePath">
+                            <h:outputText value="#{actionDtFileController.newObj.rollbackFile}"/>
+                            <p:fileDownload
+                                    value="#{actionDtFileController.downloadRollbackFile(actionDtFileController.newObj)}"/>
+                        </p:commandLink>
+                    </h:panelGrid>
+
+                    <h:panelGrid columns="2" cellpadding="5">
+                        <p:commandButton process="panel" styleClass="RedButton" icon="fa fa-check White"
+                                         value="#{actionDtFileController.isEdit ? msg['button.update'] : msg['button.insert']}"
+                                         update=":form:objectTable :insertEditForm:designGrowl panel"
+                                         actionListener="#{actionDtFileController.saveOrUpdate}"/>
+
+                        <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White" onclick="PF('editDialog').hide()"
+                                         styleClass="GreenButton"/>
+                    </h:panelGrid>
+                </p:panel>
+            </p:dialog>
+        </h:form>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                var currentTabID = "tab-0";
+                var currentIconID = "10";
+                ChangeTab(currentTabID);
+            });
+        </script>
+        <style>
+            .blockUi tbody td {
+                border-color: white !important;
+            }
+
+            .cl1 {
+                width: 20%;
+            }
+
+            .c1 {
+                width: 20%;
+            }
+
+            .c2 {
+                width: 20%;
+            }
+        </style>
+    </ui:define>
+</ui:composition>

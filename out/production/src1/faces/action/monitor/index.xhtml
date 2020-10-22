@@ -1,0 +1,201 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:pe="http://primefaces.org/ui/extensions"
+                template="/layout/olympos/template.xhtml">
+    <ui:define name="content">
+
+        <h:form id="insertEditForm">
+            <p:growl id="designGrowl" showDetail="false" widgetVar="designGrowl"/>
+
+            <div class="messagebox tc">
+                <p:growl id="mainMessage" life="5000" showDetail="true" autoUpdate="true" globalOnly="true"
+                         for="mainMessage" widgetVar="aGrowl"/>
+            </div>
+
+            <pe:blockUI target=":form:objectTable" content="blockUIContent" widgetVar="blockUiSearch"/>
+
+            <h:panelGrid id="blockUIContent" columns="2" style="display:none;table-layout:auto;" styleClass="blockUi">
+                <h:graphicImage library="olympos-layout/images" name="loading-bars-blue.svg"
+                                style="margin-right: 12px; vertical-align: middle;"/>
+                <h:outputText value="#{msg['executing']} ......" style="white-space: nowrap;"/>
+            </h:panelGrid>
+
+            <h:outputStylesheet id="blockUICSS">
+                #blockUIContent td {
+                    border: none !important;
+                    padding: 0 !important;
+                }
+            </h:outputStylesheet>
+        </h:form>
+
+        <h:form id="form">
+            <p:poll autoStart="true" interval="5" widgetVar="onlinePoll"
+                    process="@this" listener="#{monitorController.reload}"
+                    update="objectTable"/>
+
+            <p:dataTable var="obj" value="#{monitorController.actions}" style="width: 100%"
+                         paginator="true" rows="12" filterEvent="keyup" rowKey="#{obj.id}"
+                         rowIndexVar="rowIndex"
+                         paginatorPosition="bottom" id="objectTable" widgetVar="objectTable"
+                         rowsPerPageTemplate="12, 15, 20" lazy="false" editable="false"
+                         emptyMessage="#{msg['common.data.not.found']}" scrollable="true"
+                         scrollWidth="100%" frozenColumns="0" filteredValue="#{monitorController.filterActions}">
+                <f:facet name="header">
+                    <h:outputText value="#{msg['the.impact.running']}" styleClass="White Fs22"/>
+                </f:facet>
+
+                <p:ajax event="page" onstart="PF('blockUiSearch').block()"
+                        oncomplete="PF('blockUiSearch').unblock()"/>
+
+                <p:ajax event="sort" onstart="PF('blockUiSearch').block()"
+                        oncomplete="PF('blockUiSearch').unblock()"/>
+
+                <p:ajax event="filter" onstart="PF('blockUiSearch').block()"
+                        oncomplete="PF('blockUiSearch').unblock()"/>
+
+                <p:column style="width: 32px; text-align: center;" headerText="#{msg['label.order']}">
+                    <h:outputText value="#{rowIndex+ 1}"/>
+                </p:column>
+
+                <p:column id="line" style="width: 64px; text-align: center; white-space: nowrap"
+                          headerText="#{msg['common.action']}">
+                    <p:commandButton update="" title="#{msg['common.detail']}" onclick="target='_blank'" ajax="false"
+                                     styleClass="buttonEffect hvr-grow GreenButton" process="@this"
+                                     actionListener="#{monitorController.viewDetail(obj)}" icon="fa fa-info-circle White"
+                                     onstart="PF('blockUiSearch').block()" oncomplete="PF('blockUiSearch').unblock()">
+                        <f:param  name="action_id" value="#{obj.id}"/>
+                    </p:commandButton>
+                </p:column>
+
+                <p:column style="width: 120px; text-align: center;" sortBy="#{obj.tdCode}"
+                          headerText="#{msg['impaction.code']}" filterBy="#{obj.tdCode}"
+                          filterMatchMode="contains">
+                    <h:outputText value="#{obj.tdCode}"/>
+                </p:column>
+
+                <!--20181015_hoangnd_fix hien thi sai ten_start-->
+                <p:column style="width: 196px; text-align: center;" sortBy="#{obj.crNumber}"
+                          headerText="#{msg['cr.number']}"
+                          filterBy="#{obj.crNumber}" filterMatchMode="contains" >
+                    <h:outputText value="#{obj.crNumber}"/>
+                </p:column>
+                <!--20181015_hoangnd_fix hien thi sai ten_end-->
+
+                <p:column style="width: 220px; text-align: center;" sortBy="#{obj.crName}"
+                          headerText="#{msg['cr.name']}" filterBy="#{obj.crName}"
+                          filterMatchMode="contains">
+                    <h:outputText id="crName" value="#{utils.subContent(obj.crName, 64)}"/>
+                    <pe:tooltip for="crName" mouseTracking="true" adjustX="10" adjustY="10">
+                        <h:outputText value="#{obj.crName}" styleClass="Fs14" style="width: 100%"/>
+                    </pe:tooltip>
+                </p:column>
+
+                <p:column style="width: 120px; text-align: center; white-space: nowrap"
+                          sortBy="#{obj.runAuto}" headerText="#{msg['cr.auto.type']}"
+                          filterMatchMode="contains">
+                    <h:outputText value="#{obj.runAuto eq 1 ? msg['cr.auto.type.1'] : msg['cr.auto.type.0']}"/>
+                </p:column>
+
+                <p:column style="width: 120px; text-align: center; white-space: nowrap; text-align: left;"
+                          sortBy="#{obj.runningStatus}" headerText="#{msg['common.status']}"
+                          filterMatchMode="contains">
+                    <span class="#{iconUtils.monitorIcon(obj.runningStatus)}" />
+                    <p:spacer width="12px"/>
+                    <h:outputText value="#{msg['cr.running_status.'.concat(obj.runningStatus)]}"/>
+                </p:column>
+
+                <p:column style="width: 120px; text-align: center; white-space: nowrap" rendered="false"
+                          sortBy="#{obj.createdBy}" headerText="#{msg['creator']}" filterBy="#{obj.createdBy}"
+                          filterMatchMode="contains">
+                    <h:outputText value="#{obj.createdBy}"/>
+                </p:column>
+
+                <p:column style="width: 140px; text-align: center; white-space: nowrap"
+                          sortBy="#{obj.beginTime}" headerText="#{msg['common.start.time']}">
+                    <h:outputText value="#{sessionUtil.toTimeZoneDate(obj.beginTime)}">
+                        <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/>
+                    </h:outputText>
+                </p:column>
+
+                <p:column style="width: 140px; text-align: center; white-space: nowrap"
+                          sortBy="#{obj.actualStartTime}" headerText="#{msg['common.actual.start.time']}">
+                    <h:outputText value="#{sessionUtil.toTimeZoneDate(obj.actualStartTime)}">
+                        <f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss"/>
+                    </h:outputText>
+                </p:column>
+            </p:dataTable>
+        </h:form>
+
+        <script type="text/javascript">
+            $(document).ready(function () {
+                var currentTabID = "tab-0";
+                var currentIconID = "10";
+                ChangeTab(currentTabID);
+            });
+        </script>
+        <style>
+            #form\:objectTable_paginator_bottom {
+                width: 100% !important;
+            }
+
+            .ui-wizard .ui-wizard-step-titles li {
+                /*background-color: #00aeef;*/
+                /*background-color: #74AFAD;*/
+                background-color: #4ABDAC;
+            }
+
+            .ui-wizard .ui-wizard-step-titles li.ui-state-highlight {
+                /*background-color: #0ca533;*/
+                /*background-color: #D9853B;*/
+                /*background-color: #FC4A1A;*/
+                background-color: #F7B733;
+            }
+
+            .ui-wizard-step-title {
+                min-width: 92px;
+                /*min-width: 108px;*/
+                text-align: center;
+            }
+
+            .ui-wizard-navbar {
+                padding-top: 12px;
+            }
+
+            .ui-growl {
+                top: 32px !important;
+            }
+
+            .ui-blockui {
+                background-color: grey;
+            }
+
+            .ui-blockui-content {
+                background-color: grey;
+
+            }
+
+            .blockUI .ui-widget-content {
+                background-color: white;
+            }
+
+            /*#insertEditForm\:blockUIContent tbody tr td {*/
+            .blockUi tbody tr td {
+                border: none !important;
+            }
+
+            .ui-splitbutton .ui-state-hover {
+                background-color: #ff6f13 !important;
+            }
+
+            #form\:objectTable .ui-datatable-header {
+                /*background-color: #f1d086 !important;*/
+                background-color: #1abc9c !important;
+                /*border: solid 1px #f1d086 !important;*/
+                border: solid 1px #1abc9c !important;
+            }
+        </style>
+    </ui:define>
+</ui:composition>

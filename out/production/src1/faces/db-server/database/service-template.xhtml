@@ -1,0 +1,226 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" 
+	xmlns:f="http://java.sun.com/jsf/core" 
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:c="http://java.sun.com/jsp/jstl/core" 
+	xmlns:ui="http://java.sun.com/jsf/facelets" 
+	xmlns:p="http://primefaces.org/ui" 
+	xmlns:pe="http://primefaces.org/ui/extensions">
+	
+	<h:form id="form-service">
+		<p:growl id="growl" showDetail="true" showSummary="false" />
+		
+		<p:dataTable value="#{serviceTemplateController.lazyDataService}" lazy="true" 
+			var="service" rows="10" paginator="true" paginatorPosition="bottom" rowKey="#{service.id.hashCode()}"
+			paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{msg['label.record']}" rowsPerPageTemplate="5,10,15" rowIndexVar="serviceIdx"
+			style="padding: 0px ! important;" widgetVar="serviceData">
+			<f:facet name="header">
+				<div class="Card NoPadding" style="background: transparent;">
+					<div class="Container20"></div>
+					<div class="Container60 TexAlCenter">
+						<h:outputText value="#{msg['data.header.service.template']}" />
+					</div>
+					<div class="Container20">
+						<p:commandButton style="float: right;" icon="fa fa-plus-square" 
+						actionListener="#{serviceTemplateController.clean}" oncomplete="PF('insUpdateDlg').show()"
+							update=":form-ins" title="#{msg['button.insert']}" styleClass="White" />
+					</div>
+
+				</div>
+			</f:facet>
+
+			<p:column headerText="#{msg['datatable.header.stt']}" width="20">
+				<h:outputText value="#{serviceIdx +1 }" />
+			</p:column>
+			<p:column headerText="#{msg['datatable.header.template']}" width="350"
+				filterBy="#{service.flowTemplates.flowTemplateName}">
+				<h:outputText value="#{service.flowTemplates.flowTemplateName}" />
+			</p:column>
+			<p:column headerText="#{msg['label.vendorName']}" width="100" 
+				filterBy="#{service.vendor.vendorName}">
+				<h:outputText value="#{service.vendor.vendorName}" />
+			</p:column>
+			<p:column headerText="#{msg['label.versionName']}" width="100" 
+				filterBy="#{service.version.versionName}">
+				<h:outputText value="#{service.version.versionName}" />
+			</p:column>
+			<p:column headerText="#{msg['datatable.header.customer.service']}" width="100"
+				filterBy="#{service.id.serviceCode}">
+				<h:outputText value="#{msg['view.label.servicecode5']}" rendered="#{service.id.serviceCode == 5}" />
+				<h:outputText value="#{msg['view.label.servicecode4']}" rendered="#{service.id.serviceCode == 4}" />
+				<h:outputText value="#{msg['view.label.servicecode3']}" rendered="#{service.id.serviceCode == 3}" />
+				<h:outputText value="#{msg['view.label.servicecode2']}" rendered="#{service.id.serviceCode == 2}" />
+			</p:column>
+			
+			<p:column headerText="#{msg['datatable.header.customer.action']}" width="100"
+				filterBy="#{service.id.action}">
+				<f:facet name="filter">
+					<p:selectOneMenu onchange="PF('serviceData').filter()">
+						<f:selectItem itemValue="" itemLabel="#{msg['common.choose']}" />
+						<f:selectItem itemValue="1" itemLabel="#{msg['datatable.header.customer.action.new']}" />
+						<f:selectItem itemValue="2" itemLabel="#{msg['datatable.header.customer.action.update']}" />
+						<f:selectItem itemValue="3" itemLabel="#{msg['datatable.header.customer.action.delete']}" />
+					</p:selectOneMenu> 
+				</f:facet>
+			
+				<h:outputText value="#{msg['datatable.header.customer.action.new']}" rendered="#{service.id.action == 1}" />
+				<h:outputText value="#{msg['datatable.header.customer.action.update']}" rendered="#{service.id.action == 2}" />
+				<h:outputText value="#{msg['datatable.header.customer.action.delete']}" rendered="#{service.id.action == 3}" />
+
+			</p:column>
+			<p:column headerText="#{msg['datatable.header.customer.province']}" width="100" filterBy="#{service.id.provinceCode}">
+				<h:outputText value="#{service.id.provinceCode}"/>
+			</p:column>
+			<p:column headerText="Subring" width="100">
+				<h:outputText value="Subring" rendered="#{service.id.subring==1}"/>
+				<h:outputText value="No Subring" rendered="#{service.id.subring!=1}"/>
+			</p:column>
+			<p:column width="100" styleClass="TexAlCenter">
+				<p:commandButton icon="fa fa-edit" rendered="false" actionListener="#{serviceTemplateController.preEdit(service)}"
+					styleClass="White Fs14" update=":form-ins"
+					oncomplete="PF('insUpdateDlg').show()"/>
+				<p:commandButton icon="fa fa-trash" actionListener="#{serviceTemplateController.preEdit(service)}"
+					styleClass="White Fs14 RedButton" update=":comfirmDeleteId"
+					oncomplete="PF('comfirmDelete').show()"/>	
+			</p:column>
+		</p:dataTable>
+		
+
+	</h:form>
+	<h:form id="form-ins">
+		<p:dialog header="" widgetVar="insUpdateDlg" modal="true" width="80%">
+			<f:facet name="header">
+				<h:outputText value="#{msg['view.dlg.ins.update.service']}"/>
+			</f:facet>
+			<div class="Container100 Flex FlexWrap NoPadding" style="overflow: hidden;">
+				<div class="Card">
+					<div class="Container33 Responsive50">
+						<SPAN class="title-top"> 
+							<p:selectOneMenu id="chooseTemplate" filter="true" filterMatchMode="contains"
+								value="#{serviceTemplateController.serviceTemplate.flowTemplates}" 
+								converter="flowTemplateConverter" autoWidth="false" style="max-width: calc(100% - 55px)"
+								title="#{msg['datatable.header.template']}" required="true">
+								<f:selectItem itemLabel="#{msg['view.choose.flow.template']}" itemValue="" />
+								<f:selectItems value="#{generateFlowRunController.flowTemplates}" var="f" itemLabel="#{f.flowTemplateName}" itemValue="#{f}"></f:selectItems>
+								
+							</p:selectOneMenu> 
+							<label class="title-elem">#{msg['datatable.header.template']} *</label>
+						</SPAN>
+					</div>
+					<div class="Container33 Responsive50">
+						<SPAN class="title-top"> 
+							<p:autoComplete size="20" placeholder="#{msg['label.versionName']}" dropdown="true" scrollHeight="200"
+								value="#{serviceTemplateController.serviceTemplate.version}" completeMethod="#{actionDbServerController.autoCompleteVersion}" var="obj" converter="versionConverter"
+								required="true" itemLabel="#{obj.versionName}" itemValue="#{obj}" /> 
+							<label class="title-elem">#{msg['label.versionName']} *</label>
+						</SPAN>
+					</div>
+					<div class="Container33 Responsive50">
+						<SPAN class="title-top"> 
+							<p:autoComplete size="20" placeholder="#{msg['label.auto.vendor.name']}" dropdown="true" scrollHeight="200"
+								value="#{serviceTemplateController.serviceTemplate.vendor}" completeMethod="#{actionDbServerController.autoCompleVendor}" var="obj" required="true"
+								converter="vendorConverter" itemLabel="#{obj.vendorName}" itemValue="#{obj}" /> 
+							<label class="title-elem">#{msg['label.auto.vendor.name']} *</label>
+						</SPAN>
+					</div>
+				</div>
+				<div class="Card">	
+					<div class="Container33 Responsive50">
+						<SPAN class="title-top"> 
+							<p:selectOneMenu value="#{serviceTemplateController.serviceTemplate.id.serviceCode}" required="true">
+								<f:selectItem itemValue="2" itemLabel="#{msg['view.label.servicecode2']}" />
+								<f:selectItem itemValue="3" itemLabel="#{msg['view.label.servicecode3']}" />
+								<f:selectItem itemValue="4" itemLabel="#{msg['view.label.servicecode4']}" />
+								<f:selectItem itemValue="5" itemLabel="#{msg['view.label.servicecode5']}" />
+							</p:selectOneMenu> 
+							<label class="title-elem">#{msg['datatable.header.customer.service']} *</label>
+						</SPAN>
+					</div>
+					<div class="Container33 Responsive50">
+						<SPAN class="title-top"> 
+							<p:selectOneMenu value="#{serviceTemplateController.serviceTemplate.id.action}">
+								<f:selectItem itemValue="1" itemLabel="#{msg['datatable.header.customer.action.new']}" />
+								<f:selectItem itemValue="2" itemLabel="#{msg['datatable.header.customer.action.update']}" />
+								<f:selectItem itemValue="3" itemLabel="#{msg['datatable.header.customer.action.delete']}" />
+							</p:selectOneMenu> 
+							<label class="title-elem">#{msg['datatable.header.customer.action']} *</label>
+						</SPAN>
+					</div>
+					<div class="Container33 Responsive50">
+						<SPAN class="title-top">
+							<p:selectCheckboxMenu label="#{msg['common.choose']}" value="#{serviceTemplateController.serviceTemplate.provinceCodes}"
+								filter="true" filterMatchMode="contains">
+								<c:forEach items="#{serviceTemplateController.provinces}" var="p">
+									<f:selectItem itemValue="#{p.provinceCode}" itemLabel="#{p.provinceName}"/>
+								</c:forEach>
+							</p:selectCheckboxMenu> 
+							<label class="title-elem">#{msg['datatable.header.customer.province']} </label>
+						</SPAN>
+					</div>	
+					
+				</div>
+				<div class="Card">	
+					<div class="Container33 Responsive50">
+						<SPAN class="title-top">
+							<p:selectOneMenu value="#{serviceTemplateController.serviceTemplate.id.subring}">
+								<f:selectItem itemValue="" itemLabel="#{msg['common.choose']}"/>
+								<f:selectItem itemValue="0" itemLabel="No subring"/>
+								<f:selectItem itemValue="1" itemLabel="Subring"/>
+							</p:selectOneMenu> 
+							<label class="title-elem">Subring? </label>
+						</SPAN>
+					</div>
+				</div>	
+			</div>
+			<div class="Container100 Flex FlexWrap NoPadding" style="overflow: hidden;">
+				<p:commandButton value="#{msg['button.save']}" actionListener="#{serviceTemplateController.saveOrUpdate}"
+					onstart="PF('block').show()" oncomplete="PF('block').hide();PF('insUpdateDlg').hide()" update=":form-service" />
+			</div>
+		</p:dialog>
+	</h:form>
+	<p:confirmDialog global="true" header="#{msg['view.dialog.header.delete.service']}"  showEffect="face" hideEffect="scale"
+		widgetVar="comfirmDelete" id="comfirmDeleteId" >
+		<f:facet name="message">
+			<h:outputText value="#{msg['title.confirm.delete']}" />
+			<p:spacer width="100%" height="1px"></p:spacer>
+			<h:outputText style="color: black; font-weight: bold;" value="" />
+			<h:outputText value=": " />
+			<h:outputText style="color: black" value="#{serviceTemplateController.serviceTemplate}" />
+		</f:facet>
+
+		<p:commandButton value="Yes" update=":form-service" process="@this" oncomplete="PF('comfirmDelete').hide()"
+			 actionListener="#{serviceTemplateController.delete}"
+			styleClass="ui-confirmdialog-yes RedButton" icon="ui-icon-check fa fa-check Fs14 White" />
+		<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no AquaButton" onclick="PF('comfirmDelete').hide()"
+			icon="ui-icon-close fa fa-close Fs14 White" />
+	</p:confirmDialog>
+
+	<p:dialog modal="true" class="transparent-dialog" showHeader="false" widgetVar="block" draggable="false" closable="false" resizable="false">
+		<span class="fa-stack fa-2x" style="width: 5em; height: 5em; line-height: 5em;"> <i class="fa fa-fire fa-stack-1x"
+			style="bottom: 40px; color: #FAFAFA; font-size: 0.8em"></i> <i class="fa fa-spinner fa-pulse fa-3x fa-fw fa-stack-2x" style="color: #00AAFF; font-size: 3em;"></i> <i
+			class="fa fa-coffee fa-stack-1x" style="color: #975524; bottom: 20px; font-size: 1.2em"></i>
+		</span>
+	</p:dialog>
+	<script type="text/javascript">
+		
+	</script>
+	<style type="text/css">
+		.ui-datatable .ui-column-filter{
+			width: 95% !important;
+			padding-left: 0px!important;
+			padding-right: 0px!important;
+		}
+		.ui-filter-column{
+			vertical-align: bottom;
+		}
+		.ui-column-customfilter .ui-selectonemenu{
+			min-width: 20px !important;
+			padding: 0px !important;
+		}
+		.ui-column-customfilter .ui-selectonemenu label{
+			width: 36px !important;
+			padding-left: 0px !important;
+			padding-right: 0px !important;
+		}	
+	</style>
+</ui:composition>

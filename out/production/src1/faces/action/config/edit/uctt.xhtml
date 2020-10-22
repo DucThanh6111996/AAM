@@ -1,0 +1,348 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html" xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                xmlns:ice="http://java.sun.com/jsf/html">
+    <p:growl showDetail="false" widgetVar="ucttGrowl" id="ucttGrowl"/>
+
+    <pe:blockUI target=":mop:lst:kbuctt" content="blockUIIUctt" widgetVar="blockUIIUctt"/>
+    <h:panelGrid id="blockUIIUctt" columns="2" style="display:none;table-layout:auto;" styleClass="blockUi">
+        <h:graphicImage library="olympos-layout/images" name="loading-bars-blue.svg"
+                        style="margin-right: 12px; vertical-align: middle;"/>
+        <h:outputText value="#{msg['executing']} ......" style="white-space: nowrap;"/>
+    </h:panelGrid>
+
+    <p:panel id="kbuctt" header="#{msg['edit.kb']}" toggleable="false" rendered="#{!actionController.uctt and actionController.newObj.kbGroup.equals(1)}">
+        <h:panelGrid id="kb" columns="2" cellpadding="5" width="100%" columnClasses="class1, class2">
+            <h:outputText value="#{msg['mop.common.kb_type']}:" style="color: #00aaff !important;font-weight: bold"/>
+            <p:selectOneMenu style="min-width: 320px"
+                             value="#{actionController.newObj.kbType}" rendered="#{actionController.newObj.actionType.equals(1)}">
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.uc_server']}" itemValue="10"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.stop']}" itemValue="4"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.start']}" itemValue="5"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.stop_start']}" itemValue="6"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.restart']}" itemValue="11"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.sw_db']}" itemValue="7"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.sw_module']}" itemValue="8"/>
+                <p:ajax listener="#{actionController.handleChange}" update=":mop:lst:treeServices :mop:lst:database dataTableServices dataTableServicesExclusion kbuctt :mop:lst:ucttGrowl :mop:lst:searchTreeId" onstart="PF('blockUIIUctt').block()" oncomplete="PF('blockUIIUctt').unblock()" />
+            </p:selectOneMenu>
+            <p:selectOneMenu style="min-width: 320px"
+                             value="#{actionController.newObj.kbType}" rendered="#{!actionController.newObj.actionType.equals(1)}" >
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.bd_server']}" itemValue="3"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.bd_service']}" itemValue="2"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.uc_server']}" itemValue="10"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.stop']}" itemValue="4"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.start']}" itemValue="5"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.stop_start']}" itemValue="6"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.restart']}" itemValue="11"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.sw_db']}" itemValue="7"/>
+                <f:selectItem itemLabel="#{msg['mop.common.kb_type.sw_module']}" itemValue="8"/>
+                <p:ajax listener="#{actionController.handleChange}" update=":mop:lst:treeServices :mop:lst:database dataTableServices dataTableServicesExclusion kbuctt :mop:lst:ucttGrowl :mop:lst:searchTreeId" onstart="PF('blockUIIUctt').block()" oncomplete="PF('blockUIIUctt').unblock()" />
+            </p:selectOneMenu>
+
+            <h:outputText value="#{msg['mop.common.action']}:" style="color: #00aaff !important; font-weight: bold" rendered="#{actionController.newObj.kbType eq 3 or actionController.newObj.kbType eq 9 or actionController.newObj.kbType eq 10 or actionController.newObj.kbType eq null}"/>
+            <p:selectOneRadio value="#{actionController.selectedAction}" rendered="#{actionController.newObj.kbType eq 3 or actionController.newObj.kbType eq 9 or actionController.newObj.kbType eq 10 or actionController.newObj.kbType eq null}">
+                <f:selectItem itemLabel="#{msg['mop.common.reboot']}" itemValue="1"/>
+                <f:selectItem itemLabel="#{msg['mop.common.shutdown']}" itemValue="2"/>
+                <p:ajax event="change" listener="#{actionController.handleChangeToTrue}" />
+            </p:selectOneRadio>
+
+            <h:outputText value="#{msg['mop.common.database']}:" rendered="#{actionController.newObj.kbType eq 4 or actionController.newObj.kbType eq 5 or actionController.newObj.kbType eq 6 or actionController.newObj.kbType eq 7 or actionController.newObj.kbType eq 11}" style="color: #00aaff !important; font-weight: bold"/>
+            <p:selectCheckboxMenu id="database" value="#{actionController.selectedDatabases}" label="Databases" multiple="true" required="false" rendered="#{actionController.newObj.kbType eq 4 or actionController.newObj.kbType eq 5 or actionController.newObj.kbType eq 6 or actionController.newObj.kbType eq 7 or actionController.newObj.kbType eq 11}"
+                                  filter="true" filterMatchMode="contains" panelStyle="width:512px" converter="databaseConverter"
+                                  style="min-width: 320px">
+                <p:ajax  listener="#{actionController.handleChange}" update="dataTableServices dataTableServicesExclusion :mop:lst:treeServices :mop:lst:searchTreeId" process="kb" onstart="PF('blockUIIUctt').block()" oncomplete="PF('blockUIIUctt').unblock()"/>
+                <f:selectItems value="#{actionController.databases}" />
+            </p:selectCheckboxMenu>
+
+            <h:outputText value="#{msg['mop.common.uc_server']}:" rendered="#{actionController.newObj.kbType eq 10}" style="color: #00aaff !important; font-weight: bold"/>
+            <p:selectBooleanCheckbox value="#{actionController.checkUcServer}" rendered="#{actionController.newObj.kbType eq 10}"/>
+
+            <h:outputText value="#{msg['mop.common.ip']}:" style="color: #00aaff !important; font-weight: bold"/>
+            <p:inputText value="#{actionController.lstIpServer}" style="width: 412px">
+                <p:ajax event="change" listener="#{actionController.handleChange}" update=":mop:lst:dataTableServices :mop:lst:dataTableServicesExclusion :mop:lst:treeServices :mop:lst:searchTreeId" process="kb" onstart="PF('blockUIIUctt').block()" oncomplete="PF('blockUIIUctt').unblock()"/>
+            </p:inputText>
+
+            <h:outputText value="#{msg['mop.common.service']}:" style="color: #00aaff !important; font-weight: bold"/>
+            <p:outputPanel style="width: 100%;min-height: 100px; height: 320px;overflow: auto;display: block">
+                <h:panelGroup>
+                    <div class="ui-g">
+                        <div class="Container100">
+                            <p:inputText id="searchTreeId"
+                                         value="#{actionController.keyActionSearch}"
+                                         style="width: calc(100% - 20px)"
+                                         label="#{msg['button.search']}"
+                                         placeholder="#{msg['button.search']}"
+                                         title="#{msg['button.search']}">
+                                <p:ajax event="change"
+                                        onstart="PF('blockUIIUctt').block()" oncomplete="PF('blockUIIUctt').unblock()" update=":mop:lst:dataTableServices :mop:lst:dataTableServicesExclusion :mop:lst:treeServices"
+                                        listener="#{actionController.searchActionNode}">
+                                </p:ajax>
+                            </p:inputText>
+                        </div>
+                    </div>
+                </h:panelGroup>
+
+                <p:tree id="treeServices" value="#{actionController.root}" var="doc" dynamic="true" cache="false"
+                        selectionMode="checkbox"
+                        selection="#{actionController.selectedNodes}" style="padding: 0px; border: 0px; width: 100%">
+                    <p:ajax onstart="PF('blockUIIUctt').block()" oncomplete="PF('blockUIIUctt').unblock()" event="select" update=":mop:lst:dataTableServices :mop:lst:dataTableServicesExclusion :mop:lst:treeServices" listener="#{actionController.onNodeSelect}"/>
+                    <p:ajax onstart="PF('blockUIIUctt').block()" oncomplete="PF('blockUIIUctt').unblock()" event="unselect" update=":mop:lst:dataTableServices :mop:lst:dataTableServicesExclusion :mop:lst:treeServices" listener="#{actionController.onNodeUnselect}"/>
+                    <p:ajax onstart="PF('blockUIIUctt').block()" oncomplete="PF('blockUIIUctt').unblock()" event="expand" update=":mop:lst:dataTableServices :mop:lst:dataTableServicesExclusion :mop:lst:treeServices " listener="#{actionController.onNodeExpand}"/>
+                    <p:treeNode expandedIcon="ui-icon-folder-open" collapsedIcon="ui-icon-folder-collapsed">
+                        <h:outputText value="#{doc.serviceCode} - #{doc.serviceName}"/>
+                    </p:treeNode>
+
+                    <p:treeNode type="sub_parent" icon="ui-icon-folder-collapsed" expandedIcon="ui-icon-folder-open" collapsedIcon="ui-icon-folder-collapsed">
+                        <h:outputText value="#{doc.groupModuleCode} - #{doc.groupModuleName}" />
+                    </p:treeNode>
+                    <p:treeNode type="child" icon="ui-icon-circle-triangle-e">
+                        <h:outputText value="#{doc.moduleCode} - #{doc.moduleName} - #{doc.ipServer}" />
+                    </p:treeNode>
+                </p:tree>
+            </p:outputPanel>
+            <h:outputText value="#{msg['mop.common.max_thread_ip']}:" style="color: #00aaff !important; font-weight: bold"/>
+            <p:inputNumber id="txt_" value="#{actionController.newObj.maxConcurrent}" style="width: 412px" decimalPlaces="0" minValue="0" maxValue="999">
+                <p:ajax event="change" listener="#{actionController.handleChangeToTrue}" />
+            </p:inputNumber>
+
+        </h:panelGrid>
+    </p:panel>
+
+    <div style="float: left; width: 100%">
+        <div class="divStyle">
+            <div style="float: left; width: 100%; white-space: nowrap">
+                <p:dataTable var="data" style="width:100%" rowKey="#{data.moduleId}" rowIndexVar="rowIndex"
+                             value="#{actionController.lstNormalImpactModules}"
+                             id="dataTableServices" widgetVar="dataTableServices"
+                             scrollable="true" rows="10" paginatorPosition="bottom" rowsPerPageTemplate="10,15,20" paginator="true"
+                             scrollWidth="100%" scrollHeight="100%">
+                    <p:ajax event="page" onstart="PF('blockUiSearch').block()" oncomplete="PF('blockUiSearch').unblock()"/>
+                    <p:ajax event="sort" onstart="PF('blockUiSelectApp').block()" oncomplete="PF('blockUiSelectApp').unblock()"/>
+                    <p:ajax event="filter" onstart="PF('blockUiSelectApp').block()" oncomplete="PF('blockUiSelectApp').unblock()"/>
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['list.module.impaction']}" styleClass="Fs18 Blue FontItalic"/>
+                        <p:commandButton id="togglerServices" type="button" style="float:right" icon="fa fa-reorder White"
+                                         styleClass="GreenButton"/>
+                        <p:columnToggler datasource="dataTableServices" trigger="togglerServices">
+                            <p:ajax event="toggle" listener="#{actionController.onToggleServices}" />
+                        </p:columnToggler>
+                    </f:facet>
+
+                    <p:column selectionMode="multiple" style="width:24px;text-align:center" visible="#{actionController.columServices[0]}"/>
+
+                    <p:column style="width: 34px; text-align: center;" headerText="#{msg['label.order']}" visible="#{actionController.columServices[1]}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{rowIndex+ 1}"/>
+                    </p:column>
+
+                    <p:column style="width: 40px; text-align: center;" headerText="#{msg['module.kb.group']}" visible="#{actionController.columServices[2]}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.kbGroup}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['service.code']}"
+                              style="width: 110px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.serviceCode}" filterMatchMode="contains" visible="#{actionController.columServices[3]}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.serviceCode}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['service.name']}"
+                              style="width: 196px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.serviceName}" filterMatchMode="contains" visible="#{actionController.columServices[4]}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.serviceName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.code']}"
+                              style="width: 142px; text-align: center; white-space: nowrap" filterBy="#{data.moduleCode}"
+                              filterMatchMode="contains"  visible="#{actionController.columServices[5]}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.moduleCode}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.name']}"
+                              style="width: 256px; text-align: center; white-space: nowrap" filterBy="#{data.moduleName}"
+                              filterMatchMode="contains" visible="#{actionController.columServices[6]}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.moduleName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.typename']}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.moduleTypeName}"
+                              filterMatchMode="contains" visible="#{actionController.columServices[7]}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.moduleTypeName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.groupname']}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.groupModuleName}"
+                              filterMatchMode="contains"  visible="#{actionController.columServices[8]}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.groupModuleName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['path.to.install']}"
+                              style="width: 296px; text-align: center; white-space: nowrap" filterBy="#{data.executePath}"
+                              filterMatchMode="contains" visible="#{actionController.columServices[9]}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.executePath}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['ip.of.server']}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.ipServer}"
+                              filterMatchMode="contains" visible="#{actionController.columServices[10]}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.ipServer}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['user']}" style="width: 96px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.username}" filterMatchMode="contains"  visible="#{actionController.columServices[11]}">
+                        <h:outputText styleClass="#{data.typeModule eq 1 ? 'textExclusion' : 'preformatted'}"
+                                      value="#{data.username}"/>
+                    </p:column>
+                </p:dataTable>
+            </div>
+
+        </div>
+    </div>
+
+    <div style="float: left; width: 100%">
+        <div class="divStyle">
+            <div style="float: left; width: 100%; white-space: nowrap">
+                <p:dataTable var="data" style="width:100%" rowKey="#{data.moduleId}" rowIndexVar="rowIndex"
+                             value="#{actionController.lstExclusionModules}"
+                             id="dataTableServicesExclusion" widgetVar="dataTableServicesExclusion"
+                             scrollable="true" rows="10" paginatorPosition="bottom" rowsPerPageTemplate="10,15,20" paginator="true"
+                             scrollWidth="100%" scrollHeight="100%">
+                    <p:ajax event="page" onstart="PF('blockUiSearch').block()" oncomplete="PF('blockUiSearch').unblock()"/>
+                    <p:ajax event="sort" onstart="PF('blockUiSelectApp').block()" oncomplete="PF('blockUiSelectApp').unblock()"/>
+                    <p:ajax event="filter" onstart="PF('blockUiSelectApp').block()" oncomplete="PF('blockUiSelectApp').unblock()"/>
+                    <f:facet name="header">
+                        <h:outputText value="#{msg['list.module.exclusion']}" styleClass="Fs18 Blue FontItalic"/>
+                        <p:commandButton id="togglerServicesExclusion" type="button" style="float:right" icon="fa fa-reorder White"
+                                         styleClass="GreenButton"/>
+                        <p:columnToggler datasource="dataTableServicesExclusion" trigger="togglerServicesExclusion" >
+                            <p:ajax event="toggle" listener="#{actionController.onToggleServicesExclusion}" />
+                        </p:columnToggler>
+                    </f:facet>
+
+                    <p:column selectionMode="multiple" style="width:24px;text-align:center" visible="#{actionController.columServicesExclusion[0]}"/>
+
+                    <p:column style="width: 34px; text-align: center;" headerText="STT" visible="#{actionController.columServicesExclusion[1]}">
+                        <h:outputText value="#{rowIndex+ 1}"/>
+                    </p:column>
+
+                    <p:column style="width: 40px; text-align: center;" headerText="#{msg['module.kb.group']}" visible="#{actionController.columServicesExclusion[2]}">
+                        <h:outputText value="#{data.kbGroup}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['service.code']}"
+                              style="width: 110px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.serviceCode}" filterMatchMode="contains" visible="#{actionController.columServicesExclusion[3]}">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.serviceCode}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['service.name']}"
+                              style="width: 196px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.serviceName}" filterMatchMode="contains" visible="#{actionController.columServicesExclusion[4]}">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.serviceName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.code']}"
+                              style="width: 142px; text-align: center; white-space: nowrap" filterBy="#{data.moduleCode}"
+                              filterMatchMode="contains" visible="#{actionController.columServicesExclusion[5]}">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.moduleCode}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.name']}"
+                              style="width: 256px; text-align: center; white-space: nowrap" filterBy="#{data.moduleName}"
+                              filterMatchMode="contains" visible="#{actionController.columServicesExclusion[6]}">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.moduleName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.typename']}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.moduleTypeName}"
+                              filterMatchMode="contains" visible="#{actionController.columServicesExclusion[7]}">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.moduleTypeName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['module.groupname']}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.groupModuleName}"
+                              filterMatchMode="contains" visible="#{actionController.columServicesExclusion[8]}">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.groupModuleName}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['path.to.install']}"
+                              style="width: 296px; text-align: center; white-space: nowrap" filterBy="#{data.executePath}"
+                              filterMatchMode="contains" visible="#{actionController.columServicesExclusion[9]}">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.executePath}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['ip.of.server']}"
+                              style="width: 96px; text-align: center; white-space: nowrap" filterBy="#{data.ipServer}"
+                              filterMatchMode="contains" visible="#{actionController.columServicesExclusion[10]}">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.ipServer}"/>
+                    </p:column>
+
+                    <p:column headerText="#{msg['user']}" style="width: 96px; text-align: center; white-space: nowrap"
+                              filterBy="#{data.username}" filterMatchMode="contains" visible="#{actionController.columServicesExclusion[11]}">
+                        <h:outputText styleClass="preformatted"
+                                      value="#{data.username}"/>
+                    </p:column>
+                </p:dataTable>
+            </div>
+
+        </div>
+    </div>
+
+    <p:confirmDialog id="confirmNextEclude" message="#{actionController.msgExcludeUCTT}"
+                     header="#{msg['confirm.next.flow_process']}"
+                     severity="alert" widgetVar="confirmNextEclude">
+        <p:commandButton value="#{msg['continue']}" icon="fa fa-check White" styleClass="GreenButton"
+                         update=":mop:lst"
+                         actionListener="#{actionController.changeNextExclude}"
+                         process="@this"
+                         onstart="PF('blockUiWizard').block(); PF('confirmNextEclude').hide()"/>
+
+        <p:commandButton value="#{msg['button.cancel']}" icon="fa fa-remove White"
+                         onclick="PF('confirmNextEclude').hide()"
+                         styleClass="ButtonRed"/>
+    </p:confirmDialog>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#form\\:searchTreeId").bind("keypress", function(e) {
+                if (e.keyCode == 13) {
+                    return false;
+                }
+            });
+
+        });
+    </script>
+    <style>
+        .textExclusion {
+            color: red;
+        }
+        .ui-picklist-source {
+            width: 97% !important;
+        }
+
+        .ui-picklist-target {
+            width: 97% !important;;
+        }
+        #mop\:lst\:kbuctt_header {
+            background-color: #1ebc61;
+            color: white;
+            text-align: center;
+        }
+    </style>
+</ui:composition>

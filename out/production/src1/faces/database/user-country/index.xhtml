@@ -1,0 +1,185 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/layout/olympos_db_server/template.xhtml">
+    <ui:define name="content">
+        <h:form id="form-service">
+            <p:growl id="growl" showDetail="true" showSummary="false" />
+
+            <p:dataTable value="#{userCountryController.lazyDataModel}" lazy="true"
+                         var="userCountry" rows="10" paginator="true" paginatorPosition="bottom" rowKey="#{userCountry.id}"
+                         paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="#{msg['label.total']} {totalRecords} #{commandController.lazyModel.rowCount > 1 ? msg['label.records'] : msg['label.record']}" rowsPerPageTemplate="5,10,15"
+                         rowIndexVar="userCountryIdx"
+                         style="padding: 0px ! important;" widgetVar="serviceData"
+                         selection="#{userCountryController.userCountries}" >
+                <f:facet name="header">
+                    <div class="Card NoPadding" style="background: transparent;">
+                        <div class="Container20">
+                            <p:commandButton style="float: left;" icon="fa fa-plus-square"
+                                             actionListener="#{userCountryController.clean}" oncomplete="PF('insUpdateDlg2').show()"
+                                             update="@form:@parent:form-ins" title="#{msg['button.insert']}" styleClass="White " />
+                        </div>
+                        <div class="Container60 TexAlCenter">
+                            <h:outputText value="#{msg['data.header.user.country']}" />
+                        </div>
+                        <div class="Container20">
+                        </div>
+
+                    </div>
+                </f:facet>
+
+                <p:column headerText="#{msg['datatable.header.stt']}" width="50">
+                    <h:outputText value="#{userCountryIdx +1 }" />
+                </p:column>
+                <p:column headerText="#{msg['datatable.header.userName']}"
+                          filterBy="#{userCountry.userName}">
+                    <h:outputText value="#{userCountry.userName}" />
+                </p:column>
+                <p:column headerText="#{msg['datatable.header.countryCode']}"
+                          filterBy="#{userCountry.countryCode}">
+                    <h:outputText value="#{userCountry.countryCode}" />
+                </p:column>
+                <p:column headerText="#{msg['datatable.header.status']}" width="200"
+                          filterBy="#{userCountry.status}" style="text-align: center;">
+                    <f:facet name="filter">
+                        <p:selectOneMenu onchange="PF('serviceData').filter()" style="text-align: center;">
+                            <f:selectItem itemLabel="#{msg['common.choose']}"/>
+                            <f:selectItem itemLabel="#{msg['datatable.header.user.country.status.0']}" itemValue="0"/>
+                            <f:selectItem itemLabel="#{msg['datatable.header.user.country.status.1']}" itemValue="1"/>
+                        </p:selectOneMenu>
+                    </f:facet>
+
+                    <h:outputText rendered="#{userCountry.status == 0}" value="#{msg['datatable.header.user.country.status.0']}" />
+                    <h:outputText rendered="#{userCountry.status == 1}" value="#{msg['datatable.header.user.country.status.1']}" />
+                </p:column>
+
+                <p:column width="100" styleClass="TexAlCenter" headerText="#{msg['datatable.header.action']}">
+                    <p:commandButton icon="fa fa-edit" actionListener="#{userCountryController.preEdit(userCountry)}"
+                                     styleClass="White Fs14" update="@form:@parent:form-ins"
+                                     oncomplete="PF('insUpdateDlg2').show()"/>
+                    <p:commandButton icon="fa fa-trash" actionListener="#{userCountryController.preEdit(userCountry)}"
+                                     styleClass="White Fs14 RedButton" update="@form:@parent:comfirmDeleteId"
+                                     oncomplete="PF('comfirmDelete').show()"/>
+                </p:column>
+            </p:dataTable>
+
+
+        </h:form>
+        <h:form id="form-ins">
+            <!--20180630_hoangnd_focus_userName_start-->
+            <p:focus id="fcUsername" for="txtUsername" />
+            <!--20180630_hoangnd_focus_userName_end-->
+	    <!-- thenv_20180630_start-->
+	    <p:dialog header="" widgetVar="insUpdateDlg2" modal="true" width="750">
+                <f:facet name="header">
+                    <h:outputText value="#{msg['view.dlg.ins.update.countryCode']}"/>
+                </f:facet>
+                <div class="Card">
+                    <div class="Container100 " >
+                        <div class="Container33 Responsive50">
+                            <span class="md-inputfield">
+                                <!--20180705_hoangnd_gioi_han_maxlength_255-->
+                                <p:inputText id="txtUsername" value="#{userCountryController.userCountry.userName}"
+                                             title="#{msg['datatable.header.userName']}"
+                                             required="true" requiredMessage="#{msg['error.userCountry.userName.empty']}"
+                                             validator="notNullValidator"
+                                             maxlength="255"
+                                             disabled="#{!sessionUtil.actionAdmin}"
+                                             style="width: 80%;"
+                                >
+                                </p:inputText>
+                                <label>#{msg['datatable.header.userName']} <span class="cd-text-required"/></label>
+                            </span>
+                        </div>
+                        <div class="Container33 Responsive50">
+                            <span class="title-top">
+                                <p:selectManyMenu label="#{msg['datatable.header.countryCode']}"
+                                                  required="true" requiredMessage="#{msg['datatable.header.countryCode.notNull']}"
+                                                  value="#{userCountryController.userCountry.countryCodes}" style="width: 83%;">
+                                    <c:forEach items="#{language.listCountryCode}" var="c">
+                                        <f:selectItem itemValue="#{c}" itemLabel="#{c}"/>
+                                    </c:forEach>
+                                </p:selectManyMenu>
+                                <label class="title-elem">#{msg['datatable.header.countryCode']} <span class="cd-text-required"/></label>
+                            </span>
+                        </div>
+                        <div class="Container33 Responsive50">
+                            <span class="title-top">
+                                <p:selectOneMenu value="#{userCountryController.userCountry.status}" style="width: 60%;">
+                                    <f:selectItem itemLabel="#{msg['datatable.header.user.country.status.1']}" itemValue="1"/>
+                                    <f:selectItem itemLabel="#{msg['datatable.header.user.country.status.0']}" itemValue="0"/>
+                                    <p:ajax event="change"/>
+                                </p:selectOneMenu>
+                                <label class="title-elem">#{msg['datatable.header.status']} <span class="cd-text-required"/></label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="Container100 Flex FlexWrap NoPadding" style="overflow: hidden;">
+                    <div style="margin: 0 auto;">
+                        <p:commandButton style="color: white;" icon="fa fa-save" value="#{msg['button.save']}" actionListener="#{userCountryController.saveOrUpdate}"
+                                         onstart="PF('block').show()" oncomplete="PF('block').hide();" update="@form:@parent:form-service, fcUsername" />
+                        <p:commandButton style="color: white; margin-left: 5px;" icon="fa fa-close" value="#{msg['button.close']}" oncomplete="PF('insUpdateDlg2').hide()" styleClass="" />
+                    </div>
+                </div>
+            </p:dialog>
+	    <!-- thenv_20180630_end-->
+        </h:form>
+        <p:confirmDialog global="true" header="#{msg['view.dialog.header.delete.usercountry']}"  showEffect="face" hideEffect="scale"
+                         widgetVar="comfirmDelete" id="comfirmDeleteId" >
+            <f:facet name="message">
+                <h:outputText value="#{msg['title.confirm.delete']}" />
+                <p:spacer width="100%" height="1px"></p:spacer>
+                <h:outputText style="color: black; font-weight: bold;" value="" />
+                <h:outputText value=": " />
+                <h:outputText style="color: black" value="#{userCountryController.userCountry.userName} - #{userCountryController.userCountry.countryCode}" />
+            </f:facet>
+
+            <p:commandButton value="Yes" update="@parent:@parent:form-service" process="@this" oncomplete="PF('comfirmDelete').hide()"
+                             actionListener="#{userCountryController.delete}"
+                             styleClass="ui-confirmdialog-yes RedButton" icon="ui-icon-check fa fa-check Fs14 White" />
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no AquaButton" onclick="PF('comfirmDelete').hide()"
+                             icon="ui-icon-close fa fa-close Fs14 White" />
+        </p:confirmDialog>
+
+        <p:dialog modal="true" class="transparent-dialog" showHeader="false" widgetVar="block" draggable="false" closable="false" resizable="false">
+            <span class="fa-stack fa-2x" style="width: 5em; height: 5em; line-height: 5em;"> <i class="fa fa-fire fa-stack-1x"
+                                                                                                style="bottom: 40px; color: #FAFAFA; font-size: 0.8em"></i> <i class="fa fa-spinner fa-pulse fa-3x fa-fw fa-stack-2x" style="color: #00AAFF; font-size: 3em;"></i> <i
+                    class="fa fa-coffee fa-stack-1x" style="color: #975524; bottom: 20px; font-size: 1.2em"></i>
+            </span>
+        </p:dialog>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                ChangeTab("group-tab-2","tab2-4");
+            });
+        </script>
+        <style type="text/css">
+            .ui-datatable .ui-column-filter{
+                width: 95% !important;
+                padding-left: 0px!important;
+                padding-right: 0px!important;
+            }
+            .ui-filter-column{
+                vertical-align: bottom;
+            }
+            .ui-column-customfilter .ui-selectonemenu{
+                min-width: 20px !important;
+                padding: 0px !important;
+                width: 99% !important;
+            }
+
+	    <!-- thenv_20180630_start-->
+            .ui-column-customfilter .ui-selectonemenu label{
+                width: 99% !important;
+                padding-left: 0px !important;
+                padding-right: 0px !important;
+                text-align: center;
+            }
+	    <!-- thenv_20180630_end-->
+        </style>
+    </ui:define>
+</ui:composition>
